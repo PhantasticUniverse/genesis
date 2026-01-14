@@ -379,6 +379,7 @@ describe('fitness functions', () => {
         complexity: 1,
         symmetry: 1,
         movement: 1,
+        replication: 1,
       };
 
       const result = calculateOverallFitness(metrics);
@@ -394,6 +395,7 @@ describe('fitness functions', () => {
         complexity: 0,
         symmetry: 0,
         movement: 0,
+        replication: 0,
       });
 
       const highSymmetry = calculateOverallFitness({
@@ -402,9 +404,10 @@ describe('fitness functions', () => {
         complexity: 0,
         symmetry: 1,
         movement: 0,
+        replication: 0,
       });
 
-      // Survival weight (0.3) > Symmetry weight (0.1)
+      // Survival weight (0.25) > Symmetry weight (0.1)
       expect(highSurvival.overall).toBeGreaterThan(highSymmetry.overall);
     });
 
@@ -415,6 +418,7 @@ describe('fitness functions', () => {
         complexity: 0.6,
         symmetry: 0.5,
         movement: 0.4,
+        replication: 0.3,
       };
 
       const result = calculateOverallFitness(metrics);
@@ -424,6 +428,7 @@ describe('fitness functions', () => {
       expect(result.complexity).toBe(0.6);
       expect(result.symmetry).toBe(0.5);
       expect(result.movement).toBe(0.4);
+      expect(result.replication).toBe(0.3);
     });
   });
 

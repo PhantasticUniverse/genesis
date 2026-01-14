@@ -82,7 +82,7 @@ bun run test           # Run all tests (Vitest)
 bun run test:coverage  # Run with coverage report
 ```
 
-**Test Coverage:** 532 tests, 30% coverage across:
+**Test Coverage:** 562 tests, 30% coverage across:
 - `src/__tests__/core/` - kernels, kernels-3d, growth, conservation
 - `src/__tests__/discovery/` - fitness, genome, GA, phylogeny
 - `src/__tests__/agency/` - behavior, spatial-hash
@@ -233,6 +233,36 @@ pipeline.step(commandEncoder);
 **Field Coupling:**
 - `depositEnabled`: Particles add mass to Lenia field
 - `gradientResponseEnabled`: Particles respond to field gradients
+
+### Self-Replication Detection
+```typescript
+import {
+  createReplicationDetector,
+  findConnectedComponents,
+  calculateReplicationFitness,
+} from './discovery/replication';
+
+// Create detector
+const detector = createReplicationDetector(width, height, {
+  minMass: 10,
+  activationThreshold: 0.1,
+  minSimilarity: 0.6,
+});
+
+// Process each frame
+const events = detector.update(stateArray, stepNumber);
+
+// Check for replication events
+for (const event of events) {
+  console.log(`Replication at step ${event.step}`);
+  console.log(`Similarity: ${event.similarity}`);
+}
+
+// Use in fitness evaluation
+const replicationFitness = calculateReplicationFitness(detector.getEvents());
+```
+
+**Fitness Metrics:** survival, stability, complexity, symmetry, movement, replication
 
 ## Known Limitations
 - **Sensorimotor obstacles**: Visual rendering subtle, may not be clearly visible

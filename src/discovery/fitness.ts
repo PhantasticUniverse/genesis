@@ -9,6 +9,7 @@ export interface FitnessMetrics {
   complexity: number;    // Spatial entropy (0-1)
   symmetry: number;      // Rotational/reflective symmetry (0-1)
   movement: number;      // Speed and consistency (0-1)
+  replication: number;   // Self-replication success (0-1)
   overall: number;       // Weighted combination
 }
 
@@ -299,13 +300,14 @@ export function calculateMovementFitness(
  * Calculate overall fitness from all metrics
  */
 export function calculateOverallFitness(metrics: Omit<FitnessMetrics, 'overall'>): FitnessMetrics {
-  // Weighted combination
+  // Weighted combination (weights sum to 1.0)
   const weights = {
-    survival: 0.3,
-    stability: 0.25,
-    complexity: 0.2,
-    symmetry: 0.1,
-    movement: 0.15,
+    survival: 0.25,
+    stability: 0.20,
+    complexity: 0.15,
+    symmetry: 0.10,
+    movement: 0.10,
+    replication: 0.20,  // Replication is a significant achievement
   };
 
   const overall =
@@ -313,7 +315,8 @@ export function calculateOverallFitness(metrics: Omit<FitnessMetrics, 'overall'>
     metrics.stability * weights.stability +
     metrics.complexity * weights.complexity +
     metrics.symmetry * weights.symmetry +
-    metrics.movement * weights.movement;
+    metrics.movement * weights.movement +
+    (metrics.replication ?? 0) * weights.replication;
 
   return { ...metrics, overall };
 }

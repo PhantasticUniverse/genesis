@@ -82,7 +82,7 @@ bun run test           # Run all tests (Vitest)
 bun run test:coverage  # Run with coverage report
 ```
 
-**Test Coverage:** 562 tests, 30% coverage across:
+**Test Coverage:** 578 tests, 30% coverage across:
 - `src/__tests__/core/` - kernels, kernels-3d, growth, conservation
 - `src/__tests__/discovery/` - fitness, genome, GA, phylogeny
 - `src/__tests__/agency/` - behavior, spatial-hash
@@ -263,6 +263,30 @@ const replicationFitness = calculateReplicationFitness(detector.getEvents());
 ```
 
 **Fitness Metrics:** survival, stability, complexity, symmetry, movement, replication
+
+### Flow-Lenia (Mass-Conserving)
+```typescript
+import {
+  createFlowLeniaPipeline,
+  type FlowLeniaConfig,
+} from './compute/webgpu/flow-lenia-pipeline';
+
+// Create flow pipeline
+const flowPipeline = createFlowLeniaPipeline(device, {
+  flowStrength: 0.5,      // How much growth gradient affects flow
+  diffusion: 0.01,        // Smoothing coefficient
+  useReintegration: true, // Better mass conservation
+  growthType: 1,          // 0=polynomial, 1=gaussian
+});
+
+// Execute step (requires external convolution result)
+flowPipeline.step(commandEncoder, convolutionTexture);
+
+// Verify mass conservation
+const currentMass = await flowPipeline.getMass();
+```
+
+**Flow Modes:** main (advection), flow_reintegration (explicit flux tracking)
 
 ## Known Limitations
 - **Sensorimotor obstacles**: Visual rendering subtle, may not be clearly visible

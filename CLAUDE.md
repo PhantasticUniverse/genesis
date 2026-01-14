@@ -82,12 +82,12 @@ bun run test           # Run all tests (Vitest)
 bun run test:coverage  # Run with coverage report
 ```
 
-**Test Coverage:** 604 tests, 30% coverage across:
+**Test Coverage:** 639 tests, 30% coverage across:
 - `src/__tests__/core/` - kernels, kernels-3d, growth, conservation
 - `src/__tests__/discovery/` - fitness, genome, GA, phylogeny, replication
 - `src/__tests__/agency/` - behavior, spatial-hash
 - `src/__tests__/compute/` - texture-pool, flow-lenia
-- `src/__tests__/analysis/` - symmetry
+- `src/__tests__/analysis/` - symmetry, chaos
 - `src/__tests__/persistence/` - storage
 - `src/__tests__/render/` - colormaps
 - `src/__tests__/utils/` - RLE encoding
@@ -143,6 +143,42 @@ const types = detectSymmetryType(result);
 - `k-fold-rotational` - k-fold rotational (2, 4, 6, 8...)
 - `radial` - high-order circular symmetry
 - `asymmetric` - no significant symmetry
+
+### Lyapunov Exponent (Chaos Analysis)
+```typescript
+import {
+  calculateLyapunovExponent,
+  wolfLyapunovEstimate,
+  quickStabilityCheck,
+  classifyDynamics,
+} from './analysis/chaos';
+
+// Define step function for your CA
+const stepFunction = (state: Float32Array) => { /* evolve state */ };
+
+// Full Lyapunov calculation
+const result = calculateLyapunovExponent(initialState, stepFunction, {
+  steps: 100,
+  perturbationMagnitude: 0.001,
+  renormalize: true,
+});
+console.log(`Exponent: ${result.exponent}`);
+console.log(`Classification: ${result.classification}`); // stable/periodic/chaotic/hyperchaotic
+console.log(`Confidence: ${result.confidence}`);
+
+// Wolf algorithm (more robust for noisy systems)
+const wolfResult = wolfLyapunovEstimate(initialState, stepFunction);
+
+// Quick stability check (fast but less accurate)
+const stability = quickStabilityCheck(initialState, stepFunction, 20);
+// Returns: 'stable' | 'unstable' | 'unknown'
+```
+
+**Lyapunov Classification:**
+- `λ < -0.01` → **stable** (perturbations decay)
+- `|λ| ≤ 0.01` → **periodic** (marginally stable)
+- `λ > 0.01` → **chaotic** (perturbations grow)
+- `λ > 1` → **hyperchaotic** (rapid divergence)
 
 ### GPU Trainer Error Handling
 ```typescript

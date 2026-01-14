@@ -82,12 +82,12 @@ bun run test           # Run all tests (Vitest)
 bun run test:coverage  # Run with coverage report
 ```
 
-**Test Coverage:** 639 tests, 30% coverage across:
+**Test Coverage:** 685 tests, 30% coverage across:
 - `src/__tests__/core/` - kernels, kernels-3d, growth, conservation
 - `src/__tests__/discovery/` - fitness, genome, GA, phylogeny, replication
 - `src/__tests__/agency/` - behavior, spatial-hash
 - `src/__tests__/compute/` - texture-pool, flow-lenia
-- `src/__tests__/analysis/` - symmetry, chaos
+- `src/__tests__/analysis/` - symmetry, chaos, periodicity
 - `src/__tests__/persistence/` - storage
 - `src/__tests__/render/` - colormaps
 - `src/__tests__/utils/` - RLE encoding
@@ -179,6 +179,37 @@ const stability = quickStabilityCheck(initialState, stepFunction, 20);
 - `|λ| ≤ 0.01` → **periodic** (marginally stable)
 - `λ > 0.01` → **chaotic** (perturbations grow)
 - `λ > 1` → **hyperchaotic** (rapid divergence)
+
+### Period Detection
+```typescript
+import {
+  detectPeriod,
+  PeriodTracker,
+  classifyPeriodBehavior,
+} from './analysis/periodicity';
+
+// Detect period from state history
+const result = detectPeriod(stateHistory, width, height, {
+  maxPeriod: 100,
+  correlationThreshold: 0.8,
+});
+console.log(`Period: ${result.period}`);
+console.log(`Exact: ${result.isExactPeriod}`);
+console.log(`Behavior: ${result.behavior}`); // static/periodic/quasi-periodic/chaotic
+console.log(classifyPeriodBehavior(result));
+
+// Incremental tracking (for real-time detection)
+const tracker = new PeriodTracker(width, height, { maxPeriod: 50 });
+// In simulation loop:
+tracker.push(currentState);
+const analysis = tracker.analyze();
+```
+
+**Period Behaviors:**
+- `static` - Fixed point (no change)
+- `periodic` - Exact or approximate cycle
+- `quasi-periodic` - Multiple incommensurate frequencies
+- `chaotic` - No detectable period
 
 ### GPU Trainer Error Handling
 ```typescript

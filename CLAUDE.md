@@ -82,8 +82,8 @@ bun run test           # Run all tests (Vitest)
 bun run test:coverage  # Run with coverage report
 ```
 
-**Test Coverage:** 685 tests, 30% coverage across:
-- `src/__tests__/core/` - kernels, kernels-3d, growth, conservation
+**Test Coverage:** 727 tests, 30% coverage across:
+- `src/__tests__/core/` - kernels, kernels-3d, growth, conservation, bioelectric, particles
 - `src/__tests__/discovery/` - fitness, genome, GA, phylogeny, replication
 - `src/__tests__/agency/` - behavior, spatial-hash
 - `src/__tests__/compute/` - texture-pool, flow-lenia
@@ -210,6 +210,47 @@ const analysis = tracker.analyze();
 - `periodic` - Exact or approximate cycle
 - `quasi-periodic` - Multiple incommensurate frequencies
 - `chaotic` - No detectable period
+
+### Bioelectric Patterns
+```typescript
+import {
+  createBioelectricState,
+  applyStimulus,
+  stepBioelectric,
+  stepBioelectricN,
+  createVoltageWave,
+  createGradient,
+  bioelectricToRGB,
+  BIOELECTRIC_PRESETS,
+} from './core/bioelectric';
+
+// Create bioelectric simulation
+const state = createBioelectricState({
+  width: 256,
+  height: 256,
+  ...BIOELECTRIC_PRESETS['voltage-calcium'],
+});
+
+// Apply stimulus
+applyStimulus(state, 0, 128, 128, 20, 0.5);
+
+// Create patterns
+createVoltageWave(state, 0, 'radial', 30, 0.3);
+createGradient(state, 1, 'left-right', 0, 1);
+
+// Step simulation
+stepBioelectricN(state, 100);
+
+// Render to RGB
+const rgba = bioelectricToRGB(state, true);
+```
+
+**Bioelectric Presets:**
+- `voltage-only` - Simple membrane potential
+- `voltage-calcium` - Vm + Ca2+ signaling
+- `ion-channels` - Vm + Na+ + K+ full model
+- `morphogen-gradient` - Diffusible signaling molecules
+- `turing-pattern` - Activator-inhibitor reaction-diffusion
 
 ### GPU Trainer Error Handling
 ```typescript

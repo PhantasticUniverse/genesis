@@ -82,11 +82,12 @@ bun run test           # Run all tests (Vitest)
 bun run test:coverage  # Run with coverage report
 ```
 
-**Test Coverage:** 578 tests, 30% coverage across:
+**Test Coverage:** 604 tests, 30% coverage across:
 - `src/__tests__/core/` - kernels, kernels-3d, growth, conservation
-- `src/__tests__/discovery/` - fitness, genome, GA, phylogeny
+- `src/__tests__/discovery/` - fitness, genome, GA, phylogeny, replication
 - `src/__tests__/agency/` - behavior, spatial-hash
-- `src/__tests__/compute/` - texture-pool
+- `src/__tests__/compute/` - texture-pool, flow-lenia
+- `src/__tests__/analysis/` - symmetry
 - `src/__tests__/persistence/` - storage
 - `src/__tests__/render/` - colormaps
 - `src/__tests__/utils/` - RLE encoding
@@ -110,6 +111,38 @@ import { calculateSymmetry } from './discovery/fitness';
 // Returns 0-1 score: 30% horizontal + 30% vertical + 40% rotational
 const score = calculateSymmetry(state, width, height);
 ```
+
+### Advanced Symmetry Analysis
+```typescript
+import {
+  analyzeSymmetry,
+  quickSymmetryScore,
+  detectSymmetryType,
+  calculateKFoldSymmetry,
+} from './analysis/symmetry';
+
+// Full symmetry analysis
+const result = analyzeSymmetry(state, width, height, { maxOrder: 8 });
+console.log(`Order: ${result.order}`);       // Dominant k-fold (1-8)
+console.log(`Strength: ${result.strength}`); // 0-1 strength
+console.log(`Horizontal: ${result.horizontal}`);
+console.log(`Vertical: ${result.vertical}`);
+console.log(`Rotational180: ${result.rotational180}`);
+
+// Quick symmetry score (faster, less detailed)
+const score = quickSymmetryScore(state, width, height);
+
+// Detect symmetry types
+const types = detectSymmetryType(result);
+// Returns: ['bilateral-horizontal', '4-fold-rotational', 'radial'] etc.
+```
+
+**Symmetry Types Detected:**
+- `bilateral-horizontal` / `bilateral-vertical` - reflection symmetry
+- `point-symmetric` - 180° rotational
+- `k-fold-rotational` - k-fold rotational (2, 4, 6, 8...)
+- `radial` - high-order circular symmetry
+- `asymmetric` - no significant symmetry
 
 ### GPU Trainer Error Handling
 ```typescript

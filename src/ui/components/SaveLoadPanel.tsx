@@ -24,6 +24,9 @@ interface SaveLoadPanelProps {
   onLoadGenome?: (genome: LeniaGenome) => void;
 }
 
+// Maximum file size for imports (1MB)
+const MAX_FILE_SIZE = 1024 * 1024;
+
 export function SaveLoadPanel({ engine, currentGenome, onLoadGenome }: SaveLoadPanelProps) {
   const [savedOrganisms, setSavedOrganisms] = useState<SavedOrganism[]>([]);
   const [saveName, setSaveName] = useState('');
@@ -87,6 +90,16 @@ export function SaveLoadPanel({ engine, currentGenome, onLoadGenome }: SaveLoadP
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      console.error(`File too large (${(file.size / 1024 / 1024).toFixed(2)}MB). Maximum size is 1MB.`);
+      // Reset input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
     try {
       const text = await readFileAsText(file);
       const genome = importGenomeJSON(text);
@@ -122,7 +135,7 @@ export function SaveLoadPanel({ engine, currentGenome, onLoadGenome }: SaveLoadP
       >
         <h3 className="font-medium text-zinc-300">Organism Library</h3>
         <span className="text-xs text-zinc-500">
-          {savedOrganisms.length} saved • {isExpanded ? '▼' : '▶'}
+          {savedOrganisms.length} saved • {isExpanded ? '−' : '+'}
         </span>
       </div>
 

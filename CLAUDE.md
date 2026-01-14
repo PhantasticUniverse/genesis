@@ -22,6 +22,7 @@ src/
 ├── training/       # Neural CA (GPU + CPU)
 ├── persistence/    # Save/load organisms
 ├── ui/components/  # React panels
+│   └── common/     # Shared UI components
 └── patterns/       # Lenia presets
 ```
 
@@ -138,6 +139,25 @@ const hash = createSpatialHash(worldWidth, worldHeight, cellSize);
 hash.insert(creature);
 const nearby = hash.queryRadius(x, y, radius);
 const nearest = hash.findNearest(x, y);
+```
+
+### Shared UI Components
+```typescript
+import { ExpandablePanel, ToggleButton, RangeSlider, StatGrid } from './ui/components/common';
+
+// Collapsible panel with header
+<ExpandablePanel title="Settings" titleColor="text-cyan-400" defaultExpanded={false}>
+  {children}
+</ExpandablePanel>
+
+// ON/OFF toggle
+<ToggleButton label="Enable Feature" value={enabled} onChange={setEnabled} activeColor="bg-cyan-600" />
+
+// Labeled range slider
+<RangeSlider label="Value" value={0.5} min={0} max={1} step={0.01} onChange={setValue} />
+
+// Grid of statistics
+<StatGrid stats={[{ label: 'Count', value: 42 }, { label: 'Score', value: '85%' }]} columns={2} />
 ```
 
 ## Known Limitations

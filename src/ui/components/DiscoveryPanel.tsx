@@ -22,8 +22,20 @@ export function DiscoveryPanel({ engine, gaController: controller, onSelectOrgan
   const [discovered, setDiscovered] = useState<Individual[]>([]);
   const [evaluationProgress, setEvaluationProgress] = useState({ current: 0, total: 0 });
   const searchAbortRef = useRef(false);
+  const isMountedRef = useRef(true);
 
-  const state = controller.getState();
+  // Cleanup: abort search on unmount to prevent memory leaks
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      searchAbortRef.current = true;
+    };
+  }, []);
+
+  // Get GA state - only access when needed to avoid stale references
+  const getState = useCallback(() => controller.getState(), [controller]);
+  const state = getState();
 
   // Main search loop
   const runSearchLoop = useCallback(async () => {
@@ -31,15 +43,19 @@ export function DiscoveryPanel({ engine, gaController: controller, onSelectOrgan
 
     searchAbortRef.current = false;
 
-    while (!searchAbortRef.current) {
+    while (!searchAbortRef.current && isMountedRef.current) {
       // Get next individual to evaluate
       const individual = controller.getNextToEvaluate();
 
       if (individual) {
+        // Check mounted before state updates
+        if (!isMountedRef.current) break;
+
+        const currentState = getState();
         setCurrentIndividual(individual);
         setEvaluationProgress({
-          current: state.population.filter(i => i.fitness !== null).length + 1,
-          total: state.population.length,
+          current: currentState.population.filter(i => i.fitness !== null).length + 1,
+          total: currentState.population.length,
         });
 
         try {
@@ -75,13 +91,15 @@ export function DiscoveryPanel({ engine, gaController: controller, onSelectOrgan
       } else if (controller.isGenerationComplete()) {
         // Evolve to next generation
         controller.evolve();
-        setDiscovered(controller.getArchive().slice(0, 10));
+        if (isMountedRef.current) {
+          setDiscovered(controller.getArchive().slice(0, 10));
+        }
       }
 
       // Small delay to allow UI updates
       await new Promise(resolve => setTimeout(resolve, 10));
     }
-  }, [engine, controller, state.population]);
+  }, [engine, controller, getState]);
 
   const handleStartSearch = useCallback(() => {
     setIsSearching(true);
@@ -100,9 +118,11 @@ export function DiscoveryPanel({ engine, gaController: controller, onSelectOrgan
     onSelectOrganism?.(params, individual.genome);
   }, [onSelectOrganism]);
 
-  // Update discovered list when archive changes
+  // Update discovered list when generation changes
   useEffect(() => {
-    setDiscovered(controller.getArchive().slice(0, 10));
+    if (isMountedRef.current) {
+      setDiscovered(controller.getArchive().slice(0, 10));
+    }
   }, [state.generation, controller]);
 
   return (

@@ -50,6 +50,14 @@ export function TrainingPanel({ engine }: TrainingPanelProps) {
 
     try {
       const device = engine.getDevice();
+
+      // Check if GPU device is available
+      if (!device) {
+        console.error('WebGPU device not available. Please use CPU training mode.');
+        setUseGPU(false);
+        return;
+      }
+
       const trainer = await createGPUTrainer(device, {
         width: 128,
         height: 128,

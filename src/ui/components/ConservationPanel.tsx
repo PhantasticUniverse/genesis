@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Engine } from '../../core/engine';
 import type { ConservationConfig } from '../../core/conservation';
+import { ToggleButton, RangeSlider } from './common';
 
 interface ConservationPanelProps {
   engine: Engine | null;
@@ -23,12 +24,16 @@ export function ConservationPanel({ engine }: ConservationPanelProps) {
     }
   }, [engine]);
 
-  // Poll mass when conservation is enabled
+  // Poll mass when conservation is enabled AND panel is expanded
+  // This optimization prevents unnecessary polling when user isn't looking
   useEffect(() => {
-    if (!engine || !config?.enabled) {
+    if (!engine || !config?.enabled || !isExpanded) {
       setMass(null);
       return;
     }
+
+    // Initial fetch
+    engine.getMass().then(setMass).catch(() => {});
 
     const interval = setInterval(async () => {
       try {
@@ -40,7 +45,7 @@ export function ConservationPanel({ engine }: ConservationPanelProps) {
     }, 500);
 
     return () => clearInterval(interval);
-  }, [engine, config?.enabled]);
+  }, [engine, config?.enabled, isExpanded]);
 
   const updateConfig = useCallback((updates: Partial<ConservationConfig>) => {
     if (engine && config) {
@@ -71,19 +76,12 @@ export function ConservationPanel({ engine }: ConservationPanelProps) {
           </p>
 
           {/* Enable Toggle */}
-          <div className="flex items-center justify-between">
-            <label className="text-sm text-zinc-400">Enable Conservation</label>
-            <button
-              onClick={() => updateConfig({ enabled: !config.enabled })}
-              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                config.enabled
-                  ? 'bg-cyan-600 text-white'
-                  : 'bg-zinc-700 text-zinc-400'
-              }`}
-            >
-              {config.enabled ? 'ON' : 'OFF'}
-            </button>
-          </div>
+          <ToggleButton
+            label="Enable Conservation"
+            value={config.enabled}
+            onChange={(enabled) => updateConfig({ enabled })}
+            activeColor="bg-cyan-600"
+          />
 
           {/* Mass Display */}
           {config.enabled && mass !== null && (
@@ -94,65 +92,41 @@ export function ConservationPanel({ engine }: ConservationPanelProps) {
           )}
 
           {/* Flow Strength */}
-          <div className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <label className="text-zinc-400">Flow Strength</label>
-              <span className="font-mono text-zinc-500">{config.flowStrength.toFixed(2)}</span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={config.flowStrength}
-              onChange={(e) => updateConfig({ flowStrength: parseFloat(e.target.value) })}
-              disabled={!config.enabled}
-              className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-cyan-500 disabled:opacity-50"
-            />
-            <p className="text-xs text-zinc-600">
-              How much growth gradient affects mass flow (0 = no flow, 1 = strong flow)
-            </p>
-          </div>
+          <RangeSlider
+            label="Flow Strength"
+            value={config.flowStrength}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={(flowStrength) => updateConfig({ flowStrength })}
+            disabled={!config.enabled}
+            description="How much growth gradient affects mass flow (0 = no flow, 1 = strong flow)"
+            accentColor="accent-cyan-500"
+          />
 
           {/* Diffusion */}
-          <div className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <label className="text-zinc-400">Diffusion</label>
-              <span className="font-mono text-zinc-500">{config.diffusion.toFixed(3)}</span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="0.1"
-              step="0.001"
-              value={config.diffusion}
-              onChange={(e) => updateConfig({ diffusion: parseFloat(e.target.value) })}
-              disabled={!config.enabled}
-              className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-cyan-500 disabled:opacity-50"
-            />
-            <p className="text-xs text-zinc-600">
-              Diffusion coefficient for smoothing (0 = none, 0.1 = high)
-            </p>
-          </div>
+          <RangeSlider
+            label="Diffusion"
+            value={config.diffusion}
+            min={0}
+            max={0.1}
+            step={0.001}
+            onChange={(diffusion) => updateConfig({ diffusion })}
+            disabled={!config.enabled}
+            formatValue={(v) => v.toFixed(3)}
+            description="Diffusion coefficient for smoothing (0 = none, 0.1 = high)"
+            accentColor="accent-cyan-500"
+          />
 
           {/* Reintegration Mode */}
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="text-sm text-zinc-400">Reintegration Mode</label>
-              <p className="text-xs text-zinc-600">More stable mass tracking</p>
-            </div>
-            <button
-              onClick={() => updateConfig({ useReintegration: !config.useReintegration })}
-              disabled={!config.enabled}
-              className={`px-3 py-1 rounded text-sm font-medium transition-colors disabled:opacity-50 ${
-                config.useReintegration
-                  ? 'bg-cyan-600 text-white'
-                  : 'bg-zinc-700 text-zinc-400'
-              }`}
-            >
-              {config.useReintegration ? 'ON' : 'OFF'}
-            </button>
-          </div>
+          <ToggleButton
+            label="Reintegration Mode"
+            description="More stable mass tracking"
+            value={config.useReintegration}
+            onChange={(useReintegration) => updateConfig({ useReintegration })}
+            disabled={!config.enabled}
+            activeColor="bg-cyan-600"
+          />
 
           {/* Info */}
           <div className="mt-4 p-3 bg-zinc-800 rounded text-xs text-zinc-500">

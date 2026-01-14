@@ -31,8 +31,10 @@ src/
 | File | Purpose |
 |------|---------|
 | `core/engine.ts` | Main orchestrator - GPU, sim loop, all features |
+| `core/engine-3d.ts` | 3D Lenia engine - volumetric simulation |
 | `core/channels.ts` | Multi-species preset configs |
 | `compute/webgpu/continuous-pipeline.ts` | Lenia convolution + FFT |
+| `compute/webgpu/lenia-3d-pipeline.ts` | 3D Lenia GPU pipeline |
 | `compute/webgpu/multi-channel-pipeline.ts` | Multi-species ecology |
 | `discovery/genetic-algorithm.ts` | GA + novelty search |
 | `training/gpu-trainer.ts` | Neural CA training |
@@ -80,8 +82,8 @@ bun run test           # Run all tests (Vitest)
 bun run test:coverage  # Run with coverage report
 ```
 
-**Test Coverage:** 460 tests, 30% coverage across:
-- `src/__tests__/core/` - kernels, growth, conservation
+**Test Coverage:** 493 tests, 30% coverage across:
+- `src/__tests__/core/` - kernels, kernels-3d, growth, conservation
 - `src/__tests__/discovery/` - fitness, genome, GA, phylogeny
 - `src/__tests__/agency/` - behavior, spatial-hash
 - `src/__tests__/compute/` - texture-pool
@@ -158,6 +160,33 @@ import { ExpandablePanel, ToggleButton, RangeSlider, StatGrid } from './ui/compo
 
 // Grid of statistics
 <StatGrid stats={[{ label: 'Count', value: 42 }, { label: 'Score', value: '85%' }]} columns={2} />
+```
+
+### 3D Lenia (Phase 3)
+```typescript
+// Create 3D engine
+import { createEngine3D } from './core/engine-3d';
+const engine3D = await createEngine3D({ canvas });
+
+// Control simulation
+engine3D.start() / stop() / stepOnce()
+engine3D.loadPreset('stable-sphere')  // Load organism preset
+engine3D.setSlicePlane('xy' | 'xz' | 'yz')  // View slice plane
+engine3D.setSlicePosition(32)  // Slice position along axis
+engine3D.setColormap('viridis')  // Set colormap
+
+// Get state
+const state = await engine3D.getState();  // Full 3D state (Float32Array)
+const slice = await engine3D.getSlice('xy', 32);  // 2D slice
+```
+
+**3D Presets:** orbium-3d, stable-sphere, ellipsoid-glider, dual-orbium, torus-3d, dual-ring-blob, primordial-soup-3d, small-orbium
+
+**3D Grid Sizes:** 32³ (small), 64³ (default), 128³ (large)
+
+**3D Types:**
+```typescript
+import type { Grid3DConfig, Lenia3DParams, Kernel3DConfig, SlicePlane } from './core/types-3d';
 ```
 
 ## Known Limitations

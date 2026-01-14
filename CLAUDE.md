@@ -82,7 +82,7 @@ bun run test           # Run all tests (Vitest)
 bun run test:coverage  # Run with coverage report
 ```
 
-**Test Coverage:** 493 tests, 30% coverage across:
+**Test Coverage:** 532 tests, 30% coverage across:
 - `src/__tests__/core/` - kernels, kernels-3d, growth, conservation
 - `src/__tests__/discovery/` - fitness, genome, GA, phylogeny
 - `src/__tests__/agency/` - behavior, spatial-hash
@@ -188,6 +188,51 @@ const slice = await engine3D.getSlice('xy', 32);  // 2D slice
 ```typescript
 import type { Grid3DConfig, Lenia3DParams, Kernel3DConfig, SlicePlane } from './core/types-3d';
 ```
+
+### Particle-Lenia Hybrid
+```typescript
+import {
+  createParticleSystem,
+  addParticle,
+  spawnRandomParticles,
+  updateParticleSystem,
+  depositToField,
+  calculateFieldGradient,
+  INTERACTION_PRESETS,
+} from './core/particles';
+
+// Create particle system
+const state = createParticleSystem({
+  maxParticles: 500,
+  numTypes: 3,
+  gridWidth: 512,
+  gridHeight: 512,
+});
+
+// Spawn particles
+spawnRandomParticles(state, 100, { spread: 50 });
+
+// Set interaction preset
+state.interactionMatrix = INTERACTION_PRESETS.clustering(3);
+
+// Physics step
+updateParticleSystem(state, fieldGradient);
+
+// Deposit particles to Lenia field
+depositToField(state, field);
+
+// GPU Pipeline (for performance)
+import { createParticlePipeline } from './compute/webgpu/particle-pipeline';
+const pipeline = createParticlePipeline(device, config);
+pipeline.setParticles(particles);
+pipeline.step(commandEncoder);
+```
+
+**Interaction Presets:** attractive, clustering, chain, random
+
+**Field Coupling:**
+- `depositEnabled`: Particles add mass to Lenia field
+- `gradientResponseEnabled`: Particles respond to field gradients
 
 ## Known Limitations
 - **Sensorimotor obstacles**: Visual rendering subtle, may not be clearly visible

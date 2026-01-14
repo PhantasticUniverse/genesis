@@ -79,10 +79,11 @@ bun run test           # Run all tests (Vitest)
 bun run test:coverage  # Run with coverage report
 ```
 
-**Test Coverage:** 390 tests, 25% coverage across:
+**Test Coverage:** 460 tests, 30% coverage across:
 - `src/__tests__/core/` - kernels, growth, conservation
 - `src/__tests__/discovery/` - fitness, genome, GA, phylogeny
-- `src/__tests__/agency/` - behavior
+- `src/__tests__/agency/` - behavior, spatial-hash
+- `src/__tests__/compute/` - texture-pool
 - `src/__tests__/persistence/` - storage
 - `src/__tests__/render/` - colormaps
 - `src/__tests__/utils/` - RLE encoding
@@ -115,6 +116,28 @@ trainer.onError((error, state) => {
 });
 trainer.clearErrors();  // Reset error count to resume
 // Training auto-stops after 3 consecutive errors
+```
+
+### Performance Optimizations (Phase 2)
+```typescript
+// KD-Tree for novelty search (O(n²) → O(n log n))
+import { BehaviorKDTree, createBehaviorIndex } from './discovery/spatial-index';
+const kdTree = createBehaviorIndex(individuals);
+const novelty = kdTree.noveltyScore(behavior, k);
+
+// Texture pool to reduce GPU memory churn
+import { createTexturePool } from './compute/webgpu/texture-pool';
+const pool = createTexturePool(device, { staleFrames: 300, maxPerKey: 4 });
+const texture = pool.acquire(256, 256, 'r32float', usage);
+pool.release(texture);
+pool.cleanup();  // Remove stale textures
+
+// Spatial hash for creature tracking (O(n) → O(1) average)
+import { createSpatialHash } from './agency/spatial-hash';
+const hash = createSpatialHash(worldWidth, worldHeight, cellSize);
+hash.insert(creature);
+const nearby = hash.queryRadius(x, y, radius);
+const nearest = hash.findNearest(x, y);
 ```
 
 ## Known Limitations

@@ -17,6 +17,10 @@ import {
   behaviorDistance,
 } from './fitness';
 import {
+  BehaviorKDTree,
+  createBehaviorIndex,
+} from './spatial-index';
+import {
   type PhyloTree,
   createPhyloTree,
   addPhyloNode,
@@ -107,7 +111,8 @@ export function createPopulation(size: number): Individual[] {
 }
 
 /**
- * Calculate novelty score for an individual
+ * Calculate novelty score for an individual (O(n) brute force)
+ * @deprecated Use calculateNoveltyBatch with KD-tree for better performance
  */
 export function calculateNovelty(
   individual: Individual,
@@ -136,6 +141,48 @@ export function calculateNovelty(
 
   // Average distance to k nearest neighbors
   return kNearest.reduce((a, b) => a + b, 0) / kNearest.length;
+}
+
+/**
+ * Calculate novelty scores for all individuals using KD-tree (O(n log n))
+ * Much faster than calling calculateNovelty for each individual
+ */
+export function calculateNoveltyBatch(
+  population: Individual[],
+  archive: Individual[],
+  k: number
+): void {
+  // Build KD-tree from all individuals with behavior
+  const allIndividuals = [...population, ...archive];
+  const kdTree = createBehaviorIndex(
+    allIndividuals.map(ind => ({
+      behavior: ind.behavior,
+      data: ind,
+    }))
+  );
+
+  // If tree is empty or too small, fall back to simple calculation
+  if (kdTree.isEmpty()) {
+    for (const individual of population) {
+      individual.novelty = hasBehavior(individual) ? 1 : 0;
+    }
+    return;
+  }
+
+  // Calculate novelty for each individual using KD-tree
+  for (const individual of population) {
+    if (!hasBehavior(individual)) {
+      individual.novelty = 0;
+      continue;
+    }
+
+    // Query k nearest, excluding self
+    individual.novelty = kdTree.noveltyScore(
+      individual.behavior,
+      k,
+      (data) => data.id === individual.id
+    );
+  }
 }
 
 /**
@@ -177,15 +224,8 @@ export function evolvePopulation(
   const { population, archive } = state;
   const newPopulation: Individual[] = [];
 
-  // Calculate novelty for all individuals
-  for (const individual of population) {
-    individual.novelty = calculateNovelty(
-      individual,
-      population,
-      archive,
-      config.noveltyK
-    );
-  }
+  // Calculate novelty for all individuals using KD-tree (O(n log n) instead of O(n²))
+  calculateNoveltyBatch(population, archive, config.noveltyK);
 
   // Sort by combined score
   const sorted = [...population].sort((a, b) => {

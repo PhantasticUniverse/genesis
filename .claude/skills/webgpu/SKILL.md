@@ -66,6 +66,31 @@ buffers.release("myBuffer");
 buffers.destroy();
 ```
 
+## Async GPU Readback
+
+```typescript
+import { createAsyncReadbackManager } from "./core/async-readback";
+
+const readback = createAsyncReadbackManager(device, width, height);
+
+// Request non-blocking readback
+readback.requestReadback(device, commandEncoder, stateTexture);
+
+// Poll for result (returns cached data while new data maps)
+const state = readback.pollResult();
+
+// Check if new data is pending
+if (readback.isPending()) {
+  // Use cached result while waiting
+}
+
+// Get last cached result
+const cached = readback.getCachedResult();
+
+// Cleanup
+readback.destroy();
+```
+
 ## Spatial Hash (Creature Tracking)
 
 ```typescript
@@ -90,6 +115,32 @@ hash.remove(creature.id);
 
 // Clear all
 hash.clear();
+```
+
+## Hungarian Algorithm (Optimal Creature Matching)
+
+```typescript
+import {
+  hungarianAlgorithm,
+  matchCreaturesHungarian,
+  computeTrackingCostMatrix,
+} from "./agency/hungarian";
+
+// Low-level: solve assignment problem
+const result = hungarianAlgorithm(costMatrix, maxCost);
+// result.assignment[i] = j means row i assigned to column j
+
+// High-level: match creatures across frames
+const matches = matchCreaturesHungarian(previousCreatures, newComponents, 50);
+// Returns Map<componentLabel, creatureId>
+
+// Compute cost matrix with velocity prediction
+const costs = computeTrackingCostMatrix(prevCreatures, newComponents, {
+  distanceWeight: 1.0,
+  massWeight: 0.3,
+  velocityWeight: 0.5,
+  maxDistance: 50,
+});
 ```
 
 ## KD-Tree for Novelty Search

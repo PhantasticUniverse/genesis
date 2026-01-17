@@ -9,7 +9,7 @@ import {
   PRESET_RULES,
   CONTINUOUS_PRESET_NAMES,
 } from "../stores/simulation-store";
-import type { Engine, ColormapName } from "../../core/engine";
+import type { Engine, ColormapName, BoundaryMode } from "../../core/engine";
 import { COLORMAP_IDS } from "../../core/engine";
 import { useEngineControls } from "../hooks/useEngine";
 import type { CAParadigm } from "../../core/types";
@@ -37,6 +37,22 @@ const COLORMAP_NAMES: Record<ColormapName, string> = {
   earth: "Earth",
   magma: "Magma",
 };
+
+// Human-readable boundary mode names
+const BOUNDARY_MODE_NAMES: Record<BoundaryMode, string> = {
+  periodic: "Periodic (Toroidal)",
+  clamped: "Clamped (Edge)",
+  reflected: "Reflected (Mirror)",
+  zero: "Zero (Absorbing)",
+};
+
+// All boundary modes
+const BOUNDARY_MODES: BoundaryMode[] = [
+  "periodic",
+  "clamped",
+  "reflected",
+  "zero",
+];
 
 interface ControlsProps {
   engine: Engine | null;
@@ -89,6 +105,10 @@ export function Controls({ engine }: ControlsProps) {
 
   const handleColormapChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     engine?.setColormap(e.target.value as ColormapName);
+  };
+
+  const handleBoundaryModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    engine?.setBoundaryMode(e.target.value as BoundaryMode);
   };
 
   return (
@@ -258,6 +278,26 @@ export function Controls({ engine }: ControlsProps) {
           ))}
         </select>
       </div>
+
+      {/* Boundary Mode Selector (continuous only) */}
+      {paradigm === "continuous" && (
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-zinc-500 uppercase tracking-wide">
+            Boundary
+          </label>
+          <select
+            onChange={handleBoundaryModeChange}
+            defaultValue="periodic"
+            className="px-3 py-2 rounded bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            {BOUNDARY_MODES.map((mode) => (
+              <option key={mode} value={mode}>
+                {BOUNDARY_MODE_NAMES[mode]}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Current Rule Display */}
       <div className="text-xs text-zinc-500 font-mono">

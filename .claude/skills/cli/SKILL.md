@@ -15,6 +15,7 @@ bun run cli analyze --help            # Analysis commands
 bun run cli bench --help              # Benchmark commands
 bun run cli evolve --help             # Evolution commands
 bun run cli evaluate --help           # Fitness evaluation
+bun run cli sweep --help              # Parameter sweep
 ```
 
 ## Analysis Commands
@@ -81,6 +82,37 @@ bun run cli evaluate batch -n 20 --size 64
 bun run cli evaluate compare -a "genome1..." -b "genome2..."
 ```
 
+## Parameter Sweep Commands
+
+```bash
+# Run parameter sweep from config
+bun run cli sweep run --config sweep_config.json --parallel 4 -o results/
+
+# Validate sweep config
+bun run cli sweep validate --config sweep_config.json
+
+# Analyze sweep results
+bun run cli sweep analyze -i results/
+
+# Generate sample config
+bun run cli sweep generate-config -o sweep_config.json
+```
+
+### Sweep Config Format
+
+```json
+{
+  "command": "evolve run",
+  "parameters": {
+    "population": { "values": [20, 50, 100] },
+    "mutation_rate": { "min": 0.01, "max": 0.2, "steps": 5 },
+    "novelty_weight": { "values": [0.0, 0.3, 0.5, 1.0] }
+  },
+  "repeats": 5,
+  "metrics": ["best_fitness", "coverage", "generations_to_converge"]
+}
+```
+
 ## CPU Lenia (No WebGPU)
 
 Pure CPU implementation for testing:
@@ -139,22 +171,27 @@ setState(ctx, newState);
 
 ```
 src/cli/
-├── index.ts          # CLI entry point
+├── index.ts              # CLI entry point
 ├── commands/
-│   ├── analyze.ts    # Analysis commands
-│   ├── bench.ts      # Benchmark commands
-│   ├── evolve.ts     # Evolution commands
-│   └── evaluate.ts   # Fitness evaluation
+│   ├── analyze.ts        # Analysis commands
+│   ├── bench.ts          # Benchmark commands
+│   ├── evolve.ts         # Evolution commands
+│   ├── evaluate.ts       # Fitness evaluation
+│   └── sweep.ts          # Parameter sweep
+├── sweep-executor.ts     # Sweep execution engine
+├── experiment-tracker.ts # Experiment manifest tracking
 └── utils/
-    ├── cpu-step.ts   # CPU Lenia implementation
-    └── reporters.ts  # Output formatting
+    ├── cpu-step.ts       # CPU Lenia implementation
+    └── reporters.ts      # Output formatting
 ```
 
 ## Core Files
 
-| File                     | Purpose                     |
-| ------------------------ | --------------------------- |
-| `cli/index.ts`           | CLI entry point             |
-| `cli/commands/*.ts`      | Command implementations     |
-| `cli/utils/cpu-step.ts`  | CPU Lenia (no WebGPU)       |
-| `cli/utils/reporters.ts` | Output formatting utilities |
+| File                        | Purpose                     |
+| --------------------------- | --------------------------- |
+| `cli/index.ts`              | CLI entry point             |
+| `cli/commands/*.ts`         | Command implementations     |
+| `cli/sweep-executor.ts`     | Parameter sweep engine      |
+| `cli/experiment-tracker.ts` | Experiment manifest/logging |
+| `cli/utils/cpu-step.ts`     | CPU Lenia (no WebGPU)       |
+| `cli/utils/reporters.ts`    | Output formatting utilities |

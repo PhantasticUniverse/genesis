@@ -43,6 +43,8 @@ import {
   formatTiming,
   type OutputFormat,
 } from "../utils/reporters";
+import { setSeed, getSeed } from "../../core/random";
+import { createExperimentTracker } from "../experiment-tracker";
 import * as fs from "fs";
 
 /**
@@ -277,6 +279,7 @@ export function registerEvaluateCommands(program: Command): void {
     .option("-n, --count <n>", "Number of random genomes to evaluate", "10")
     .option("--size <n>", "Grid size", "64")
     .option("--steps <n>", "Simulation steps", "100")
+    .option("--seed <n>", "Random seed for reproducibility")
     .option("-f, --format <format>", "Output format (json|table|csv)", "table")
     .option("-o, --output <file>", "Output file for results")
     .action(async (options) => {
@@ -285,7 +288,24 @@ export function registerEvaluateCommands(program: Command): void {
       const steps = parseInt(options.steps);
       const format = options.format as OutputFormat;
 
+      // Initialize seeded RNG
+      if (options.seed) {
+        setSeed(parseInt(options.seed));
+      }
+
+      // Create experiment tracker
+      const tracker = createExperimentTracker("evaluate", "batch", {
+        count,
+        size,
+        steps,
+        seed: getSeed(),
+        input: options.input,
+        output: options.output,
+        format,
+      });
+
       printHeader("Batch Genome Evaluation");
+      console.log(`Experiment ID: ${tracker.getId()}`);
 
       let genomes: LeniaGenome[];
 
@@ -296,6 +316,7 @@ export function registerEvaluateCommands(program: Command): void {
           : [data.encoded ? decodeGenome(data.encoded) : data];
         console.log(`Loaded ${genomes.length} genomes from ${options.input}`);
       } else {
+        console.log(`Seed: ${getSeed()}`);
         genomes = Array.from({ length: count }, () => randomGenome());
         console.log(`Generated ${count} random genomes`);
       }
@@ -362,6 +383,11 @@ export function registerEvaluateCommands(program: Command): void {
       console.log(`Average fitness: ${avgFitness.toFixed(4)}`);
       console.log(`Best fitness: ${maxFitness.toFixed(4)}`);
       console.log(`Worst fitness: ${minFitness.toFixed(4)}`);
+
+      // Complete and save experiment manifest
+      tracker.complete(options.output);
+      const manifestPath = tracker.save();
+      console.log(`\nExperiment manifest saved to ${manifestPath}`);
     });
 
   // Compare two genomes
@@ -460,10 +486,16 @@ export function registerEvaluateCommands(program: Command): void {
     .option("-g, --genome <encoded>", "Encoded genome string")
     .option("-r, --random", "Use random genome")
     .option("--size <n>", "Grid size", "64")
+    .option("--seed <n>", "Random seed for reproducibility")
     .option("-f, --format <format>", "Output format (json|table|csv)", "json")
     .action(async (options) => {
       const size = parseInt(options.size);
       const format = options.format as OutputFormat;
+
+      // Initialize seeded RNG
+      if (options.seed) {
+        setSeed(parseInt(options.seed));
+      }
 
       printHeader("Quick Fitness Check");
 
@@ -472,6 +504,7 @@ export function registerEvaluateCommands(program: Command): void {
       if (options.genome) {
         genome = decodeGenome(options.genome);
       } else {
+        console.log(`Seed: ${getSeed()}`);
         genome = randomGenome();
         console.log("Using random genome");
       }

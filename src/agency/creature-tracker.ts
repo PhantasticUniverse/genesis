@@ -3,6 +3,8 @@
  * Connected component detection and tracking for organisms
  */
 
+import { matchCreaturesHungarian } from "./hungarian";
+
 export interface Creature {
   id: number;
   centroidX: number;
@@ -143,10 +145,25 @@ interface ComponentStats {
 }
 
 /**
- * Match components to existing creatures using Hungarian algorithm (simplified)
- * Uses distance between centroids for matching
+ * Match components to existing creatures using Hungarian algorithm
+ * Uses distance between centroids with velocity prediction for matching
+ *
+ * The Hungarian algorithm provides optimal assignment minimizing total cost,
+ * which is more robust than greedy matching during occlusions and merges.
  */
 export function matchCreatures(
+  previousCreatures: Map<number, Creature>,
+  newComponents: ComponentStats[],
+  maxMatchDistance: number = 50,
+): Map<number, number> {
+  return matchCreaturesHungarian(previousCreatures, newComponents, maxMatchDistance);
+}
+
+/**
+ * Legacy greedy matching (kept for comparison/testing)
+ * @deprecated Use matchCreatures which now uses Hungarian algorithm
+ */
+export function matchCreaturesGreedy(
   previousCreatures: Map<number, Creature>,
   newComponents: ComponentStats[],
   maxMatchDistance: number = 50,
@@ -174,13 +191,13 @@ export function matchCreatures(
     }
   }
 
-  // Greedy matching (simple approach - could use Hungarian for optimal)
+  // Greedy matching - sorts by distance and assigns closest pairs
   distances.sort((a, b) => a.dist - b.dist);
 
   const usedPrevIds = new Set<number>();
   const usedCompLabels = new Set<number>();
 
-  for (const { prevId, compLabel, dist } of distances) {
+  for (const { prevId, compLabel } of distances) {
     if (!usedPrevIds.has(prevId) && !usedCompLabels.has(compLabel)) {
       matches.set(compLabel, prevId);
       usedPrevIds.add(prevId);

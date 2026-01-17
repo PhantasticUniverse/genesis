@@ -44,6 +44,37 @@ engine.disableSensorimotor();
 // Mass conservation
 engine.setConservationConfig({ enabled: true });
 engine.getMass(): Promise<number>;
+
+// Boundary conditions
+engine.setBoundaryMode("periodic" | "clamped" | "reflected" | "zero");
+engine.getBoundaryMode();
+```
+
+## Boundary Modes
+
+| Mode        | Description                              |
+| ----------- | ---------------------------------------- |
+| `periodic`  | Toroidal wrap (default)                  |
+| `clamped`   | Edge values repeat                       |
+| `reflected` | Mirror at boundaries                     |
+| `zero`      | Absorbing (values go to 0 at edges)      |
+
+## Seeded Random Number Generator
+
+```typescript
+import { createSeededRandom, globalRandom, setGlobalSeed } from "./core/random";
+
+// Create independent seeded RNG
+const rng = createSeededRandom(12345);
+rng.next();           // 0-1 float
+rng.nextInt(0, 100);  // Integer in range [0, 100)
+rng.nextGaussian();   // Normal distribution
+rng.shuffle(array);   // In-place shuffle
+rng.choice(array);    // Random element
+
+// Global RNG for convenience
+setGlobalSeed(42);
+globalRandom.next();
 ```
 
 ## Multi-Species Presets
@@ -87,4 +118,5 @@ pipeline.getCachedMass(); // Non-blocking mass read
 | `core/channels.ts` | Multi-species preset configs    |
 | `core/kernels.ts`  | Kernel generation functions     |
 | `core/growth.ts`   | Growth function implementations |
+| `core/random.ts`   | Seeded RNG (xorshift128+)       |
 | `core/types.ts`    | TypeScript type definitions     |

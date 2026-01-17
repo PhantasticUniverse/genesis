@@ -13,8 +13,8 @@ struct Params {
     growth_width: f32,     // σ
     dt: f32,               // Time step
     growth_type: u32,      // 0=polynomial, 1=gaussian, 2=step
+    normalization_factor: f32, // Mass conservation factor (1.0 = disabled)
     _padding0: u32,
-    _padding1: u32,
 }
 
 @group(0) @binding(0) var current_state: texture_2d<f32>;
@@ -83,7 +83,9 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     );
 
     // Apply growth with time integration
-    var new_state = current + params.dt * growth;
+    // Multiply delta by normalization factor for mass conservation
+    var delta = params.dt * growth * params.normalization_factor;
+    var new_state = current + delta;
 
     // Clamp to valid range
     new_state = clamp(new_state, 0.0, 1.0);

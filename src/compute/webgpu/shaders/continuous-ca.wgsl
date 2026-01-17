@@ -12,12 +12,76 @@ struct Params {
     growth_width: f32,     // σ
     dt: f32,               // Time step
     growth_type: u32,      // 0=polynomial, 1=gaussian, 2=step
+    normalization_factor: f32, // Mass conservation factor (1.0 = disabled)
+    boundary_mode: u32,    // 0=periodic, 1=clamped, 2=reflected, 3=zero
+    _padding1: u32,
+    _padding2: u32,
 }
 
 @group(0) @binding(0) var state_in: texture_2d<f32>;
 @group(0) @binding(1) var state_out: texture_storage_2d<r32float, write>;
 @group(0) @binding(2) var<uniform> params: Params;
 @group(0) @binding(3) var kernel_texture: texture_2d<f32>;
+
+// Boundary condition result
+struct BoundaryResult {
+    coord: vec2<i32>,
+    valid: bool,  // If false, treat as zero (out of bounds)
+}
+
+// Apply boundary conditions based on mode
+// 0 = periodic (toroidal wrap)
+// 1 = clamped (clamp to edge)
+// 2 = reflected (mirror at boundary)
+// 3 = zero (out of bounds = 0)
+fn apply_boundary(coord: vec2<i32>, width: i32, height: i32, mode: u32) -> BoundaryResult {
+    var result: BoundaryResult;
+    result.valid = true;
+
+    var x = coord.x;
+    var y = coord.y;
+
+    switch (mode) {
+        case 0u: {
+            // Periodic (toroidal) - wrap around
+            if (x < 0) { x = x + width; }
+            if (y < 0) { y = y + height; }
+            if (x >= width) { x = x - width; }
+            if (y >= height) { y = y - height; }
+        }
+        case 1u: {
+            // Clamped - clamp to edge
+            x = clamp(x, 0, width - 1);
+            y = clamp(y, 0, height - 1);
+        }
+        case 2u: {
+            // Reflected - mirror at boundary
+            if (x < 0) { x = -x - 1; }
+            if (y < 0) { y = -y - 1; }
+            if (x >= width) { x = 2 * width - x - 1; }
+            if (y >= height) { y = 2 * height - y - 1; }
+            // Additional clamp for safety with large kernels
+            x = clamp(x, 0, width - 1);
+            y = clamp(y, 0, height - 1);
+        }
+        case 3u: {
+            // Zero - out of bounds returns 0
+            if (x < 0 || x >= width || y < 0 || y >= height) {
+                result.valid = false;
+            }
+        }
+        default: {
+            // Default to periodic
+            if (x < 0) { x = x + width; }
+            if (y < 0) { y = y + height; }
+            if (x >= width) { x = x - width; }
+            if (y >= height) { y = y - height; }
+        }
+    }
+
+    result.coord = vec2<i32>(x, y);
+    return result;
+}
 
 // Polynomial growth function (Lenia style)
 // g(n) = 2 * (1 - ((n - μ) / (3σ))^2)^4 - 1
@@ -96,22 +160,25 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     // Convolution: sum of (neighbor * kernel_weight)
     var weighted_sum: f32 = 0.0;
     var kernel_sum: f32 = 0.0;
+    let w = i32(params.width);
+    let h = i32(params.height);
 
     for (var ky: i32 = 0; ky < kernel_size; ky = ky + 1) {
         for (var kx: i32 = 0; kx < kernel_size; kx = kx + 1) {
-            // Neighbor position with toroidal wrapping
-            var nx = coord.x + kx - radius;
-            var ny = coord.y + ky - radius;
+            // Neighbor position
+            let neighbor_coord = vec2<i32>(coord.x + kx - radius, coord.y + ky - radius);
 
-            // Toroidal wrap
-            if (nx < 0) { nx = nx + i32(params.width); }
-            if (ny < 0) { ny = ny + i32(params.height); }
-            if (nx >= i32(params.width)) { nx = nx - i32(params.width); }
-            if (ny >= i32(params.height)) { ny = ny - i32(params.height); }
+            // Apply boundary conditions
+            let boundary = apply_boundary(neighbor_coord, w, h, params.boundary_mode);
 
-            // Get neighbor state and kernel weight
-            let neighbor_state = textureLoad(state_in, vec2<u32>(u32(nx), u32(ny)), 0).r;
+            // Get kernel weight (always valid)
             let kernel_weight = textureLoad(kernel_texture, vec2<u32>(u32(kx), u32(ky)), 0).r;
+
+            // Get neighbor state (or 0 if out of bounds in zero mode)
+            var neighbor_state: f32 = 0.0;
+            if (boundary.valid) {
+                neighbor_state = textureLoad(state_in, vec2<u32>(u32(boundary.coord.x), u32(boundary.coord.y)), 0).r;
+            }
 
             weighted_sum = weighted_sum + neighbor_state * kernel_weight;
             kernel_sum = kernel_sum + kernel_weight;
@@ -134,7 +201,9 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     );
 
     // Apply growth with time integration
-    var new_state = current_state + params.dt * growth;
+    // Multiply delta by normalization factor for mass conservation
+    var delta = params.dt * growth * params.normalization_factor;
+    var new_state = current_state + delta;
 
     // Clamp to valid range
     new_state = clamp(new_state, 0.0, 1.0);

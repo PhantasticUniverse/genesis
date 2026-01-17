@@ -19,6 +19,10 @@ import {
   useWebGPUCheck,
 } from "./ui/components/WebGPUCheck";
 import { PerformanceMonitor } from "./ui/components/PerformanceMonitor";
+import {
+  AppErrorBoundary,
+  PanelErrorBoundary,
+} from "./ui/components/ErrorBoundary";
 import { createGAController } from "./discovery/genetic-algorithm";
 import { useEngine } from "./ui/hooks/useEngine";
 import { useEngine3D } from "./ui/hooks/useEngine3D";
@@ -253,7 +257,9 @@ function App() {
             {/* Mode-specific controls */}
             {mode === "2d" ? (
               <>
-                <Controls engine={engine} />
+                <PanelErrorBoundary panelName="Controls">
+                  <Controls engine={engine} />
+                </PanelErrorBoundary>
 
                 {/* Info Panel */}
                 <div className="mt-6 p-4 bg-zinc-900 rounded-lg border border-zinc-800">
@@ -274,41 +280,57 @@ function App() {
                 </div>
 
                 {/* Discovery Panel */}
-                <DiscoveryPanel
-                  engine={engine}
-                  gaController={gaController}
-                  onSelectOrganism={handleSelectOrganism}
-                />
+                <PanelErrorBoundary panelName="Discovery">
+                  <DiscoveryPanel
+                    engine={engine}
+                    gaController={gaController}
+                    onSelectOrganism={handleSelectOrganism}
+                  />
+                </PanelErrorBoundary>
 
                 {/* Phylogeny Panel */}
-                <PhylogenyPanel
-                  gaController={gaController}
-                  onSelectOrganism={handleSelectOrganism}
-                />
+                <PanelErrorBoundary panelName="Phylogeny">
+                  <PhylogenyPanel
+                    gaController={gaController}
+                    onSelectOrganism={handleSelectOrganism}
+                  />
+                </PanelErrorBoundary>
 
                 {/* Agency Panel */}
-                <AgencyPanel engine={engine} />
+                <PanelErrorBoundary panelName="Agency">
+                  <AgencyPanel engine={engine} />
+                </PanelErrorBoundary>
 
                 {/* Training Panel */}
-                <TrainingPanel engine={engine} />
+                <PanelErrorBoundary panelName="Training">
+                  <TrainingPanel engine={engine} />
+                </PanelErrorBoundary>
 
                 {/* Conservation Panel */}
-                <ConservationPanel engine={engine} />
+                <PanelErrorBoundary panelName="Conservation">
+                  <ConservationPanel engine={engine} />
+                </PanelErrorBoundary>
 
                 {/* Ecology Panel */}
-                <EcologyPanel engine={engine} />
+                <PanelErrorBoundary panelName="Ecology">
+                  <EcologyPanel engine={engine} />
+                </PanelErrorBoundary>
 
                 {/* Save/Load Panel */}
-                <SaveLoadPanel
-                  engine={engine}
-                  currentGenome={currentGenome}
-                  onLoadGenome={handleLoadGenome}
-                />
+                <PanelErrorBoundary panelName="Save/Load">
+                  <SaveLoadPanel
+                    engine={engine}
+                    currentGenome={currentGenome}
+                    onLoadGenome={handleLoadGenome}
+                  />
+                </PanelErrorBoundary>
               </>
             ) : (
               <>
                 {/* 3D Lenia Panel */}
-                <Lenia3DPanel engine={engine3D} onInit={initialize3D} />
+                <PanelErrorBoundary panelName="3D Lenia">
+                  <Lenia3DPanel engine={engine3D} onInit={initialize3D} />
+                </PanelErrorBoundary>
 
                 {/* 3D Info Panel */}
                 <div className="mt-6 p-4 bg-zinc-900 rounded-lg border border-zinc-800">
@@ -367,4 +389,13 @@ function App() {
   );
 }
 
-export default App;
+// Wrap App with top-level error boundary
+function AppWithErrorBoundary() {
+  return (
+    <AppErrorBoundary>
+      <App />
+    </AppErrorBoundary>
+  );
+}
+
+export default AppWithErrorBoundary;

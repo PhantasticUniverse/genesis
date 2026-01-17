@@ -5,6 +5,7 @@
 
 import type { GridConfig, DiscreteRule, CAParadigm } from "./types";
 import { DEFAULT_GRID_CONFIG, GAME_OF_LIFE_RULE } from "./types";
+import { createAsyncReadbackManager, type AsyncReadbackManager } from "./async-readback";
 import { initWebGPU, createShaderModule } from "../compute/webgpu/context";
 import {
   createBufferManager,
@@ -15,6 +16,7 @@ import {
   createContinuousPipeline,
   type ContinuousPipeline,
   type ContinuousCAParams,
+  type BoundaryMode,
   CONTINUOUS_PRESETS,
 } from "../compute/webgpu/continuous-pipeline";
 import {
@@ -123,8 +125,15 @@ export interface Engine {
   setContinuousParams(params: Partial<ContinuousCAParams>): void;
   setContinuousPreset(presetName: keyof typeof CONTINUOUS_PRESETS): void;
   setColormap(colormap: ColormapName): void;
+  setBoundaryMode(mode: BoundaryMode): void;
+  getBoundaryMode(): BoundaryMode;
   readState(): Promise<Float32Array | null>;
   destroy(): void;
+
+  // Async readback methods (non-blocking)
+  requestStateReadback(): void; // Request async readback
+  pollState(): Float32Array | null; // Non-blocking poll for result
+  isReadbackPending(): boolean; // Check if readback is in progress
 
   // Conservation methods
   setConservationConfig(config: Partial<ConservationConfig>): void;
@@ -452,12 +461,18 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
   // Create buffer manager
   const bufferManager = createBufferManager(device, gridConfig);
 
-  // Create staging buffer for GPU -> CPU readback
+  // Create staging buffer for GPU -> CPU readback (legacy synchronous)
   const bytesPerRow = Math.ceil((gridConfig.width * 4) / 256) * 256; // Must be multiple of 256
   const stagingBuffer = device.createBuffer({
     label: "staging-buffer",
     size: bytesPerRow * gridConfig.height,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+  });
+
+  // Create async readback manager for non-blocking state reads
+  const asyncReadback = createAsyncReadbackManager(device, {
+    width: gridConfig.width,
+    height: gridConfig.height,
   });
 
   // Create compute shader module
@@ -863,6 +878,28 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
       );
     } else if (currentParadigm === "continuous") {
       // Continuous CA (Lenia/SmoothLife)
+
+      // Apply mass conservation if enabled
+      // Uses cached mass from previous frame for real-time feedback
+      if (conservationPipeline.getConfig().enabled) {
+        const currentMass = conservationPipeline.getCachedMass();
+
+        // Set target mass on first frame with valid mass
+        if (targetMass === null && currentMass > 0) {
+          targetMass = currentMass;
+        }
+
+        // Calculate and set normalization factor using previous frame's mass
+        if (targetMass !== null && currentMass > 0) {
+          // Clamp normalization factor to prevent extreme values
+          const normFactor = Math.max(0.5, Math.min(2.0, targetMass / currentMass));
+          continuousPipeline.setNormalizationFactor(normFactor);
+        }
+      } else {
+        // Reset to no normalization when disabled
+        continuousPipeline.setNormalizationFactor(1.0);
+      }
+
       // Use the dispatch method which handles FFT vs direct convolution automatically
       continuousPipeline.dispatch(
         commandEncoder,
@@ -884,9 +921,9 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
     // Swap buffers
     bufferManager.swap();
 
-    // Compute mass if conservation is enabled (every 10 steps for display)
-    // Note: Actual mass conservation (normalization) is not yet implemented
-    // The mass display shows how mass evolves over time
+    // Compute mass if conservation is enabled (every 10 steps for cache update)
+    // Mass conservation normalization is applied in the continuous pipeline above
+    // This periodic computation keeps the cached mass value current
     if (conservationPipeline.getConfig().enabled && step % 10 === 0) {
       const massCommandEncoder = device.createCommandEncoder();
       conservationPipeline.computeMass(
@@ -1259,6 +1296,19 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
       render();
     },
 
+    setBoundaryMode(mode: BoundaryMode) {
+      if (continuousPipeline) {
+        continuousPipeline.setBoundaryMode(mode);
+      }
+    },
+
+    getBoundaryMode(): BoundaryMode {
+      if (continuousPipeline) {
+        return continuousPipeline.getBoundaryMode();
+      }
+      return "periodic"; // Default
+    },
+
     // Conservation methods
     setConservationConfig(config: Partial<ConservationConfig>) {
       conservationPipeline.setConfig(config);
@@ -1312,6 +1362,22 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
       }
     },
 
+    // Async readback methods (non-blocking)
+    requestStateReadback() {
+      const readTexture = bufferManager.getReadTexture();
+      const commandEncoder = device.createCommandEncoder();
+      asyncReadback.requestReadback(commandEncoder, readTexture);
+      device.queue.submit([commandEncoder.finish()]);
+    },
+
+    pollState(): Float32Array | null {
+      return asyncReadback.pollResult();
+    },
+
+    isReadbackPending(): boolean {
+      return asyncReadback.isPending();
+    },
+
     destroy() {
       this.stop();
 
@@ -1331,6 +1397,7 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
       safeDestroy(() => multiChannelPipeline.destroy(), "multiChannelPipeline");
       safeDestroy(() => multiKernelPipeline.destroy(), "multiKernelPipeline");
       safeDestroy(() => stagingBuffer.destroy(), "stagingBuffer");
+      safeDestroy(() => asyncReadback.destroy(), "asyncReadback");
       safeDestroy(() => sensorimotorMainA.destroy(), "sensorimotorMainA");
       safeDestroy(() => sensorimotorMainB.destroy(), "sensorimotorMainB");
       safeDestroy(() => sensorimotorAuxA.destroy(), "sensorimotorAuxA");
@@ -1870,3 +1937,6 @@ export type { SpawnParticleOptions, ParticlePresetName };
 // Re-export multi-kernel types
 export type { MultiKernelConfig, SingleKernelParams, GrowthParams };
 export { MULTIKERNEL_PRESETS };
+
+// Re-export boundary mode type
+export type { BoundaryMode };

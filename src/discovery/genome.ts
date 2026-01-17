@@ -3,6 +3,8 @@
  * Encodes the parameters of a Lenia organism for genetic algorithm search
  */
 
+import { random, randomInt, randomFloat, randomBool } from "../core/random";
+
 export interface LeniaGenome {
   // Kernel parameters
   R: number; // Radius (10-50)
@@ -35,34 +37,21 @@ export const GENOME_RANGES = {
  * Generate a random genome
  */
 export function randomGenome(): LeniaGenome {
-  const numPeaks = 1 + Math.floor(Math.random() * 3); // 1-3 peaks
+  const numPeaks = randomInt(1, 3); // 1-3 peaks
   const peaks: number[] = [];
   for (let i = 0; i < numPeaks; i++) {
-    peaks.push(
-      GENOME_RANGES.b.min +
-        Math.random() * (GENOME_RANGES.b.max - GENOME_RANGES.b.min),
-    );
+    peaks.push(randomFloat(GENOME_RANGES.b.min, GENOME_RANGES.b.max));
   }
   peaks.sort();
 
   return {
-    R: Math.round(
-      GENOME_RANGES.R.min +
-        Math.random() * (GENOME_RANGES.R.max - GENOME_RANGES.R.min),
-    ),
-    T: Math.round(
-      GENOME_RANGES.T.min +
-        Math.random() * (GENOME_RANGES.T.max - GENOME_RANGES.T.min),
-    ),
+    R: randomInt(GENOME_RANGES.R.min, GENOME_RANGES.R.max),
+    T: randomInt(GENOME_RANGES.T.min, GENOME_RANGES.T.max),
     b: peaks,
-    m:
-      GENOME_RANGES.m.min +
-      Math.random() * (GENOME_RANGES.m.max - GENOME_RANGES.m.min),
-    s:
-      GENOME_RANGES.s.min +
-      Math.random() * (GENOME_RANGES.s.max - GENOME_RANGES.s.min),
-    kn: (1 + Math.floor(Math.random() * 4)) as 1 | 2 | 3 | 4,
-    gn: (1 + Math.floor(Math.random() * 3)) as 1 | 2 | 3,
+    m: randomFloat(GENOME_RANGES.m.min, GENOME_RANGES.m.max),
+    s: randomFloat(GENOME_RANGES.s.min, GENOME_RANGES.s.max),
+    kn: randomInt(1, 4) as 1 | 2 | 3 | 4,
+    gn: randomInt(1, 3) as 1 | 2 | 3,
   };
 }
 
@@ -92,8 +81,8 @@ export function mutateGenome(
     max: number,
     sigma: number,
   ): number => {
-    if (Math.random() > mutationRate) return value;
-    const delta = (Math.random() * 2 - 1) * sigma * (max - min);
+    if (!randomBool(mutationRate)) return value;
+    const delta = (random() * 2 - 1) * sigma * (max - min);
     return Math.max(min, Math.min(max, value + delta));
   };
 
@@ -128,27 +117,24 @@ export function mutateGenome(
   mutated.b.sort();
 
   // Occasionally add/remove a peak
-  if (Math.random() < mutationRate * 0.5) {
-    if (Math.random() < 0.5 && mutated.b.length < 4) {
+  if (randomBool(mutationRate * 0.5)) {
+    if (randomBool(0.5) && mutated.b.length < 4) {
       // Add a peak
-      mutated.b.push(
-        GENOME_RANGES.b.min +
-          Math.random() * (GENOME_RANGES.b.max - GENOME_RANGES.b.min),
-      );
+      mutated.b.push(randomFloat(GENOME_RANGES.b.min, GENOME_RANGES.b.max));
       mutated.b.sort();
     } else if (mutated.b.length > 1) {
       // Remove a peak
-      const idx = Math.floor(Math.random() * mutated.b.length);
+      const idx = randomInt(0, mutated.b.length - 1);
       mutated.b.splice(idx, 1);
     }
   }
 
   // Occasionally change kernel/growth type
-  if (Math.random() < mutationRate * 0.3) {
-    mutated.kn = (1 + Math.floor(Math.random() * 4)) as 1 | 2 | 3 | 4;
+  if (randomBool(mutationRate * 0.3)) {
+    mutated.kn = randomInt(1, 4) as 1 | 2 | 3 | 4;
   }
-  if (Math.random() < mutationRate * 0.3) {
-    mutated.gn = (1 + Math.floor(Math.random() * 3)) as 1 | 2 | 3;
+  if (randomBool(mutationRate * 0.3)) {
+    mutated.gn = randomInt(1, 3) as 1 | 2 | 3;
   }
 
   return mutated;
@@ -169,7 +155,7 @@ export function crossoverGenomes(
     const range = maxVal - minVal;
     const lower = Math.max(min, minVal - alpha * range);
     const upper = Math.min(max, maxVal + alpha * range);
-    return lower + Math.random() * (upper - lower);
+    return randomFloat(lower, upper);
   };
 
   // Blend continuous parameters
@@ -183,8 +169,8 @@ export function crossoverGenomes(
     m: blend(parent1.m, parent2.m, GENOME_RANGES.m.min, GENOME_RANGES.m.max),
     s: blend(parent1.s, parent2.s, GENOME_RANGES.s.min, GENOME_RANGES.s.max),
     b: [],
-    kn: Math.random() < 0.5 ? parent1.kn : parent2.kn,
-    gn: Math.random() < 0.5 ? parent1.gn : parent2.gn,
+    kn: randomBool(0.5) ? parent1.kn : parent2.kn,
+    gn: randomBool(0.5) ? parent1.gn : parent2.gn,
   };
 
   // Blend peaks - average number of peaks
@@ -297,13 +283,10 @@ export function randomMultiKernelGenome(
 ): MultiKernelGenome {
   const numKernels =
     kernelCount ??
-    MULTIKERNEL_GENOME_RANGES.kernelCount.min +
-      Math.floor(
-        Math.random() *
-          (MULTIKERNEL_GENOME_RANGES.kernelCount.max -
-            MULTIKERNEL_GENOME_RANGES.kernelCount.min +
-            1),
-      );
+    randomInt(
+      MULTIKERNEL_GENOME_RANGES.kernelCount.min,
+      MULTIKERNEL_GENOME_RANGES.kernelCount.max,
+    );
 
   const R: number[] = [];
   const b: number[][] = [];
@@ -316,21 +299,21 @@ export function randomMultiKernelGenome(
   for (let i = 0; i < numKernels; i++) {
     // Radius
     R.push(
-      Math.round(
-        MULTIKERNEL_GENOME_RANGES.R.min +
-          Math.random() *
-            (MULTIKERNEL_GENOME_RANGES.R.max - MULTIKERNEL_GENOME_RANGES.R.min),
+      randomInt(
+        MULTIKERNEL_GENOME_RANGES.R.min,
+        MULTIKERNEL_GENOME_RANGES.R.max,
       ),
     );
 
     // Peaks (1-3 per kernel)
-    const numPeaks = 1 + Math.floor(Math.random() * 3);
+    const numPeaks = randomInt(1, 3);
     const peaks: number[] = [];
     for (let j = 0; j < numPeaks; j++) {
       peaks.push(
-        MULTIKERNEL_GENOME_RANGES.b.min +
-          Math.random() *
-            (MULTIKERNEL_GENOME_RANGES.b.max - MULTIKERNEL_GENOME_RANGES.b.min),
+        randomFloat(
+          MULTIKERNEL_GENOME_RANGES.b.min,
+          MULTIKERNEL_GENOME_RANGES.b.max,
+        ),
       );
     }
     peaks.sort();
@@ -338,40 +321,42 @@ export function randomMultiKernelGenome(
 
     // Weight
     h.push(
-      MULTIKERNEL_GENOME_RANGES.h.min +
-        Math.random() *
-          (MULTIKERNEL_GENOME_RANGES.h.max - MULTIKERNEL_GENOME_RANGES.h.min),
+      randomFloat(
+        MULTIKERNEL_GENOME_RANGES.h.min,
+        MULTIKERNEL_GENOME_RANGES.h.max,
+      ),
     );
 
     // Growth center
     m.push(
-      MULTIKERNEL_GENOME_RANGES.m.min +
-        Math.random() *
-          (MULTIKERNEL_GENOME_RANGES.m.max - MULTIKERNEL_GENOME_RANGES.m.min),
+      randomFloat(
+        MULTIKERNEL_GENOME_RANGES.m.min,
+        MULTIKERNEL_GENOME_RANGES.m.max,
+      ),
     );
 
     // Growth width
     s.push(
-      MULTIKERNEL_GENOME_RANGES.s.min +
-        Math.random() *
-          (MULTIKERNEL_GENOME_RANGES.s.max - MULTIKERNEL_GENOME_RANGES.s.min),
+      randomFloat(
+        MULTIKERNEL_GENOME_RANGES.s.min,
+        MULTIKERNEL_GENOME_RANGES.s.max,
+      ),
     );
 
     // Kernel type
-    kn.push(1 + Math.floor(Math.random() * 4));
+    kn.push(randomInt(1, 4));
 
     // Growth type
-    gn.push(1 + Math.floor(Math.random() * 3));
+    gn.push(randomInt(1, 3));
   }
 
   return {
-    T: Math.round(
-      MULTIKERNEL_GENOME_RANGES.T.min +
-        Math.random() *
-          (MULTIKERNEL_GENOME_RANGES.T.max - MULTIKERNEL_GENOME_RANGES.T.min),
+    T: randomInt(
+      MULTIKERNEL_GENOME_RANGES.T.min,
+      MULTIKERNEL_GENOME_RANGES.T.max,
     ),
     kernelCount: numKernels,
-    combinationMode: Math.floor(Math.random() * 3),
+    combinationMode: randomInt(0, 2),
     R,
     b,
     h,
@@ -418,8 +403,8 @@ export function mutateMultiKernelGenome(
     max: number,
     sigma: number,
   ): number => {
-    if (Math.random() > mutationRate) return value;
-    const delta = (Math.random() * 2 - 1) * sigma * (max - min);
+    if (!randomBool(mutationRate)) return value;
+    const delta = (random() * 2 - 1) * sigma * (max - min);
     return Math.max(min, Math.min(max, value + delta));
   };
 
@@ -434,8 +419,8 @@ export function mutateMultiKernelGenome(
   );
 
   // Occasionally change combination mode
-  if (Math.random() < mutationRate * 0.3) {
-    mutated.combinationMode = Math.floor(Math.random() * 3);
+  if (randomBool(mutationRate * 0.3)) {
+    mutated.combinationMode = randomInt(0, 2);
   }
 
   // Mutate per-kernel params
@@ -482,44 +467,42 @@ export function mutateMultiKernelGenome(
     mutated.b[i].sort();
 
     // Occasionally add/remove a peak
-    if (Math.random() < mutationRate * 0.5) {
-      if (Math.random() < 0.5 && mutated.b[i].length < 4) {
+    if (randomBool(mutationRate * 0.5)) {
+      if (randomBool(0.5) && mutated.b[i].length < 4) {
         mutated.b[i].push(
-          MULTIKERNEL_GENOME_RANGES.b.min +
-            Math.random() *
-              (MULTIKERNEL_GENOME_RANGES.b.max -
-                MULTIKERNEL_GENOME_RANGES.b.min),
+          randomFloat(
+            MULTIKERNEL_GENOME_RANGES.b.min,
+            MULTIKERNEL_GENOME_RANGES.b.max,
+          ),
         );
         mutated.b[i].sort();
       } else if (mutated.b[i].length > 1) {
-        const idx = Math.floor(Math.random() * mutated.b[i].length);
+        const idx = randomInt(0, mutated.b[i].length - 1);
         mutated.b[i].splice(idx, 1);
       }
     }
 
     // Occasionally change kernel/growth type
-    if (Math.random() < mutationRate * 0.3) {
-      mutated.kn[i] = 1 + Math.floor(Math.random() * 4);
+    if (randomBool(mutationRate * 0.3)) {
+      mutated.kn[i] = randomInt(1, 4);
     }
-    if (Math.random() < mutationRate * 0.3) {
-      mutated.gn[i] = 1 + Math.floor(Math.random() * 3);
+    if (randomBool(mutationRate * 0.3)) {
+      mutated.gn[i] = randomInt(1, 3);
     }
   }
 
   // Occasionally add/remove a kernel
-  if (Math.random() < mutationRate * 0.2) {
+  if (randomBool(mutationRate * 0.2)) {
     if (
-      Math.random() < 0.5 &&
+      randomBool(0.5) &&
       mutated.kernelCount < MULTIKERNEL_GENOME_RANGES.kernelCount.max
     ) {
       // Add a kernel
       mutated.kernelCount++;
       mutated.R.push(
-        Math.round(
-          MULTIKERNEL_GENOME_RANGES.R.min +
-            Math.random() *
-              (MULTIKERNEL_GENOME_RANGES.R.max -
-                MULTIKERNEL_GENOME_RANGES.R.min),
+        randomInt(
+          MULTIKERNEL_GENOME_RANGES.R.min,
+          MULTIKERNEL_GENOME_RANGES.R.max,
         ),
       );
       mutated.b.push([0.5]);
@@ -530,7 +513,7 @@ export function mutateMultiKernelGenome(
       mutated.gn.push(1);
     } else if (mutated.kernelCount > 1) {
       // Remove a kernel
-      const idx = Math.floor(Math.random() * mutated.kernelCount);
+      const idx = randomInt(0, mutated.kernelCount - 1);
       mutated.kernelCount--;
       mutated.R.splice(idx, 1);
       mutated.b.splice(idx, 1);
@@ -560,7 +543,7 @@ export function crossoverMultiKernelGenomes(
     const range = maxVal - minVal;
     const lower = Math.max(min, minVal - alpha * range);
     const upper = Math.min(max, maxVal + alpha * range);
-    return lower + Math.random() * (upper - lower);
+    return randomFloat(lower, upper);
   };
 
   // Average kernel count
@@ -640,8 +623,8 @@ export function crossoverMultiKernelGenomes(
     b.push(peaks);
 
     // Pick kernel/growth types from one parent
-    kn.push(Math.random() < 0.5 ? parent1.kn[p1Idx] : parent2.kn[p2Idx]);
-    gn.push(Math.random() < 0.5 ? parent1.gn[p1Idx] : parent2.gn[p2Idx]);
+    kn.push(randomBool(0.5) ? parent1.kn[p1Idx] : parent2.kn[p2Idx]);
+    gn.push(randomBool(0.5) ? parent1.gn[p1Idx] : parent2.gn[p2Idx]);
   }
 
   return {
@@ -654,8 +637,9 @@ export function crossoverMultiKernelGenomes(
       ),
     ),
     kernelCount,
-    combinationMode:
-      Math.random() < 0.5 ? parent1.combinationMode : parent2.combinationMode,
+    combinationMode: randomBool(0.5)
+      ? parent1.combinationMode
+      : parent2.combinationMode,
     R,
     b,
     h,

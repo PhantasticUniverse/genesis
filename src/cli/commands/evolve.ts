@@ -44,6 +44,8 @@ import {
   progressBar,
   type OutputFormat,
 } from "../utils/reporters";
+import { setSeed, getSeed } from "../../core/random";
+import { createExperimentTracker } from "../experiment-tracker";
 import * as fs from "fs";
 
 interface EvaluationResult {
@@ -151,6 +153,7 @@ export function registerEvolveCommands(program: Command): void {
     .option("--mutation <n>", "Mutation rate", "0.15")
     .option("--crossover <n>", "Crossover rate", "0.7")
     .option("--novelty <n>", "Novelty weight (0-1)", "0.3")
+    .option("--seed <n>", "Random seed for reproducibility")
     .option("-o, --output <file>", "Output file for results")
     .option("-f, --format <format>", "Output format (json|table|csv)", "json")
     .action(async (options) => {
@@ -160,8 +163,31 @@ export function registerEvolveCommands(program: Command): void {
       const steps = parseInt(options.steps);
       const format = options.format as OutputFormat;
 
-      printHeader("Genetic Algorithm Evolution");
+      // Initialize seeded RNG
+      const seed = options.seed ? parseInt(options.seed) : setSeed();
+      if (options.seed) {
+        setSeed(seed);
+      }
 
+      // Create experiment tracker
+      const tracker = createExperimentTracker("evolve", "run", {
+        population: populationSize,
+        generations,
+        size,
+        steps,
+        elite: parseInt(options.elite),
+        mutation: parseFloat(options.mutation),
+        crossover: parseFloat(options.crossover),
+        novelty: parseFloat(options.novelty),
+        seed: getSeed(),
+        output: options.output,
+        format,
+      });
+
+      printHeader("Genetic Algorithm Evolution");
+      console.log(`Experiment ID: ${tracker.getId()}`);
+
+      console.log(`Seed: ${getSeed()}`);
       console.log(`Population: ${populationSize}`);
       console.log(`Generations: ${generations}`);
       console.log(`Grid: ${size}x${size}`);
@@ -250,6 +276,7 @@ export function registerEvolveCommands(program: Command): void {
       const bestGenome = state.bestIndividual?.genome;
 
       const results = {
+        seed: getSeed(),
         generations,
         populationSize,
         totalTimeMs: totalTime,
@@ -274,6 +301,11 @@ export function registerEvolveCommands(program: Command): void {
         console.log(`\nResults saved to ${options.output}`);
       }
 
+      // Complete and save experiment manifest
+      tracker.complete(options.output);
+      const manifestPath = tracker.save();
+      console.log(`Experiment manifest saved to ${manifestPath}`);
+
       report(
         {
           totalTime: formatTiming(totalTime),
@@ -291,6 +323,7 @@ export function registerEvolveCommands(program: Command): void {
     .option("--population <n>", "Population size", "10")
     .option("--size <n>", "Grid size", "64")
     .option("--steps <n>", "Simulation steps", "50")
+    .option("--seed <n>", "Random seed for reproducibility")
     .option("-f, --format <format>", "Output format (json|table|csv)", "table")
     .action(async (options) => {
       const populationSize = parseInt(options.population);
@@ -298,7 +331,24 @@ export function registerEvolveCommands(program: Command): void {
       const steps = parseInt(options.steps);
       const format = options.format as OutputFormat;
 
+      // Initialize seeded RNG
+      const seed = options.seed ? parseInt(options.seed) : setSeed();
+      if (options.seed) {
+        setSeed(seed);
+      }
+
+      // Create experiment tracker
+      const tracker = createExperimentTracker("evolve", "test", {
+        population: populationSize,
+        size,
+        steps,
+        seed: getSeed(),
+        format,
+      });
+
       printHeader("GA Quick Test");
+      console.log(`Experiment ID: ${tracker.getId()}`);
+      console.log(`Seed: ${getSeed()}\n`);
 
       const ga = createGAController({ populationSize });
       const population = ga.getPopulation();
@@ -335,6 +385,11 @@ export function registerEvolveCommands(program: Command): void {
 
       printSection("Results (top 5)");
       report(results.slice(0, 5), { format });
+
+      // Complete and save experiment manifest
+      tracker.complete();
+      const manifestPath = tracker.save();
+      console.log(`\nExperiment manifest saved to ${manifestPath}`);
     });
 
   // Resume evolution from saved state
@@ -343,13 +398,24 @@ export function registerEvolveCommands(program: Command): void {
     .description("Resume evolution from saved results")
     .requiredOption("-i, --input <file>", "Input file with previous results")
     .option("--generations <n>", "Additional generations to run", "5")
+    .option("--seed <n>", "Random seed (uses previous seed if not specified)")
     .option("-o, --output <file>", "Output file for results")
     .option("-f, --format <format>", "Output format (json|table|csv)", "json")
     .action(async (options) => {
       const generations = parseInt(options.generations);
       const format = options.format as OutputFormat;
 
+      // Create experiment tracker
+      const tracker = createExperimentTracker("evolve", "resume", {
+        input: options.input,
+        generations,
+        seed: options.seed ? parseInt(options.seed) : undefined,
+        output: options.output,
+        format,
+      });
+
       printHeader("Resume Evolution");
+      console.log(`Experiment ID: ${tracker.getId()}`);
 
       // Load previous results
       const previousResults = JSON.parse(
@@ -357,6 +423,13 @@ export function registerEvolveCommands(program: Command): void {
       );
       console.log(`Loaded results from ${options.input}`);
       console.log(`Previous best fitness: ${previousResults.bestFitness}`);
+
+      // Use provided seed, or previous seed, or generate new
+      const seed = options.seed
+        ? parseInt(options.seed)
+        : (previousResults.seed ?? setSeed());
+      setSeed(seed);
+      console.log(`Seed: ${getSeed()}`);
 
       // Decode best genome
       if (!previousResults.bestGenome?.encoded) {
@@ -387,5 +460,10 @@ export function registerEvolveCommands(program: Command): void {
         },
         { format },
       );
+
+      // Complete and save experiment manifest
+      tracker.complete(options.output);
+      const manifestPath = tracker.save();
+      console.log(`\nExperiment manifest saved to ${manifestPath}`);
     });
 }

@@ -42,6 +42,8 @@ import {
   printSection,
   type OutputFormat,
 } from "../utils/reporters";
+import { setSeed, getSeed } from "../../core/random";
+import { createExperimentTracker } from "../experiment-tracker";
 import * as fs from "fs";
 
 /**
@@ -61,6 +63,7 @@ export function registerAnalyzeCommands(program: Command): void {
     .option("-b, --blob", "Generate blob state for analysis")
     .option("--size <n>", "Grid size (width=height)", "128")
     .option("--max-order <n>", "Maximum symmetry order to test", "8")
+    .option("--seed <n>", "Random seed for reproducibility")
     .option("-f, --format <format>", "Output format (json|table|csv)", "json")
     .option("-q, --quick", "Quick symmetry score only")
     .action(async (options) => {
@@ -68,7 +71,15 @@ export function registerAnalyzeCommands(program: Command): void {
       const maxOrder = parseInt(options.maxOrder);
       const format = options.format as OutputFormat;
 
+      // Initialize seeded RNG
+      if (options.seed) {
+        setSeed(parseInt(options.seed));
+      }
+
       printHeader("Symmetry Analysis");
+      if (options.random || options.blob) {
+        console.log(`Seed: ${getSeed()}`);
+      }
 
       // Get state
       let state: Float32Array;
@@ -118,6 +129,7 @@ export function registerAnalyzeCommands(program: Command): void {
     .option("--size <n>", "Grid size", "64")
     .option("--steps <n>", "Number of evolution steps", "100")
     .option("--perturbation <n>", "Perturbation magnitude", "0.001")
+    .option("--seed <n>", "Random seed for reproducibility")
     .option("--wolf", "Use Wolf algorithm (more robust)")
     .option("-q, --quick", "Quick stability check only")
     .option("-f, --format <format>", "Output format (json|table|csv)", "json")
@@ -127,7 +139,15 @@ export function registerAnalyzeCommands(program: Command): void {
       const perturbation = parseFloat(options.perturbation);
       const format = options.format as OutputFormat;
 
+      // Initialize seeded RNG
+      if (options.seed) {
+        setSeed(parseInt(options.seed));
+      }
+
       printHeader("Chaos Analysis (Lyapunov Exponent)");
+      if (options.random || options.blob) {
+        console.log(`Seed: ${getSeed()}`);
+      }
 
       // Get initial state
       let initialState: Float32Array;
@@ -197,6 +217,7 @@ export function registerAnalyzeCommands(program: Command): void {
     .option("--steps <n>", "Number of evolution steps", "200")
     .option("--max-period <n>", "Maximum period to search for", "100")
     .option("--threshold <n>", "Correlation threshold", "0.8")
+    .option("--seed <n>", "Random seed for reproducibility")
     .option("-f, --format <format>", "Output format (json|table|csv)", "json")
     .action(async (options) => {
       const size = parseInt(options.size);
@@ -205,7 +226,15 @@ export function registerAnalyzeCommands(program: Command): void {
       const threshold = parseFloat(options.threshold);
       const format = options.format as OutputFormat;
 
+      // Initialize seeded RNG
+      if (options.seed) {
+        setSeed(parseInt(options.seed));
+      }
+
       printHeader("Periodicity Analysis");
+      if (options.random || options.blob) {
+        console.log(`Seed: ${getSeed()}`);
+      }
 
       // Create simulation context
       const ctx = createCPULenia({ width: size, height: size });
@@ -255,13 +284,31 @@ export function registerAnalyzeCommands(program: Command): void {
     .option("-b, --blob", "Use blob initial state")
     .option("--size <n>", "Grid size", "64")
     .option("--steps <n>", "Steps for chaos/period analysis", "100")
+    .option("--seed <n>", "Random seed for reproducibility")
     .option("-f, --format <format>", "Output format (json|table|csv)", "json")
     .action(async (options) => {
       const size = parseInt(options.size);
       const steps = parseInt(options.steps);
       const format = options.format as OutputFormat;
 
+      // Initialize seeded RNG
+      if (options.seed) {
+        setSeed(parseInt(options.seed));
+      }
+
+      // Create experiment tracker
+      const tracker = createExperimentTracker("analyze", "full", {
+        size,
+        steps,
+        seed: getSeed(),
+        random: options.random,
+        blob: options.blob,
+        format,
+      });
+
       printHeader("Full Analysis");
+      console.log(`Experiment ID: ${tracker.getId()}`);
+      console.log(`Seed: ${getSeed()}`);
 
       // Create simulation context
       const ctx = createCPULenia({ width: size, height: size });
@@ -309,6 +356,7 @@ export function registerAnalyzeCommands(program: Command): void {
 
       // Summary
       const summary = {
+        seed: getSeed(),
         gridSize: size,
         steps,
         initialSymmetry: {
@@ -334,5 +382,10 @@ export function registerAnalyzeCommands(program: Command): void {
 
       printSection("Summary");
       report(summary, { format });
+
+      // Complete and save experiment manifest
+      tracker.complete();
+      const manifestPath = tracker.save();
+      console.log(`\nExperiment manifest saved to ${manifestPath}`);
     });
 }

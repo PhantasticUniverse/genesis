@@ -36,6 +36,8 @@ import {
   formatTiming,
   type OutputFormat,
 } from "../utils/reporters";
+import { setSeed, getSeed, random, randomBool } from "../../core/random";
+import { createExperimentTracker } from "../experiment-tracker";
 
 // ============================================================================
 // CPU-Based Multi-Kernel Lenia Simulation
@@ -480,6 +482,7 @@ export function registerMultiKernelCommands(program: Command): void {
     .command("random")
     .description("Generate random multi-kernel genome")
     .option("-k, --kernels <n>", "Number of kernels (1-4)")
+    .option("--seed <n>", "Random seed for reproducibility")
     .option("-f, --format <format>", "Output format (json|table)", "json")
     .option("-o, --output <file>", "Output file")
     .action(async (options) => {
@@ -488,7 +491,13 @@ export function registerMultiKernelCommands(program: Command): void {
         ? parseInt(options.kernels)
         : undefined;
 
+      // Initialize seeded RNG
+      if (options.seed) {
+        setSeed(parseInt(options.seed));
+      }
+
       printHeader("Random Multi-Kernel Genome");
+      console.log(`Seed: ${getSeed()}`);
 
       const genome = randomMultiKernelGenome(kernelCount);
       const encoded = encodeMultiKernelGenome(genome);
@@ -515,12 +524,18 @@ export function registerMultiKernelCommands(program: Command): void {
     .option("-i, --input <file>", "JSON file containing genome")
     .option("--size <n>", "Grid size", "64")
     .option("--steps <n>", "Simulation steps", "100")
+    .option("--seed <n>", "Random seed for reproducibility")
     .option("-f, --format <format>", "Output format (json|table)", "json")
     .option("-o, --output <file>", "Output file")
     .action(async (options) => {
       const size = parseInt(options.size);
       const steps = parseInt(options.steps);
       const format = options.format as OutputFormat;
+
+      // Initialize seeded RNG
+      if (options.seed) {
+        setSeed(parseInt(options.seed));
+      }
 
       printHeader("Multi-Kernel Genome Evaluation");
 
@@ -540,6 +555,7 @@ export function registerMultiKernelCommands(program: Command): void {
         }
         console.log(`Loaded genome from ${options.input}`);
       } else {
+        console.log(`Seed: ${getSeed()}`);
         genome = randomMultiKernelGenome();
         console.log("Generated random genome");
       }
@@ -597,6 +613,7 @@ export function registerMultiKernelCommands(program: Command): void {
     .option("--size <n>", "Grid size", "64")
     .option("--steps <n>", "Simulation steps per evaluation", "50")
     .option("-m, --mutation-rate <r>", "Mutation rate", "0.15")
+    .option("--seed <n>", "Random seed for reproducibility")
     .option("-f, --format <format>", "Output format (json|table)", "table")
     .option("-o, --output <file>", "Output file for best genomes")
     .action(async (options) => {
@@ -610,7 +627,27 @@ export function registerMultiKernelCommands(program: Command): void {
         : undefined;
       const format = options.format as OutputFormat;
 
+      // Initialize seeded RNG
+      if (options.seed) {
+        setSeed(parseInt(options.seed));
+      }
+
+      // Create experiment tracker
+      const tracker = createExperimentTracker("multikernel", "evolve", {
+        generations,
+        population: popSize,
+        kernels: kernelCount,
+        size,
+        steps,
+        mutationRate,
+        seed: getSeed(),
+        output: options.output,
+        format,
+      });
+
       printHeader("Multi-Kernel Evolution");
+      console.log(`Experiment ID: ${tracker.getId()}`);
+      console.log(`Seed: ${getSeed()}`);
       console.log(`Generations: ${generations}, Population: ${popSize}`);
       console.log(`Grid: ${size}x${size}, Steps: ${steps}`);
       console.log(`Mutation rate: ${mutationRate}`);
@@ -663,10 +700,10 @@ export function registerMultiKernelCommands(program: Command): void {
         while (nextGen.length < popSize) {
           // Tournament select two parents
           const tournament = (k: number) => {
-            let best = evaluated[Math.floor(Math.random() * evaluated.length)];
+            let best = evaluated[Math.floor(random() * evaluated.length)];
             for (let i = 1; i < k; i++) {
               const challenger =
-                evaluated[Math.floor(Math.random() * evaluated.length)];
+                evaluated[Math.floor(random() * evaluated.length)];
               if (challenger.fitness > best.fitness) {
                 best = challenger;
               }
@@ -679,7 +716,7 @@ export function registerMultiKernelCommands(program: Command): void {
 
           // Crossover or mutation
           let child: MultiKernelGenome;
-          if (Math.random() < 0.7) {
+          if (randomBool(0.7)) {
             child = crossoverMultiKernelGenomes(parent1, parent2);
           } else {
             child = mutateMultiKernelGenome(parent1, mutationRate);
@@ -731,6 +768,11 @@ export function registerMultiKernelCommands(program: Command): void {
       console.log(
         `Best genome: ${bestGenomes[0]?.genome.kernelCount} kernels, ${["sum", "avg", "weighted"][bestGenomes[0]?.genome.combinationMode]} mode`,
       );
+
+      // Complete and save experiment manifest
+      tracker.complete(options.output);
+      const manifestPath = tracker.save();
+      console.log(`\nExperiment manifest saved to ${manifestPath}`);
     });
 
   // Export config

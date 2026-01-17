@@ -22,12 +22,33 @@ import {
 import continuousCAShader from "./shaders/continuous-ca.wgsl?raw";
 import continuousGrowthShader from "./shaders/continuous-growth.wgsl?raw";
 
+export type BoundaryMode = "periodic" | "clamped" | "reflected" | "zero";
+
 export interface ContinuousCAParams {
   kernelRadius: number;
   growthCenter: number; // μ
   growthWidth: number; // σ
   dt: number; // Time step
   growthType: number; // 0=polynomial, 1=gaussian, 2=step
+  massConservation?: boolean; // Enable mass conservation
+  normalizationFactor?: number; // Mass normalization factor (computed externally)
+  boundaryMode?: BoundaryMode; // Boundary condition mode (default: periodic)
+}
+
+// Map boundary mode names to shader enum values
+function boundaryModeToValue(mode: BoundaryMode): number {
+  switch (mode) {
+    case "periodic":
+      return 0;
+    case "clamped":
+      return 1;
+    case "reflected":
+      return 2;
+    case "zero":
+      return 3;
+    default:
+      return 0;
+  }
 }
 
 export interface ContinuousPipeline {
@@ -55,6 +76,14 @@ export interface ContinuousPipeline {
 
   // Check if using FFT path
   isUsingFFT(): boolean;
+
+  // Mass conservation methods
+  setNormalizationFactor(factor: number): void;
+  isMassConservationEnabled(): boolean;
+
+  // Boundary mode methods
+  setBoundaryMode(mode: BoundaryMode): void;
+  getBoundaryMode(): BoundaryMode;
 
   destroy(): void;
 }
@@ -166,15 +195,16 @@ export function createContinuousPipeline(
   });
 
   // Create uniform buffer for direct path
-  // Layout: width, height, kernel_radius, kernel_size, growth_center, growth_width, dt, growth_type
+  // Layout: width, height, kernel_radius, kernel_size, growth_center, growth_width, dt, growth_type,
+  //         normalization_factor, padding, padding, padding
   const uniformBuffer = device.createBuffer({
     label: "continuous-ca-uniform-buffer",
-    size: 32, // 8 x 4 bytes
+    size: 48, // 12 x 4 bytes
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
   // Create uniform buffer for growth phase (FFT path)
-  // Layout: width, height, growth_center, growth_width, dt, growth_type, padding, padding
+  // Layout: width, height, growth_center, growth_width, dt, growth_type, normalization_factor, padding
   const growthUniformBuffer = device.createBuffer({
     label: "continuous-growth-uniform-buffer",
     size: 32, // 8 x 4 bytes
@@ -188,6 +218,9 @@ export function createContinuousPipeline(
     growthWidth: 0.015,
     dt: 0.1,
     growthType: 0, // polynomial
+    massConservation: false,
+    normalizationFactor: 1.0, // 1.0 = no normalization
+    boundaryMode: "periodic", // default to toroidal
   };
 
   // FFT pipeline (created lazily when needed)
@@ -244,7 +277,7 @@ export function createContinuousPipeline(
 
   // Write uniforms for direct path
   function writeUniforms() {
-    const data = new ArrayBuffer(32);
+    const data = new ArrayBuffer(48);
     const u32View = new Uint32Array(data);
     const f32View = new Float32Array(data);
 
@@ -256,6 +289,9 @@ export function createContinuousPipeline(
     f32View[5] = currentParams.growthWidth;
     f32View[6] = currentParams.dt;
     u32View[7] = currentParams.growthType;
+    f32View[8] = currentParams.normalizationFactor ?? 1.0;
+    u32View[9] = boundaryModeToValue(currentParams.boundaryMode ?? "periodic");
+    // padding at 10, 11
 
     device.queue.writeBuffer(uniformBuffer, 0, data);
   }
@@ -272,7 +308,8 @@ export function createContinuousPipeline(
     f32View[3] = currentParams.growthWidth;
     f32View[4] = currentParams.dt;
     u32View[5] = currentParams.growthType;
-    // padding at 6, 7
+    f32View[6] = currentParams.normalizationFactor ?? 1.0;
+    // padding at 7
 
     device.queue.writeBuffer(growthUniformBuffer, 0, data);
   }
@@ -400,6 +437,25 @@ export function createContinuousPipeline(
 
     isUsingFFT() {
       return useFFT;
+    },
+
+    setNormalizationFactor(factor: number) {
+      currentParams.normalizationFactor = factor;
+      writeUniforms();
+      writeGrowthUniforms();
+    },
+
+    isMassConservationEnabled() {
+      return currentParams.massConservation ?? false;
+    },
+
+    setBoundaryMode(mode: BoundaryMode) {
+      currentParams.boundaryMode = mode;
+      writeUniforms();
+    },
+
+    getBoundaryMode(): BoundaryMode {
+      return currentParams.boundaryMode ?? "periodic";
     },
 
     destroy() {

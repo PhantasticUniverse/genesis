@@ -126,6 +126,51 @@ const analysis = tracker.analyze();
 | `quasi-periodic` | Multiple incommensurate frequencies |
 | `chaotic`        | No detectable period                |
 
+## Statistical Analysis
+
+```typescript
+import {
+  mean, variance, std, sem,
+  median, percentile, iqr,
+  skewness, kurtosis,
+  bootstrapCI,
+  bootstrapBCaCI,
+  cohensD,
+  hedgesG,
+  cliffsD,
+  mannWhitneyU,
+  kruskalWallis,
+  bonferroniCorrection,
+  holmCorrection,
+  benjaminiHochberg,
+} from "./analysis/statistics";
+
+// Basic statistics
+const m = mean(data);
+const s = std(data);
+const ci = bootstrapBCaCI(data, mean, { confidence: 0.95 });
+
+// Effect sizes
+const d = cohensD(group1, group2);
+console.log(`Effect: ${d.interpretation}`); // 'small' | 'medium' | 'large'
+
+// Non-parametric tests
+const uTest = mannWhitneyU(group1, group2, 0.05);
+console.log(`p-value: ${uTest.pValue}, significant: ${uTest.significant}`);
+
+// Multiple comparison correction
+const { corrected, significant } = holmCorrection(pValues);
+```
+
+### Effect Size Interpretation
+
+| Cohen's d | Interpretation |
+| --------- | -------------- |
+| < 0.2     | Negligible     |
+| 0.2 - 0.5 | Small          |
+| 0.5 - 0.8 | Medium         |
+| > 0.8     | Large          |
+
 ## Core Files
 
 | File                      | Purpose                       |
@@ -133,4 +178,6 @@ const analysis = tracker.analyze();
 | `analysis/symmetry.ts`    | Symmetry detection algorithms |
 | `analysis/chaos.ts`       | Lyapunov exponent calculation |
 | `analysis/periodicity.ts` | Period detection and tracking |
+| `analysis/statistics.ts`  | Statistical analysis module   |
+| `analysis/experiment.ts`  | Experiment comparison         |
 | `discovery/fitness.ts`    | Quick symmetry score          |

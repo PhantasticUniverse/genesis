@@ -1,0 +1,370 @@
+{
+  "generations": 50,
+  "populationSize": 20,
+  "totalTimeMs": 218655.29279200002,
+  "bestFitness": 0.5635060599091776,
+  "archiveSize": 0,
+  "bestGenome": {
+    "kernelRadius": 20,
+    "growthCenter": 0.052472851581176254,
+    "growthWidth": 0.07726580757081492,
+    "timeResolution": 19,
+    "peaks": [
+      0.2643682835640294,
+      0.7373639964450264
+    ],
+    "encoded": "MjB8MTl8MC4yNjQsMC43Mzd8MC4wNTI1fDAuMDc3M3wzfDE="
+  },
+  "generationStats": [
+    {
+      "generation": 1,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.1147959891629701,
+      "archiveSize": 0,
+      "elapsedMs": 11782.798417
+    },
+    {
+      "generation": 2,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.13483973426428886,
+      "archiveSize": 0,
+      "elapsedMs": 8476.623582999999
+    },
+    {
+      "generation": 3,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.3108000207568441,
+      "archiveSize": 0,
+      "elapsedMs": 8253.091582999998
+    },
+    {
+      "generation": 4,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.4371715171704332,
+      "archiveSize": 0,
+      "elapsedMs": 7582.147208999999
+    },
+    {
+      "generation": 5,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.4877184507140366,
+      "archiveSize": 0,
+      "elapsedMs": 4429.893707999996
+    },
+    {
+      "generation": 6,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.386060242969427,
+      "archiveSize": 0,
+      "elapsedMs": 5702.487207999999
+    },
+    {
+      "generation": 7,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.480427433976922,
+      "archiveSize": 0,
+      "elapsedMs": 5311.362624999994
+    },
+    {
+      "generation": 8,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.38573111097642043,
+      "archiveSize": 0,
+      "elapsedMs": 5631.609084000003
+    },
+    {
+      "generation": 9,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.5057509537894419,
+      "archiveSize": 0,
+      "elapsedMs": 3795.0070410000044
+    },
+    {
+      "generation": 10,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.4183785675354539,
+      "archiveSize": 0,
+      "elapsedMs": 4153.053375000003
+    },
+    {
+      "generation": 11,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.45188021546238993,
+      "archiveSize": 0,
+      "elapsedMs": 3772.0750419999968
+    },
+    {
+      "generation": 12,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.3632306332179958,
+      "archiveSize": 0,
+      "elapsedMs": 4629.143125000002
+    },
+    {
+      "generation": 13,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.48130136337440355,
+      "archiveSize": 0,
+      "elapsedMs": 4947.141332999992
+    },
+    {
+      "generation": 14,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.36901749896974384,
+      "archiveSize": 0,
+      "elapsedMs": 5523.63900000001
+    },
+    {
+      "generation": 15,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.46435058867144924,
+      "archiveSize": 0,
+      "elapsedMs": 5475.399042000005
+    },
+    {
+      "generation": 16,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.40763196675576907,
+      "archiveSize": 0,
+      "elapsedMs": 5051.908708000003
+    },
+    {
+      "generation": 17,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.31429970356651665,
+      "archiveSize": 0,
+      "elapsedMs": 5580.854709000007
+    },
+    {
+      "generation": 18,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.46326275746846013,
+      "archiveSize": 0,
+      "elapsedMs": 5608.550709000003
+    },
+    {
+      "generation": 19,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.3661325411469455,
+      "archiveSize": 0,
+      "elapsedMs": 5023.990082999997
+    },
+    {
+      "generation": 20,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.43525162659294514,
+      "archiveSize": 0,
+      "elapsedMs": 4913.296166
+    },
+    {
+      "generation": 21,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.3384607741644012,
+      "archiveSize": 0,
+      "elapsedMs": 5441.912375
+    },
+    {
+      "generation": 22,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.4350079707337091,
+      "archiveSize": 0,
+      "elapsedMs": 4750.475000000006
+    },
+    {
+      "generation": 23,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.24719705892465904,
+      "archiveSize": 0,
+      "elapsedMs": 5355.218166999999
+    },
+    {
+      "generation": 24,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.48200742014835446,
+      "archiveSize": 0,
+      "elapsedMs": 4757.377832999977
+    },
+    {
+      "generation": 25,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.36428729808628557,
+      "archiveSize": 0,
+      "elapsedMs": 5005.411040999985
+    },
+    {
+      "generation": 26,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.4609587928384499,
+      "archiveSize": 0,
+      "elapsedMs": 4689.562083000026
+    },
+    {
+      "generation": 27,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.29314279959275313,
+      "archiveSize": 0,
+      "elapsedMs": 5334.982625000004
+    },
+    {
+      "generation": 28,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.3646672049257674,
+      "archiveSize": 0,
+      "elapsedMs": 5644.212999999989
+    },
+    {
+      "generation": 29,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.38150587685920295,
+      "archiveSize": 0,
+      "elapsedMs": 3922.0975000000035
+    },
+    {
+      "generation": 30,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.45241316742218335,
+      "archiveSize": 0,
+      "elapsedMs": 2865.6724580000155
+    },
+    {
+      "generation": 31,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.40475144091391435,
+      "archiveSize": 0,
+      "elapsedMs": 2740.4172919999983
+    },
+    {
+      "generation": 32,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.43383215639315437,
+      "archiveSize": 0,
+      "elapsedMs": 2463.232000000018
+    },
+    {
+      "generation": 33,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.2449854917243041,
+      "archiveSize": 0,
+      "elapsedMs": 2895.2781250000116
+    },
+    {
+      "generation": 34,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.436739569848365,
+      "archiveSize": 0,
+      "elapsedMs": 2938.930040999985
+    },
+    {
+      "generation": 35,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.36169273233386395,
+      "archiveSize": 0,
+      "elapsedMs": 2773.7245410000032
+    },
+    {
+      "generation": 36,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.4316233938858721,
+      "archiveSize": 0,
+      "elapsedMs": 2508.718041999993
+    },
+    {
+      "generation": 37,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.311285476016882,
+      "archiveSize": 0,
+      "elapsedMs": 2497.674457999994
+    },
+    {
+      "generation": 38,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.47682546020979294,
+      "archiveSize": 0,
+      "elapsedMs": 2326.0599159999983
+    },
+    {
+      "generation": 39,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.38297094894088046,
+      "archiveSize": 0,
+      "elapsedMs": 2323.1898330000113
+    },
+    {
+      "generation": 40,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.43172034757885475,
+      "archiveSize": 0,
+      "elapsedMs": 2815.1378330000152
+    },
+    {
+      "generation": 41,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.4286058246431968,
+      "archiveSize": 0,
+      "elapsedMs": 2873.624749999988
+    },
+    {
+      "generation": 42,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.4543967002923428,
+      "archiveSize": 0,
+      "elapsedMs": 3247.0286250000063
+    },
+    {
+      "generation": 43,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.2864485180600045,
+      "archiveSize": 0,
+      "elapsedMs": 3360.7875830000266
+    },
+    {
+      "generation": 44,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.43049402185099916,
+      "archiveSize": 0,
+      "elapsedMs": 2848.856207999983
+    },
+    {
+      "generation": 45,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.31067141683130656,
+      "archiveSize": 0,
+      "elapsedMs": 2822.340833000024
+    },
+    {
+      "generation": 46,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.45386171190319846,
+      "archiveSize": 0,
+      "elapsedMs": 2764.748583000008
+    },
+    {
+      "generation": 47,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.34077446304360887,
+      "archiveSize": 0,
+      "elapsedMs": 2792.829916000017
+    },
+    {
+      "generation": 48,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.4285405148753013,
+      "archiveSize": 0,
+      "elapsedMs": 2761.126332999993
+    },
+    {
+      "generation": 49,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.4474730585595547,
+      "archiveSize": 0,
+      "elapsedMs": 2551.645166000002
+    },
+    {
+      "generation": 50,
+      "bestFitness": 0.5635060599091776,
+      "avgFitness": 0.3596282668207688,
+      "archiveSize": 0,
+      "elapsedMs": 2918.8135410000104
+    }
+  ]
+}

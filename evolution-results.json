@@ -1,0 +1,160 @@
+{
+  "generations": 20,
+  "populationSize": 20,
+  "totalTimeMs": 111646.94116599999,
+  "bestFitness": 0.5355501393545286,
+  "archiveSize": 0,
+  "bestGenome": {
+    "kernelRadius": 12,
+    "growthCenter": 0.1310466739482636,
+    "growthWidth": 0.0785319312592768,
+    "timeResolution": 19,
+    "peaks": [
+      0.4203989247048885,
+      0.7276189610927082
+    ],
+    "encoded": "MTJ8MTl8MC40MjAsMC43Mjh8MC4xMzEwfDAuMDc4NXwxfDI="
+  },
+  "generationStats": [
+    {
+      "generation": 1,
+      "bestFitness": 0.48609888049355143,
+      "avgFitness": 0.035957883168484105,
+      "archiveSize": 0,
+      "elapsedMs": 11627.038
+    },
+    {
+      "generation": 2,
+      "bestFitness": 0.48609888049355143,
+      "avgFitness": 0.05212480424391053,
+      "archiveSize": 0,
+      "elapsedMs": 11495.585375
+    },
+    {
+      "generation": 3,
+      "bestFitness": 0.48609888049355143,
+      "avgFitness": 0.0994591002451892,
+      "archiveSize": 0,
+      "elapsedMs": 12089.533125000002
+    },
+    {
+      "generation": 4,
+      "bestFitness": 0.5050952467362662,
+      "avgFitness": 0.1730756231064681,
+      "archiveSize": 0,
+      "elapsedMs": 10660.927916
+    },
+    {
+      "generation": 5,
+      "bestFitness": 0.5171981895415583,
+      "avgFitness": 0.32661380223834796,
+      "archiveSize": 0,
+      "elapsedMs": 6574.079083999997
+    },
+    {
+      "generation": 6,
+      "bestFitness": 0.5208226742131417,
+      "avgFitness": 0.3995820621951519,
+      "archiveSize": 0,
+      "elapsedMs": 5089.024041999997
+    },
+    {
+      "generation": 7,
+      "bestFitness": 0.5248808988136685,
+      "avgFitness": 0.3722514207970579,
+      "archiveSize": 0,
+      "elapsedMs": 4146.181291000001
+    },
+    {
+      "generation": 8,
+      "bestFitness": 0.5354342162292518,
+      "avgFitness": 0.47840499285204646,
+      "archiveSize": 0,
+      "elapsedMs": 4057.228083000009
+    },
+    {
+      "generation": 9,
+      "bestFitness": 0.5354342162292518,
+      "avgFitness": 0.3521394390933764,
+      "archiveSize": 0,
+      "elapsedMs": 4049.334957999992
+    },
+    {
+      "generation": 10,
+      "bestFitness": 0.5355501393545286,
+      "avgFitness": 0.45180302519997345,
+      "archiveSize": 0,
+      "elapsedMs": 4221.314459000001
+    },
+    {
+      "generation": 11,
+      "bestFitness": 0.5355501393545286,
+      "avgFitness": 0.34132966961984,
+      "archiveSize": 0,
+      "elapsedMs": 3617.0408749999915
+    },
+    {
+      "generation": 12,
+      "bestFitness": 0.5355501393545286,
+      "avgFitness": 0.4419395206590718,
+      "archiveSize": 0,
+      "elapsedMs": 3723.6480420000007
+    },
+    {
+      "generation": 13,
+      "bestFitness": 0.5355501393545286,
+      "avgFitness": 0.34575743589452496,
+      "archiveSize": 0,
+      "elapsedMs": 3949.240458
+    },
+    {
+      "generation": 14,
+      "bestFitness": 0.5355501393545286,
+      "avgFitness": 0.4265144855333552,
+      "archiveSize": 0,
+      "elapsedMs": 3990.338791999995
+    },
+    {
+      "generation": 15,
+      "bestFitness": 0.5355501393545286,
+      "avgFitness": 0.3761618242610441,
+      "archiveSize": 0,
+      "elapsedMs": 3789.3560829999915
+    },
+    {
+      "generation": 16,
+      "bestFitness": 0.5355501393545286,
+      "avgFitness": 0.42616077107420536,
+      "archiveSize": 0,
+      "elapsedMs": 3984.730416999999
+    },
+    {
+      "generation": 17,
+      "bestFitness": 0.5355501393545286,
+      "avgFitness": 0.39910579444161953,
+      "archiveSize": 0,
+      "elapsedMs": 3649.5652919999993
+    },
+    {
+      "generation": 18,
+      "bestFitness": 0.5355501393545286,
+      "avgFitness": 0.4993069100964845,
+      "archiveSize": 0,
+      "elapsedMs": 3738.501084000003
+    },
+    {
+      "generation": 19,
+      "bestFitness": 0.5355501393545286,
+      "avgFitness": 0.4978044364491943,
+      "archiveSize": 0,
+      "elapsedMs": 3566.9155420000025
+    },
+    {
+      "generation": 20,
+      "bestFitness": 0.5355501393545286,
+      "avgFitness": 0.47456498530359,
+      "archiveSize": 0,
+      "elapsedMs": 3618.7487919999985
+    }
+  ]
+}

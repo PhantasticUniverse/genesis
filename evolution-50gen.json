@@ -9,10 +9,7 @@
     "growthCenter": 0.052472851581176254,
     "growthWidth": 0.07726580757081492,
     "timeResolution": 19,
-    "peaks": [
-      0.2643682835640294,
-      0.7373639964450264
-    ],
+    "peaks": [0.2643682835640294, 0.7373639964450264],
     "encoded": "MjB8MTl8MC4yNjQsMC43Mzd8MC4wNTI1fDAuMDc3M3wzfDE="
   },
   "generationStats": [

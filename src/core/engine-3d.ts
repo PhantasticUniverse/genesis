@@ -113,7 +113,7 @@ export async function createEngine3D(
   const initialKernel = config.kernel ?? DEFAULT_KERNEL_3D_CONFIG;
 
   // Initialize WebGPU
-  const { device, context } = await initWebGPU(canvas);
+  const { device } = await initWebGPU();
 
   // Create 3D pipeline
   let pipeline: Lenia3DPipeline = createLenia3DPipeline(

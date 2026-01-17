@@ -221,7 +221,8 @@ export const PARTICLE_LENIA_PRESETS: Record<
     initialParticles: 50,
   },
   clustering: {
-    description: "Same-type particles cluster, creating distinct Lenia colonies",
+    description:
+      "Same-type particles cluster, creating distinct Lenia colonies",
     particleConfig: { maxParticles: 300, numTypes: 3, friction: 0.03 },
     coupling: {
       depositEnabled: true,
@@ -247,7 +248,8 @@ export const PARTICLE_LENIA_PRESETS: Record<
     initialParticles: 60,
   },
   seeder: {
-    description: "Particles seed growth and are attracted to high-density regions",
+    description:
+      "Particles seed growth and are attracted to high-density regions",
     particleConfig: { maxParticles: 100, numTypes: 1, friction: 0.05 },
     coupling: {
       depositEnabled: true,
@@ -1688,6 +1690,11 @@ export type { EcologyParams };
 export type { MultiChannelConfig };
 
 // Re-export particle types
-export type { ParticleSystemState, ParticleSystemConfig, FieldCouplingConfig, Particle };
+export type {
+  ParticleSystemState,
+  ParticleSystemConfig,
+  FieldCouplingConfig,
+  Particle,
+};
 export type { SpawnParticleOptions, ParticlePresetName };
 // PARTICLE_LENIA_PRESETS is already exported where it's defined

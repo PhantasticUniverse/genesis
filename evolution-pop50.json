@@ -10,9 +10,7 @@
     "growthWidth": 0.059411368221825245,
     "timeResolution": 5,
     "peaks": [
-      0.2526031996773531,
-      0.7108204611868134,
-      0.8678648219260745,
+      0.2526031996773531, 0.7108204611868134, 0.8678648219260745,
       0.9095491136384903
     ],
     "encoded": "MjB8NXwwLjI1MywwLjcxMSwwLjg2OCwwLjkxMHwwLjA4NTZ8MC4wNTk0fDF8Mg=="

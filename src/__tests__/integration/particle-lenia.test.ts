@@ -36,7 +36,9 @@ describe("Particle-Lenia Hybrid Integration", () => {
         expect(PARTICLE_LENIA_PRESETS[preset].particleConfig).toBeDefined();
         expect(PARTICLE_LENIA_PRESETS[preset].coupling).toBeDefined();
         expect(PARTICLE_LENIA_PRESETS[preset].interactionPreset).toBeDefined();
-        expect(PARTICLE_LENIA_PRESETS[preset].initialParticles).toBeGreaterThan(0);
+        expect(PARTICLE_LENIA_PRESETS[preset].initialParticles).toBeGreaterThan(
+          0,
+        );
       });
     });
 
@@ -171,7 +173,8 @@ describe("Particle-Lenia Hybrid Integration", () => {
       // Particle velocity should reflect the gradient direction
       // Note: The exact velocity depends on mass and dt
       // Just verify that the gradient had some effect on the particle
-      const hasGradientEffect = state.particles[0].vx !== 0 || state.particles[0].x !== 32;
+      const hasGradientEffect =
+        state.particles[0].vx !== 0 || state.particles[0].x !== 32;
       expect(hasGradientEffect).toBe(true);
     });
   });
@@ -375,10 +378,9 @@ describe("Particle-Lenia Hybrid Integration", () => {
             preset.coupling,
           );
 
-          state.interactionMatrix =
-            INTERACTION_PRESETS[preset.interactionPreset](
-              preset.particleConfig.numTypes ?? 3,
-            );
+          state.interactionMatrix = INTERACTION_PRESETS[
+            preset.interactionPreset
+          ](preset.particleConfig.numTypes ?? 3);
           spawnRandomParticles(state, preset.initialParticles);
 
           // Should be able to update without errors

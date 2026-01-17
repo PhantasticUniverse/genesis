@@ -81,11 +81,11 @@ export function createFFTPipeline(
     });
 
   // Ping-pong textures for FFT passes
-  let fftTextureA = createComplexTexture("fft-texture-a");
-  let fftTextureB = createComplexTexture("fft-texture-b");
+  const fftTextureA = createComplexTexture("fft-texture-a");
+  const fftTextureB = createComplexTexture("fft-texture-b");
 
   // Kernel FFT texture (precomputed)
-  let kernelFFTTexture = createComplexTexture("kernel-fft");
+  const kernelFFTTexture = createComplexTexture("kernel-fft");
 
   // Uniform buffers
   const butterflyUniformBuffer = device.createBuffer({

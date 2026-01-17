@@ -42,7 +42,11 @@ export function hungarianAlgorithm(
 
   const m = costMatrix[0]?.length ?? 0;
   if (m === 0) {
-    return { assignment: new Array(n).fill(-1), totalCost: 0, assignmentCount: 0 };
+    return {
+      assignment: new Array(n).fill(-1),
+      totalCost: 0,
+      assignmentCount: 0,
+    };
   }
 
   // Pad to square matrix if necessary
@@ -93,7 +97,9 @@ function createPaddedMatrix(
 
   // Use a large but finite padding value
   // This ensures the algorithm converges while making padding assignments unfavorable
-  const safePadding = isFinite(fillValue) ? fillValue : Math.max(maxVal * size * 100, 1e9);
+  const safePadding = isFinite(fillValue)
+    ? fillValue
+    : Math.max(maxVal * size * 100, 1e9);
 
   for (let i = 0; i < size; i++) {
     padded[i] = [];

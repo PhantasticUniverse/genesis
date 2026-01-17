@@ -218,12 +218,17 @@ describe("computeTrackingCostMatrix", () => {
       ),
     ).toEqual([]);
     expect(
-      computeTrackingCostMatrix([], [{ centroidX: 0, centroidY: 0, mass: 100 }]),
+      computeTrackingCostMatrix(
+        [],
+        [{ centroidX: 0, centroidY: 0, mass: 100 }],
+      ),
     ).toEqual([]);
   });
 
   it("should compute distance-based costs", () => {
-    const prev = [{ centroidX: 0, centroidY: 0, velocityX: 0, velocityY: 0, mass: 100 }];
+    const prev = [
+      { centroidX: 0, centroidY: 0, velocityX: 0, velocityY: 0, mass: 100 },
+    ];
     const curr = [
       { centroidX: 10, centroidY: 0, mass: 100 },
       { centroidX: 0, centroidY: 20, mass: 100 },
@@ -242,7 +247,9 @@ describe("computeTrackingCostMatrix", () => {
   });
 
   it("should incorporate velocity prediction", () => {
-    const prev = [{ centroidX: 0, centroidY: 0, velocityX: 5, velocityY: 0, mass: 100 }];
+    const prev = [
+      { centroidX: 0, centroidY: 0, velocityX: 5, velocityY: 0, mass: 100 },
+    ];
     const curr = [
       { centroidX: 5, centroidY: 0, mass: 100 }, // At predicted position
       { centroidX: 10, centroidY: 0, mass: 100 }, // Past predicted position
@@ -260,7 +267,9 @@ describe("computeTrackingCostMatrix", () => {
   });
 
   it("should incorporate mass similarity", () => {
-    const prev = [{ centroidX: 0, centroidY: 0, velocityX: 0, velocityY: 0, mass: 100 }];
+    const prev = [
+      { centroidX: 0, centroidY: 0, velocityX: 0, velocityY: 0, mass: 100 },
+    ];
     const curr = [
       { centroidX: 5, centroidY: 0, mass: 100 }, // Same mass
       { centroidX: 5, centroidY: 0, mass: 50 }, // Different mass
@@ -277,7 +286,9 @@ describe("computeTrackingCostMatrix", () => {
   });
 
   it("should mark distant matches as invalid", () => {
-    const prev = [{ centroidX: 0, centroidY: 0, velocityX: 0, velocityY: 0, mass: 100 }];
+    const prev = [
+      { centroidX: 0, centroidY: 0, velocityX: 0, velocityY: 0, mass: 100 },
+    ];
     const curr = [{ centroidX: 100, centroidY: 0, mass: 100 }];
 
     const matrix = computeTrackingCostMatrix(prev, curr, { maxDistance: 50 });
@@ -300,15 +311,29 @@ describe("matchCreaturesHungarian", () => {
         mass: number;
       }
     >();
-    const curr: Array<{ label: number; centroidX: number; centroidY: number; mass: number }> =
-      [];
+    const curr: Array<{
+      label: number;
+      centroidX: number;
+      centroidY: number;
+      mass: number;
+    }> = [];
 
     expect(matchCreaturesHungarian(prev, curr).size).toBe(0);
   });
 
   it("should match single creature", () => {
     const prev = new Map([
-      [1, { id: 1, centroidX: 10, centroidY: 10, velocityX: 1, velocityY: 1, mass: 100 }],
+      [
+        1,
+        {
+          id: 1,
+          centroidX: 10,
+          centroidY: 10,
+          velocityX: 1,
+          velocityY: 1,
+          mass: 100,
+        },
+      ],
     ]);
     const curr = [{ label: 5, centroidX: 12, centroidY: 12, mass: 100 }];
 
@@ -320,8 +345,28 @@ describe("matchCreaturesHungarian", () => {
     // Setup: 2 creatures that have crossed paths
     // Greedy would assign wrong pairs, Hungarian should get it right
     const prev = new Map([
-      [1, { id: 1, centroidX: 0, centroidY: 0, velocityX: 10, velocityY: 0, mass: 100 }],
-      [2, { id: 2, centroidX: 20, centroidY: 0, velocityX: -10, velocityY: 0, mass: 100 }],
+      [
+        1,
+        {
+          id: 1,
+          centroidX: 0,
+          centroidY: 0,
+          velocityX: 10,
+          velocityY: 0,
+          mass: 100,
+        },
+      ],
+      [
+        2,
+        {
+          id: 2,
+          centroidX: 20,
+          centroidY: 0,
+          velocityX: -10,
+          velocityY: 0,
+          mass: 100,
+        },
+      ],
     ]);
 
     // After one frame, they've crossed
@@ -340,7 +385,17 @@ describe("matchCreaturesHungarian", () => {
 
   it("should not match creatures beyond maxMatchDistance", () => {
     const prev = new Map([
-      [1, { id: 1, centroidX: 0, centroidY: 0, velocityX: 0, velocityY: 0, mass: 100 }],
+      [
+        1,
+        {
+          id: 1,
+          centroidX: 0,
+          centroidY: 0,
+          velocityX: 0,
+          velocityY: 0,
+          mass: 100,
+        },
+      ],
     ]);
     const curr = [{ label: 5, centroidX: 100, centroidY: 100, mass: 100 }];
 
@@ -350,7 +405,17 @@ describe("matchCreaturesHungarian", () => {
 
   it("should handle more components than creatures", () => {
     const prev = new Map([
-      [1, { id: 1, centroidX: 10, centroidY: 10, velocityX: 0, velocityY: 0, mass: 100 }],
+      [
+        1,
+        {
+          id: 1,
+          centroidX: 10,
+          centroidY: 10,
+          velocityX: 0,
+          velocityY: 0,
+          mass: 100,
+        },
+      ],
     ]);
     const curr = [
       { label: 5, centroidX: 11, centroidY: 11, mass: 100 },
@@ -367,9 +432,39 @@ describe("matchCreaturesHungarian", () => {
 
   it("should handle more creatures than components", () => {
     const prev = new Map([
-      [1, { id: 1, centroidX: 10, centroidY: 10, velocityX: 0, velocityY: 0, mass: 100 }],
-      [2, { id: 2, centroidX: 50, centroidY: 50, velocityX: 0, velocityY: 0, mass: 100 }],
-      [3, { id: 3, centroidX: 80, centroidY: 80, velocityX: 0, velocityY: 0, mass: 100 }],
+      [
+        1,
+        {
+          id: 1,
+          centroidX: 10,
+          centroidY: 10,
+          velocityX: 0,
+          velocityY: 0,
+          mass: 100,
+        },
+      ],
+      [
+        2,
+        {
+          id: 2,
+          centroidX: 50,
+          centroidY: 50,
+          velocityX: 0,
+          velocityY: 0,
+          mass: 100,
+        },
+      ],
+      [
+        3,
+        {
+          id: 3,
+          centroidX: 80,
+          centroidY: 80,
+          velocityX: 0,
+          velocityY: 0,
+          mass: 100,
+        },
+      ],
     ]);
     const curr = [{ label: 5, centroidX: 11, centroidY: 11, mass: 100 }];
 

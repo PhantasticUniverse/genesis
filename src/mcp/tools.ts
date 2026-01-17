@@ -182,7 +182,8 @@ export const GENESIS_TOOLS = [
   },
   {
     name: "genesis_analyze_symmetry",
-    description: "Analyze rotational and reflectional symmetry of current state",
+    description:
+      "Analyze rotational and reflectional symmetry of current state",
     inputSchema: {
       type: "object" as const,
       properties: {},
@@ -190,7 +191,8 @@ export const GENESIS_TOOLS = [
   },
   {
     name: "genesis_analyze_chaos",
-    description: "Estimate Lyapunov exponent (chaos measure) of current dynamics",
+    description:
+      "Estimate Lyapunov exponent (chaos measure) of current dynamics",
     inputSchema: {
       type: "object" as const,
       properties: {

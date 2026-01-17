@@ -130,9 +130,15 @@ const analysis = tracker.analyze();
 
 ```typescript
 import {
-  mean, variance, std, sem,
-  median, percentile, iqr,
-  skewness, kurtosis,
+  mean,
+  variance,
+  std,
+  sem,
+  median,
+  percentile,
+  iqr,
+  skewness,
+  kurtosis,
   bootstrapCI,
   bootstrapBCaCI,
   cohensD,

@@ -5,7 +5,10 @@
 
 import type { GridConfig, DiscreteRule, CAParadigm } from "./types";
 import { DEFAULT_GRID_CONFIG, GAME_OF_LIFE_RULE } from "./types";
-import { createAsyncReadbackManager, type AsyncReadbackManager } from "./async-readback";
+import {
+  createAsyncReadbackManager,
+  type AsyncReadbackManager,
+} from "./async-readback";
 import { initWebGPU, createShaderModule } from "../compute/webgpu/context";
 import {
   createBufferManager,
@@ -574,8 +577,8 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
         GPUTextureUsage.COPY_DST,
     });
 
-  let multiChannelTextureA = createMultiChannelTexture("multi-channel-a");
-  let multiChannelTextureB = createMultiChannelTexture("multi-channel-b");
+  const multiChannelTextureA = createMultiChannelTexture("multi-channel-a");
+  const multiChannelTextureB = createMultiChannelTexture("multi-channel-b");
   let multiChannelRead = multiChannelTextureA;
   let multiChannelWrite = multiChannelTextureB;
 
@@ -593,14 +596,14 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
         GPUTextureUsage.COPY_DST,
     });
 
-  let sensorimotorMainA = createSensorimotorTexture("sensorimotor-main-a");
-  let sensorimotorMainB = createSensorimotorTexture("sensorimotor-main-b");
-  let sensorimotorAuxA = createSensorimotorTexture("sensorimotor-aux-a");
-  let sensorimotorAuxB = createSensorimotorTexture("sensorimotor-aux-b");
-  let sensorimotorMainRead = sensorimotorMainA;
-  let sensorimotorMainWrite = sensorimotorMainB;
-  let sensorimotorAuxRead = sensorimotorAuxA;
-  let sensorimotorAuxWrite = sensorimotorAuxB;
+  const sensorimotorMainA = createSensorimotorTexture("sensorimotor-main-a");
+  const sensorimotorMainB = createSensorimotorTexture("sensorimotor-main-b");
+  const sensorimotorAuxA = createSensorimotorTexture("sensorimotor-aux-a");
+  const sensorimotorAuxB = createSensorimotorTexture("sensorimotor-aux-b");
+  const sensorimotorMainRead = sensorimotorMainA;
+  const sensorimotorMainWrite = sensorimotorMainB;
+  const sensorimotorAuxRead = sensorimotorAuxA;
+  const sensorimotorAuxWrite = sensorimotorAuxB;
   let sensorimotorEnabled = false;
 
   // Mass conservation state
@@ -892,7 +895,10 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
         // Calculate and set normalization factor using previous frame's mass
         if (targetMass !== null && currentMass > 0) {
           // Clamp normalization factor to prevent extreme values
-          const normFactor = Math.max(0.5, Math.min(2.0, targetMass / currentMass));
+          const normFactor = Math.max(
+            0.5,
+            Math.min(2.0, targetMass / currentMass),
+          );
           continuousPipeline.setNormalizationFactor(normFactor);
         }
       } else {

@@ -58,7 +58,7 @@ export async function checkWebGPUSupport(): Promise<WebGPUCheckResult> {
   try {
     // Try to get adapter with timeout (5 seconds)
     const timeoutPromise = new Promise<null>((_, reject) =>
-      setTimeout(() => reject(new Error("timeout")), 5000)
+      setTimeout(() => reject(new Error("timeout")), 5000),
     );
 
     const adapterPromise = navigator.gpu.requestAdapter({

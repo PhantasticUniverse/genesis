@@ -52,12 +52,12 @@ engine.getBoundaryMode();
 
 ## Boundary Modes
 
-| Mode        | Description                              |
-| ----------- | ---------------------------------------- |
-| `periodic`  | Toroidal wrap (default)                  |
-| `clamped`   | Edge values repeat                       |
-| `reflected` | Mirror at boundaries                     |
-| `zero`      | Absorbing (values go to 0 at edges)      |
+| Mode        | Description                         |
+| ----------- | ----------------------------------- |
+| `periodic`  | Toroidal wrap (default)             |
+| `clamped`   | Edge values repeat                  |
+| `reflected` | Mirror at boundaries                |
+| `zero`      | Absorbing (values go to 0 at edges) |
 
 ## Seeded Random Number Generator
 
@@ -66,11 +66,11 @@ import { createSeededRandom, globalRandom, setGlobalSeed } from "./core/random";
 
 // Create independent seeded RNG
 const rng = createSeededRandom(12345);
-rng.next();           // 0-1 float
-rng.nextInt(0, 100);  // Integer in range [0, 100)
-rng.nextGaussian();   // Normal distribution
-rng.shuffle(array);   // In-place shuffle
-rng.choice(array);    // Random element
+rng.next(); // 0-1 float
+rng.nextInt(0, 100); // Integer in range [0, 100)
+rng.nextGaussian(); // Normal distribution
+rng.shuffle(array); // In-place shuffle
+rng.choice(array); // Random element
 
 // Global RNG for convenience
 setGlobalSeed(42);

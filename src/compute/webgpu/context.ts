@@ -34,8 +34,8 @@ export async function initWebGPU(): Promise<WebGPUContext> {
   const timeoutPromise = new Promise<null>((_, reject) =>
     setTimeout(
       () => reject(new Error("WebGPU adapter request timed out")),
-      5000
-    )
+      5000,
+    ),
   );
 
   const adapterPromise = navigator.gpu.requestAdapter({

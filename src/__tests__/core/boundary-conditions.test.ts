@@ -95,7 +95,11 @@ describe("ContinuousPipeline boundary mode", () => {
 
   let mockBuffers: MockGPUBuffer[];
   let mockTextures: MockGPUTexture[];
-  let writeBufferCalls: Array<{ buffer: MockGPUBuffer; offset: number; data: ArrayBuffer }>;
+  let writeBufferCalls: Array<{
+    buffer: MockGPUBuffer;
+    offset: number;
+    data: ArrayBuffer;
+  }>;
 
   beforeEach(() => {
     mockBuffers = [];
@@ -124,22 +128,22 @@ describe("ContinuousPipeline boundary mode", () => {
     mockDevice = {
       createBuffer: vi.fn().mockImplementation(createBuffer),
       createTexture: vi.fn().mockImplementation(createTexture),
-      createBindGroupLayout: vi
-        .fn()
-        .mockImplementation((desc: { label: string }): MockGPUBindGroupLayout => ({
+      createBindGroupLayout: vi.fn().mockImplementation(
+        (desc: { label: string }): MockGPUBindGroupLayout => ({
           label: desc.label,
-        })),
+        }),
+      ),
       createPipelineLayout: vi.fn().mockReturnValue({}),
-      createComputePipeline: vi
-        .fn()
-        .mockImplementation((desc: { label: string }): MockGPUComputePipeline => ({
+      createComputePipeline: vi.fn().mockImplementation(
+        (desc: { label: string }): MockGPUComputePipeline => ({
           label: desc.label,
-        })),
-      createBindGroup: vi
-        .fn()
-        .mockImplementation((desc: { label: string }): MockGPUBindGroup => ({
+        }),
+      ),
+      createBindGroup: vi.fn().mockImplementation(
+        (desc: { label: string }): MockGPUBindGroup => ({
           label: desc.label,
-        })),
+        }),
+      ),
       createShaderModule: vi.fn().mockReturnValue({}),
       queue: {
         writeBuffer: vi.fn().mockImplementation((buffer, offset, data) => {
@@ -244,7 +248,12 @@ describe("Boundary application logic", () => {
 
       case "zero":
         // Out of bounds = invalid
-        if (resultX < 0 || resultX >= width || resultY < 0 || resultY >= height) {
+        if (
+          resultX < 0 ||
+          resultX >= width ||
+          resultY < 0 ||
+          resultY >= height
+        ) {
           valid = false;
         }
         break;

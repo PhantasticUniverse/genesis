@@ -90,7 +90,9 @@ describe("createMAPElitesArchive", () => {
       },
     ];
 
-    expect(() => createMAPElitesArchive({ descriptors: singleDescriptor })).toThrow();
+    expect(() =>
+      createMAPElitesArchive({ descriptors: singleDescriptor }),
+    ).toThrow();
   });
 });
 
@@ -286,7 +288,10 @@ describe("MAPElitesArchive selection", () => {
       let selectedOverexploredCount = 0;
       for (let i = 0; i < 100; i++) {
         const selected = archive.selectCuriosity();
-        if (selected?.coords[0] === cell?.coords[0] && selected?.coords[1] === cell?.coords[1]) {
+        if (
+          selected?.coords[0] === cell?.coords[0] &&
+          selected?.coords[1] === cell?.coords[1]
+        ) {
           selectedOverexploredCount++;
         }
       }
@@ -338,7 +343,8 @@ describe("MAPElitesArchive statistics", () => {
   it("should calculate mean fitness correctly", () => {
     const stats = archive.getStats();
     const elites = archive.getElites();
-    const expectedMean = elites.reduce((s, e) => s + e.fitness, 0) / elites.length;
+    const expectedMean =
+      elites.reduce((s, e) => s + e.fitness, 0) / elites.length;
     expect(stats.meanFitness).toBeCloseTo(expectedMean, 5);
   });
 
@@ -392,7 +398,12 @@ describe("MAPElitesArchive clear", () => {
 
     // Populate
     for (let i = 0; i < 10; i++) {
-      archive.tryAdd(createTestGenome(i), 0.5, createTestBehavior(i * 100, i), 0);
+      archive.tryAdd(
+        createTestGenome(i),
+        0.5,
+        createTestBehavior(i * 100, i),
+        0,
+      );
     }
 
     expect(archive.getStats().filledCells).toBe(10);

@@ -142,10 +142,7 @@ export function kurtosis(values: number[]): number {
   const m4 = values.reduce((acc, v) => acc + ((v - m) / s) ** 4, 0) / n;
 
   // Excess kurtosis with sample correction
-  return (
-    ((n - 1) / ((n - 2) * (n - 3))) *
-    ((n + 1) * m4 - 3 * (n - 1))
-  );
+  return ((n - 1) / ((n - 2) * (n - 3))) * ((n + 1) * m4 - 3 * (n - 1));
 }
 
 // ============================================================================
@@ -220,7 +217,8 @@ export function bootstrapCI(
 ): ConfidenceInterval {
   const { nBootstrap = 10000, confidenceLevel = 0.95, seed } = config;
 
-  const rng = seed !== undefined ? new SeededRandom(seed) : { random: Math.random };
+  const rng =
+    seed !== undefined ? new SeededRandom(seed) : { random: Math.random };
 
   // Generate bootstrap distribution
   const bootstrapStats: number[] = [];
@@ -254,7 +252,8 @@ export function bootstrapBCaCI(
 ): ConfidenceInterval {
   const { nBootstrap = 10000, confidenceLevel = 0.95, seed } = config;
 
-  const rng = seed !== undefined ? new SeededRandom(seed) : { random: Math.random };
+  const rng =
+    seed !== undefined ? new SeededRandom(seed) : { random: Math.random };
   const n = values.length;
   const thetaHat = statistic(values);
 
@@ -516,7 +515,7 @@ export function kruskalWallis(
   for (let i = 0; i < groups.length; i++) {
     const ni = groups[i].length;
     if (ni > 0) {
-      H += (rankSums[i] ** 2) / ni;
+      H += rankSums[i] ** 2 / ni;
     }
   }
   H = (12 / (n * (n + 1))) * H - 3 * (n + 1);
@@ -540,9 +539,10 @@ export function kruskalWallis(
 /**
  * Apply Bonferroni correction to p-values
  */
-export function bonferroniCorrection(
-  pValues: number[],
-): { corrected: number[]; significant: boolean[] } {
+export function bonferroniCorrection(pValues: number[]): {
+  corrected: number[];
+  significant: boolean[];
+} {
   const m = pValues.length;
   const corrected = pValues.map((p) => Math.min(1, p * m));
   const significant = corrected.map((p) => p < 0.05);
@@ -552,9 +552,10 @@ export function bonferroniCorrection(
 /**
  * Apply Holm-Bonferroni step-down correction
  */
-export function holmCorrection(
-  pValues: number[],
-): { corrected: number[]; significant: boolean[] } {
+export function holmCorrection(pValues: number[]): {
+  corrected: number[];
+  significant: boolean[];
+} {
   const m = pValues.length;
   const indexed = pValues.map((p, i) => ({ p, i }));
   indexed.sort((a, b) => a.p - b.p);
@@ -576,9 +577,10 @@ export function holmCorrection(
 /**
  * Apply Benjamini-Hochberg FDR correction
  */
-export function benjaminiHochbergCorrection(
-  pValues: number[],
-): { corrected: number[]; significant: boolean[] } {
+export function benjaminiHochbergCorrection(pValues: number[]): {
+  corrected: number[];
+  significant: boolean[];
+} {
   const m = pValues.length;
   const indexed = pValues.map((p, i) => ({ p, i }));
   indexed.sort((a, b) => a.p - b.p);
@@ -620,19 +622,19 @@ export function normalQuantile(p: number): number {
   // Coefficients for rational approximation
   const a = [
     -3.969683028665376e1, 2.209460984245205e2, -2.759285104469687e2,
-    1.383577518672690e2, -3.066479806614716e1, 2.506628277459239e0,
+    1.38357751867269e2, -3.066479806614716e1, 2.506628277459239,
   ];
   const b = [
     -5.447609879822406e1, 1.615858368580409e2, -1.556989798598866e2,
     6.680131188771972e1, -1.328068155288572e1,
   ];
   const c = [
-    -7.784894002430293e-3, -3.223964580411365e-1, -2.400758277161838e0,
-    -2.549732539343734e0, 4.374664141464968e0, 2.938163982698783e0,
+    -7.784894002430293e-3, -3.223964580411365e-1, -2.400758277161838,
+    -2.549732539343734, 4.374664141464968, 2.938163982698783,
   ];
   const d = [
-    7.784695709041462e-3, 3.224671290700398e-1, 2.445134137142996e0,
-    3.754408661907416e0,
+    7.784695709041462e-3, 3.224671290700398e-1, 2.445134137142996,
+    3.754408661907416,
   ];
 
   const pLow = 0.02425;
@@ -736,6 +738,9 @@ export function summarize(values: number[]): {
     iqr: iqr(values),
     skewness: skewness(values),
     kurtosis: kurtosis(values),
-    ci95: bootstrapCI(values, mean, { nBootstrap: 2000, confidenceLevel: 0.95 }),
+    ci95: bootstrapCI(values, mean, {
+      nBootstrap: 2000,
+      confidenceLevel: 0.95,
+    }),
   };
 }

@@ -1,0 +1,28 @@
+{
+  "id": "exp_2026-01-17T09-39-52-480Z_ofw4cz",
+  "command": "analyze",
+  "subcommand": "full",
+  "args": {
+    "size": 64,
+    "steps": 100,
+    "seed": 42,
+    "random": true,
+    "format": "table"
+  },
+  "seed": 42,
+  "timestamp": "2026-01-17T09:39:52.525Z",
+  "git": {
+    "hash": "78e7793",
+    "branch": "main",
+    "dirty": true
+  },
+  "system": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "nodeVersion": "v22.6.0",
+    "cpuModel": "Apple M4 Max",
+    "totalMemoryGB": 36
+  },
+  "status": "completed",
+  "duration": 417
+}

@@ -144,7 +144,7 @@ describe("3D Organism Importer", () => {
       const result = decode3DRLE(rle, 8, 8, 8);
 
       // Should have values on 3 different layers
-      let layersWithValues = new Set<number>();
+      const layersWithValues = new Set<number>();
       const { width, height, depth, cells } = result;
 
       for (let z = 0; z < depth; z++) {

@@ -81,10 +81,10 @@ describe("buildCliArgs", () => {
   });
 
   it("should add config parameters", () => {
-    const args = buildCliArgs(
-      "evolve run",
-      { population: 50, mutation_rate: 0.1 },
-    );
+    const args = buildCliArgs("evolve run", {
+      population: 50,
+      mutation_rate: 0.1,
+    });
 
     expect(args).toContain("--population");
     expect(args).toContain("50");
@@ -359,9 +359,9 @@ describe("validateSweepConfig", () => {
 
     const result = validateSweepConfig(config);
     expect(result.valid).toBe(false);
-    expect(result.errors.some((e) => e.includes("min") && e.includes("max"))).toBe(
-      true,
-    );
+    expect(
+      result.errors.some((e) => e.includes("min") && e.includes("max")),
+    ).toBe(true);
   });
 
   it("should reject non-positive repeats", () => {

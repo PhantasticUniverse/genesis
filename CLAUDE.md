@@ -54,16 +54,23 @@ engine.setBoundaryMode('periodic' | 'clamped' | 'reflected' | 'zero')
 ## Seeded RNG
 
 ```typescript
-import { setSeed, random, randomInt, randomFloat, randomBool } from './core/random';
+import {
+  setSeed,
+  random,
+  randomInt,
+  randomFloat,
+  randomBool,
+} from "./core/random";
 
-setSeed(12345);           // Set global seed for reproducibility
-random();                 // 0-1 float
-randomInt(min, max);      // Integer in [min, max]
-randomFloat(min, max);    // Float in [min, max]
-randomBool(0.5);          // Boolean with probability
+setSeed(12345); // Set global seed for reproducibility
+random(); // 0-1 float
+randomInt(min, max); // Integer in [min, max]
+randomFloat(min, max); // Float in [min, max]
+randomBool(0.5); // Boolean with probability
 ```
 
 CLI commands support `--seed` for reproducible experiments:
+
 ```bash
 bun run cli evolve run --seed 42 --generations 10
 bun run cli multikernel evolve --seed 42 --generations 5
@@ -99,20 +106,20 @@ bun run test:coverage     # With coverage report
 
 Domain-specific documentation is in `.claude/skills/`:
 
-| Skill        | Description                                    |
-| ------------ | ---------------------------------------------- |
-| `lenia-core` | Engine API, parameters, boundary modes         |
-| `analysis`   | Symmetry, chaos, periodicity, statistics       |
-| `discovery`  | GA, fitness, novelty, MAP-Elites, replication  |
-| `webgpu`     | GPU pipelines, async readback, spatial hash    |
-| `3d-lenia`   | 3D engine and presets                          |
-| `advanced`   | Particles, bioelectric, flow-lenia             |
-| `cli`        | CLI commands, parameter sweep, CPU testing     |
+| Skill        | Description                                   |
+| ------------ | --------------------------------------------- |
+| `lenia-core` | Engine API, parameters, boundary modes        |
+| `analysis`   | Symmetry, chaos, periodicity, statistics      |
+| `discovery`  | GA, fitness, novelty, MAP-Elites, replication |
+| `webgpu`     | GPU pipelines, async readback, spatial hash   |
+| `3d-lenia`   | 3D engine and presets                         |
+| `advanced`   | Particles, bioelectric, flow-lenia            |
+| `cli`        | CLI commands, parameter sweep, CPU testing    |
 
 ## MCP Server (AI Interaction)
 
 ```typescript
-import { createGenesisMCPServer } from './mcp/server';
+import { createGenesisMCPServer } from "./mcp/server";
 const server = createGenesisMCPServer();
 // Tools: genesis_start_simulation, genesis_step, genesis_analyze_*, etc.
 ```

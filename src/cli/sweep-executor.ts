@@ -235,7 +235,10 @@ export function parseMetrics(
       const patterns = [
         new RegExp(`${name}[:\\s]+=?\\s*([\\d.eE+-]+)`, "i"),
         new RegExp(`"${name}"[:\\s]+([\\d.eE+-]+)`, "i"),
-        new RegExp(`${name.replace(/_/g, "\\s*")}[:\\s]+=?\\s*([\\d.eE+-]+)`, "i"),
+        new RegExp(
+          `${name.replace(/_/g, "\\s*")}[:\\s]+=?\\s*([\\d.eE+-]+)`,
+          "i",
+        ),
       ];
 
       for (const pattern of patterns) {
@@ -499,7 +502,9 @@ export function formatSweepSummary(results: SweepResults): string {
   for (const agg of results.aggregated) {
     lines.push("");
     lines.push(`Config: ${JSON.stringify(agg.config)}`);
-    lines.push(`  Successful runs: ${agg.successCount}/${results.config.repeats}`);
+    lines.push(
+      `  Successful runs: ${agg.successCount}/${results.config.repeats}`,
+    );
 
     for (const [metric, stats] of Object.entries(agg.metrics)) {
       lines.push(
@@ -614,6 +619,8 @@ export function parseSweepConfig(json: Record<string, unknown>): SweepConfig {
     repeats: json.repeats as number,
     metrics: json.metrics as string[],
     outputDir: json.outputDir as string | undefined,
-    fixedArgs: json.fixedArgs as Record<string, string | number | boolean> | undefined,
+    fixedArgs: json.fixedArgs as
+      | Record<string, string | number | boolean>
+      | undefined,
   };
 }

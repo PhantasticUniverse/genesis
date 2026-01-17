@@ -78,7 +78,7 @@ export function createSensorimotorPipeline(
   });
 
   // Create kernel texture
-  let kernelSize = params.kernelRadius * 2 + 1;
+  const kernelSize = params.kernelRadius * 2 + 1;
   let kernelTexture = createKernelTexture(device, params.kernelRadius);
 
   function createKernelTexture(device: GPUDevice, radius: number): GPUTexture {

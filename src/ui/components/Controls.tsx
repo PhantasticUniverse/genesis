@@ -107,7 +107,9 @@ export function Controls({ engine }: ControlsProps) {
     engine?.setColormap(e.target.value as ColormapName);
   };
 
-  const handleBoundaryModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleBoundaryModeChange = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
     engine?.setBoundaryMode(e.target.value as BoundaryMode);
   };
 

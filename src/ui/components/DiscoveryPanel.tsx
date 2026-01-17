@@ -12,6 +12,102 @@ import { genomeToParams, type LeniaGenome } from "../../discovery/genome";
 import { evaluateGenome } from "../../discovery/evaluator";
 import type { Engine } from "../../core/engine";
 
+/**
+ * Fitness history entry for charting
+ */
+interface FitnessHistoryEntry {
+  generation: number;
+  best: number;
+  avg: number;
+}
+
+/**
+ * Mini fitness chart showing evolution progress
+ */
+function FitnessChart({ history }: { history: FitnessHistoryEntry[] }) {
+  if (history.length < 2) return null;
+
+  const width = 120;
+  const height = 40;
+  const padding = 2;
+
+  // Find max fitness for scaling
+  const maxFitness = Math.max(...history.map((h) => h.best), 0.1);
+
+  // Create path for best fitness line
+  const bestPath = history
+    .map((entry, i) => {
+      const x = padding + (i / (history.length - 1)) * (width - padding * 2);
+      const y =
+        height - padding - (entry.best / maxFitness) * (height - padding * 2);
+      return `${i === 0 ? "M" : "L"} ${x} ${y}`;
+    })
+    .join(" ");
+
+  // Create path for average fitness line
+  const avgPath = history
+    .map((entry, i) => {
+      const x = padding + (i / (history.length - 1)) * (width - padding * 2);
+      const y =
+        height - padding - (entry.avg / maxFitness) * (height - padding * 2);
+      return `${i === 0 ? "M" : "L"} ${x} ${y}`;
+    })
+    .join(" ");
+
+  return (
+    <div className="p-2 bg-zinc-800 rounded">
+      <div className="flex items-center justify-between text-xs text-zinc-500 mb-1">
+        <span>Fitness History</span>
+        <span>{history.length} gen</span>
+      </div>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full h-10"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <linearGradient id="bestFitnessGradient" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="rgb(168, 85, 247)" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="rgb(168, 85, 247)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {/* Fill under best line */}
+        <path
+          d={`${bestPath} L ${width - padding} ${height - padding} L ${padding} ${height - padding} Z`}
+          fill="url(#bestFitnessGradient)"
+        />
+        {/* Average fitness line (dimmer) */}
+        <path
+          d={avgPath}
+          fill="none"
+          stroke="rgb(113, 113, 122)"
+          strokeWidth="1"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray="2,2"
+        />
+        {/* Best fitness line */}
+        <path
+          d={bestPath}
+          fill="none"
+          stroke="rgb(168, 85, 247)"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <div className="flex justify-between text-xs mt-1">
+        <span className="text-zinc-500">
+          Avg: <span className="text-zinc-400">{(history[history.length - 1]?.avg * 100).toFixed(0)}%</span>
+        </span>
+        <span className="text-zinc-500">
+          Best: <span className="text-purple-400">{(history[history.length - 1]?.best * 100).toFixed(0)}%</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 interface DiscoveryPanelProps {
   engine: Engine | null;
   gaController: GAController;
@@ -35,8 +131,10 @@ export function DiscoveryPanel({
     current: 0,
     total: 0,
   });
+  const [fitnessHistory, setFitnessHistory] = useState<FitnessHistoryEntry[]>([]);
   const searchAbortRef = useRef(false);
   const isMountedRef = useRef(true);
+  const lastRecordedGenRef = useRef(-1);
 
   // Cleanup: abort search on unmount to prevent memory leaks
   useEffect(() => {
@@ -95,6 +193,7 @@ export function DiscoveryPanel({
               complexity: 0,
               symmetry: 0,
               movement: 0,
+              replication: 0,
               overall: 0,
             },
             {
@@ -108,6 +207,31 @@ export function DiscoveryPanel({
           );
         }
       } else if (controller.isGenerationComplete()) {
+        // Record fitness history before evolving
+        const currentState = getState();
+        if (isMountedRef.current && currentState.generation > lastRecordedGenRef.current) {
+          lastRecordedGenRef.current = currentState.generation;
+
+          // Calculate average fitness of evaluated individuals
+          const evaluated = currentState.population.filter(
+            (ind) => ind.fitness !== null
+          );
+          const avgFitness =
+            evaluated.length > 0
+              ? evaluated.reduce((sum, ind) => sum + (ind.fitness?.overall ?? 0), 0) /
+                evaluated.length
+              : 0;
+
+          setFitnessHistory((prev) => [
+            ...prev,
+            {
+              generation: currentState.generation,
+              best: currentState.bestFitness,
+              avg: avgFitness,
+            },
+          ]);
+        }
+
         // Evolve to next generation
         controller.evolve();
         if (isMountedRef.current) {
@@ -122,6 +246,8 @@ export function DiscoveryPanel({
 
   const handleStartSearch = useCallback(() => {
     setIsSearching(true);
+    setFitnessHistory([]);
+    lastRecordedGenRef.current = -1;
     controller.reset();
     runSearchLoop();
   }, [controller, runSearchLoop]);
@@ -215,6 +341,9 @@ export function DiscoveryPanel({
           <div className="text-zinc-300 font-mono">{state.archive.length}</div>
         </div>
       </div>
+
+      {/* Fitness history chart */}
+      {fitnessHistory.length >= 2 && <FitnessChart history={fitnessHistory} />}
 
       {/* Best individual */}
       {state.bestIndividual && (

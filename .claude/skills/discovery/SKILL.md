@@ -170,12 +170,12 @@ archive.import(state);
 
 ### Descriptor Presets
 
-| Preset           | Axes                    | Use Case                |
-| ---------------- | ----------------------- | ----------------------- |
-| `mass-speed`     | Total mass × Mean speed | General exploration     |
-| `mass-rotation`  | Total mass × Rotation   | Spinning organisms      |
-| `speed-stability`| Mean speed × Stability  | Movement patterns       |
-| `mass-age`       | Total mass × Lifetime   | Survival strategies     |
+| Preset            | Axes                    | Use Case            |
+| ----------------- | ----------------------- | ------------------- |
+| `mass-speed`      | Total mass × Mean speed | General exploration |
+| `mass-rotation`   | Total mass × Rotation   | Spinning organisms  |
+| `speed-stability` | Mean speed × Stability  | Movement patterns   |
+| `mass-age`        | Total mass × Lifetime   | Survival strategies |
 
 ## Statistical Analysis
 
@@ -197,8 +197,8 @@ const ci = bootstrapCI(data, mean, { confidence: 0.95, iterations: 10000 });
 const bcaCI = bootstrapBCaCI(data, mean, { confidence: 0.95 });
 
 // Effect sizes
-const d = cohensD(group1, group2);   // Cohen's d
-const g = hedgesG(group1, group2);   // Hedges' g (small samples)
+const d = cohensD(group1, group2); // Cohen's d
+const g = hedgesG(group1, group2); // Hedges' g (small samples)
 const delta = cliffsD(group1, group2); // Non-parametric
 
 // Statistical tests

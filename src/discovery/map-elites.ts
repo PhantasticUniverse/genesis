@@ -119,7 +119,12 @@ export interface MAPElitesArchive {
   getBest(): ArchiveCell | null;
 
   /** Try to add a genome to the archive */
-  tryAdd(genome: Genome, fitness: number, behavior: BehaviorVector, generation: number): boolean;
+  tryAdd(
+    genome: Genome,
+    fitness: number,
+    behavior: BehaviorVector,
+    generation: number,
+  ): boolean;
 
   /** Select a random elite for reproduction */
   selectRandom(): ArchiveCell | null;
@@ -249,7 +254,9 @@ export function createMAPElitesArchive(
 
   // Validate descriptors (only support 2D for now)
   if (fullConfig.descriptors.length !== 2) {
-    throw new Error("MAP-Elites currently supports exactly 2 behavioral descriptors");
+    throw new Error(
+      "MAP-Elites currently supports exactly 2 behavioral descriptors",
+    );
   }
 
   // Create 2D grid storage
@@ -273,7 +280,9 @@ export function createMAPElitesArchive(
 
       // Map to bin index
       const normalized = (value - desc.min) / (desc.max - desc.min);
-      const bin = Math.floor(Math.max(0, Math.min(desc.bins - 1, normalized * desc.bins)));
+      const bin = Math.floor(
+        Math.max(0, Math.min(desc.bins - 1, normalized * desc.bins)),
+      );
       coords.push(bin);
     }
 
@@ -561,14 +570,20 @@ export function mapElitesGeneration(
   evaluated: number;
   stats: ArchiveStats;
 }> {
-  const fullParams: MAPElitesParams = { ...DEFAULT_MAP_ELITES_PARAMS, ...params };
+  const fullParams: MAPElitesParams = {
+    ...DEFAULT_MAP_ELITES_PARAMS,
+    ...params,
+  };
 
   return new Promise(async (resolve) => {
     const batch: Genome[] = [];
 
     // Generate batch
     for (let i = 0; i < fullParams.batchSize; i++) {
-      if (Math.random() < fullParams.explorationRate || archive.getStats().filledCells === 0) {
+      if (
+        Math.random() < fullParams.explorationRate ||
+        archive.getStats().filledCells === 0
+      ) {
         // Exploration: generate random genome
         batch.push(generateRandom());
       } else {

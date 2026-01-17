@@ -227,7 +227,7 @@ export function decodeGenome(encoded: string): LeniaGenome {
   } catch {
     throw new Error(
       `Invalid genome string: not valid base64 encoding. ` +
-        `Expected a genome string from 'encodeGenome()' or exported from evolution results.`
+        `Expected a genome string from 'encodeGenome()' or exported from evolution results.`,
     );
   }
 
@@ -235,7 +235,7 @@ export function decodeGenome(encoded: string): LeniaGenome {
   if (parts.length < 7) {
     throw new Error(
       `Invalid genome format: expected 7 parts but got ${parts.length}. ` +
-        `The genome string may be corrupted or from an incompatible version.`
+        `The genome string may be corrupted or from an incompatible version.`,
     );
   }
 
@@ -734,7 +734,7 @@ export function decodeMultiKernelGenome(encoded: string): MultiKernelGenome {
   } catch {
     throw new Error(
       `Invalid multi-kernel genome string: not valid base64 encoding. ` +
-        `Expected a genome string from 'encodeMultiKernelGenome()' or exported from evolution results.`
+        `Expected a genome string from 'encodeMultiKernelGenome()' or exported from evolution results.`,
     );
   }
 
@@ -742,7 +742,7 @@ export function decodeMultiKernelGenome(encoded: string): MultiKernelGenome {
   if (parts.length < 10) {
     throw new Error(
       `Invalid multi-kernel genome format: expected 10 parts but got ${parts.length}. ` +
-        `The genome string may be corrupted or from an incompatible version.`
+        `The genome string may be corrupted or from an incompatible version.`,
     );
   }
 

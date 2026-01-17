@@ -284,12 +284,16 @@ export function formatComparisonReport(
 
   // Pairwise comparisons
   if (comparison.pairwiseComparisons) {
-    lines.push("### Pairwise Comparisons (with multiple comparison correction)");
+    lines.push(
+      "### Pairwise Comparisons (with multiple comparison correction)",
+    );
     lines.push("");
     lines.push(
       "| Comparison | Mean Diff | Effect Size | p-value (corrected) | Significant |",
     );
-    lines.push("|------------|-----------|-------------|---------------------|-------------|");
+    lines.push(
+      "|------------|-----------|-------------|---------------------|-------------|",
+    );
 
     for (const p of comparison.pairwiseComparisons) {
       const sigMark = p.test.significant ? "Yes" : "No";
@@ -327,8 +331,7 @@ export function estimateSampleSize(
   const z_beta = 0.84; // Approximate for power = 0.8
 
   // Adjust z_alpha for different alpha levels
-  const z_alpha_adj =
-    alpha === 0.05 ? 1.96 : alpha === 0.01 ? 2.576 : 1.645;
+  const z_alpha_adj = alpha === 0.05 ? 1.96 : alpha === 0.01 ? 2.576 : 1.645;
 
   // Adjust z_beta for different power levels
   const z_beta_adj =
@@ -403,7 +406,8 @@ export function compareAB(
     const effectDesc = effectSize.interpretation;
     const percentChange = Math.abs((difference / meanB) * 100);
 
-    recommendation = `${winner} is significantly ${higherIsBetter ? "better" : "worse"} than ${winner === nameA ? nameB : nameA} ` +
+    recommendation =
+      `${winner} is significantly ${higherIsBetter ? "better" : "worse"} than ${winner === nameA ? nameB : nameA} ` +
       `(${effectDesc} effect, ${percentChange.toFixed(1)}% ${difference > 0 ? "increase" : "decrease"}, p=${test.pValue.toExponential(3)})`;
   }
 

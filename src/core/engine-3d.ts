@@ -116,7 +116,7 @@ export async function createEngine3D(
   const { device } = await initWebGPU();
 
   // Create 3D pipeline
-  let pipeline: Lenia3DPipeline = createLenia3DPipeline(
+  const pipeline: Lenia3DPipeline = createLenia3DPipeline(
     device,
     gridConfig,
     initialParams,

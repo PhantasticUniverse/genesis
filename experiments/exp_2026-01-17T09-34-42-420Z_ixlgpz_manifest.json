@@ -1,0 +1,33 @@
+{
+  "id": "exp_2026-01-17T09-34-42-420Z_ixlgpz",
+  "command": "evolve",
+  "subcommand": "run",
+  "args": {
+    "population": 20,
+    "generations": 20,
+    "size": 64,
+    "steps": 100,
+    "elite": 2,
+    "mutation": 0.15,
+    "crossover": 0.7,
+    "novelty": 0.3,
+    "seed": 42,
+    "format": "json"
+  },
+  "seed": 42,
+  "timestamp": "2026-01-17T09:34:42.468Z",
+  "git": {
+    "hash": "78e7793",
+    "branch": "main",
+    "dirty": true
+  },
+  "system": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "nodeVersion": "v22.6.0",
+    "cpuModel": "Apple M4 Max",
+    "totalMemoryGB": 36
+  },
+  "status": "completed",
+  "duration": 105163
+}

@@ -156,7 +156,11 @@ export function matchCreatures(
   newComponents: ComponentStats[],
   maxMatchDistance: number = 50,
 ): Map<number, number> {
-  return matchCreaturesHungarian(previousCreatures, newComponents, maxMatchDistance);
+  return matchCreaturesHungarian(
+    previousCreatures,
+    newComponents,
+    maxMatchDistance,
+  );
 }
 
 /**

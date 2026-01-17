@@ -165,14 +165,10 @@ export function registerEvolveCommands(program: Command): void {
 
       // Input validation
       const errors: string[] = [];
-      if (populationSize < 2)
-        errors.push("Population must be at least 2");
-      if (generations < 1)
-        errors.push("Generations must be at least 1");
-      if (size < 8)
-        errors.push("Grid size must be at least 8");
-      if (steps < 1)
-        errors.push("Steps must be at least 1");
+      if (populationSize < 2) errors.push("Population must be at least 2");
+      if (generations < 1) errors.push("Generations must be at least 1");
+      if (size < 8) errors.push("Grid size must be at least 8");
+      if (steps < 1) errors.push("Steps must be at least 1");
 
       if (errors.length > 0) {
         console.error("Invalid parameters:");

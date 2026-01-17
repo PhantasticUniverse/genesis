@@ -71,9 +71,7 @@ export class ErrorBoundary extends Component<
       }
 
       // Default fallback
-      return (
-        <DefaultErrorFallback error={error} onReset={this.handleReset} />
-      );
+      return <DefaultErrorFallback error={error} onReset={this.handleReset} />;
     }
 
     return children;

@@ -385,9 +385,7 @@ describe("Multiple Comparison Corrections", () => {
       const holm = holmCorrection(pValues);
 
       // At least some Holm p-values should be smaller
-      const holmSmaller = holm.corrected.some(
-        (p, i) => p < bonf.corrected[i],
-      );
+      const holmSmaller = holm.corrected.some((p, i) => p < bonf.corrected[i]);
       expect(holmSmaller).toBe(true);
     });
 

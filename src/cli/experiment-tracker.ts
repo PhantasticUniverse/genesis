@@ -340,9 +340,7 @@ export function listExperiments(
 /**
  * Summarize experiment results with statistics
  */
-export function summarizeExperiments(
-  experiments: ExperimentManifest[],
-): {
+export function summarizeExperiments(experiments: ExperimentManifest[]): {
   total: number;
   completed: number;
   failed: number;

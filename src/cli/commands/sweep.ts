@@ -16,13 +16,17 @@ import {
   type SweepResults,
 } from "../sweep-executor";
 
-export const sweepCommand = new Command("sweep")
-  .description("Run automated parameter sweeps with parallel execution");
+export const sweepCommand = new Command("sweep").description(
+  "Run automated parameter sweeps with parallel execution",
+);
 
 sweepCommand
   .command("run")
   .description("Execute a parameter sweep from a config file")
-  .requiredOption("-c, --config <file>", "Path to sweep configuration JSON file")
+  .requiredOption(
+    "-c, --config <file>",
+    "Path to sweep configuration JSON file",
+  )
   .option("-p, --parallel <n>", "Number of parallel processes", "1")
   .option("-o, --output <dir>", "Output directory for results")
   .option("--timeout <ms>", "Timeout per run in milliseconds", "300000")
@@ -142,7 +146,10 @@ sweepCommand
 sweepCommand
   .command("validate")
   .description("Validate a sweep configuration file")
-  .requiredOption("-c, --config <file>", "Path to sweep configuration JSON file")
+  .requiredOption(
+    "-c, --config <file>",
+    "Path to sweep configuration JSON file",
+  )
   .action((options) => {
     const { config: configPath } = options;
 
@@ -209,9 +216,7 @@ sweepCommand
     console.log("=== Sweep Analysis ===");
     console.log(`Command: ${results.config.command}`);
     console.log(`Total runs: ${results.runs.length}`);
-    console.log(
-      `Successful: ${results.runs.filter((r) => r.success).length}`,
-    );
+    console.log(`Successful: ${results.runs.filter((r) => r.success).length}`);
     console.log(`Duration: ${(results.totalDuration / 1000).toFixed(1)}s`);
     console.log("");
 
@@ -270,7 +275,9 @@ sweepCommand
 
       const best = sorted[0];
       if (best && best.metrics[metricName]) {
-        console.log(`${metricName}: ${best.metrics[metricName].mean.toFixed(4)}`);
+        console.log(
+          `${metricName}: ${best.metrics[metricName].mean.toFixed(4)}`,
+        );
         console.log(`  Config: ${JSON.stringify(best.config)}`);
       }
     }

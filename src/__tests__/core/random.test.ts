@@ -206,9 +206,7 @@ describe("Seeded RNG", () => {
 
       expect(result).toBe(arr); // Same reference
       expect(arr).not.toEqual(original); // Order changed
-      expect(arr.sort((a, b) => a - b)).toEqual(
-        original.sort((a, b) => a - b),
-      ); // Same elements
+      expect(arr.sort((a, b) => a - b)).toEqual(original.sort((a, b) => a - b)); // Same elements
     });
 
     it("should be reproducible", () => {

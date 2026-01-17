@@ -118,7 +118,7 @@ export function createParticlePipeline(
   // State
   let currentBuffer = 0;
   let activeParticleCount = 0;
-  let cachedPositions = new Float32Array(maxParticles * 2);
+  const cachedPositions = new Float32Array(maxParticles * 2);
   let fieldCouplingConfig = { ...DEFAULT_FIELD_COUPLING };
 
   // Create bind groups (will be recreated when needed)

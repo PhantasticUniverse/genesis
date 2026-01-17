@@ -245,7 +245,7 @@ export async function createGPUTrainer(
   const MAX_CONSECUTIVE_ERRORS = 3;
 
   // Training state
-  let state: GPUTrainerState = {
+  const state: GPUTrainerState = {
     config: cfg,
     params: pipeline.getParams(),
     currentStep: 0,

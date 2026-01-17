@@ -205,7 +205,8 @@ export class GenesisMCPServer {
   private handleStartSimulation(args: Record<string, unknown>): MCPToolResult {
     const width = (args.width as number) ?? 256;
     const height = (args.height as number) ?? 256;
-    const paradigm = (args.paradigm as "discrete" | "continuous") ?? "continuous";
+    const paradigm =
+      (args.paradigm as "discrete" | "continuous") ?? "continuous";
     const preset = (args.preset as string) ?? "lenia-orbium";
     const seed = args.seed as number | undefined;
 
@@ -540,9 +541,12 @@ export class GenesisMCPServer {
           type: "text",
           text: JSON.stringify({
             generation: this.context.evolutionStats.generation,
-            bestFitness: Math.round(this.context.evolutionStats.bestFitness * 1000) / 1000,
-            meanFitness: Math.round(this.context.evolutionStats.meanFitness * 1000) / 1000,
-            diversity: Math.round(this.context.evolutionStats.diversity * 1000) / 1000,
+            bestFitness:
+              Math.round(this.context.evolutionStats.bestFitness * 1000) / 1000,
+            meanFitness:
+              Math.round(this.context.evolutionStats.meanFitness * 1000) / 1000,
+            diversity:
+              Math.round(this.context.evolutionStats.diversity * 1000) / 1000,
             populationSize: this.context.evolutionStats.populationSize,
           }),
         },
@@ -672,8 +676,7 @@ export class GenesisMCPServer {
   }
 
   private handleTakeSnapshot(args: Record<string, unknown>): MCPToolResult {
-    const filename =
-      (args.filename as string) ?? `snapshot_${Date.now()}.png`;
+    const filename = (args.filename as string) ?? `snapshot_${Date.now()}.png`;
     const colormap = (args.colormap as string) ?? "viridis";
 
     // In a real implementation, this would render and save the image
@@ -697,7 +700,11 @@ export class GenesisMCPServer {
     const name = (args.name as string) ?? `experiment_${Date.now()}`;
     const trials = (args.trials as number) ?? 5;
     const stepsPerTrial = (args.stepsPerTrial as number) ?? 500;
-    const metrics = (args.metrics as string[]) ?? ["fitness", "mass", "survival"];
+    const metrics = (args.metrics as string[]) ?? [
+      "fitness",
+      "mass",
+      "survival",
+    ];
 
     // Simulate experiment results
     const results: Array<Record<string, number>> = [];
@@ -714,7 +721,8 @@ export class GenesisMCPServer {
     for (const metric of metrics) {
       const values = results.map((r) => r[metric]);
       const mean = values.reduce((a, b) => a + b, 0) / values.length;
-      const variance = values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length;
+      const variance =
+        values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length;
       stats[metric] = {
         mean: Math.round(mean * 1000) / 1000,
         std: Math.round(Math.sqrt(variance) * 1000) / 1000,

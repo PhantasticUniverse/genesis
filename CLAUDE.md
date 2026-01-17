@@ -45,6 +45,7 @@ FFT auto-activates when `kernelRadius >= 16`.
 engine.start() / stop() / reset(pattern)
 engine.setParadigm('discrete' | 'continuous')
 engine.enableMultiChannel(config) / disableMultiChannel()
+engine.enableMultiKernel(config) / disableMultiKernel()
 engine.getMass(): Promise<number>
 ```
 
@@ -61,7 +62,7 @@ bun run cli           # CLI (no WebGPU required)
 
 ## Testing
 
-861 tests covering: core, discovery, agency, compute, analysis, persistence, render, cli
+951 tests covering: core, discovery, agency, compute, analysis, persistence, render, cli
 
 ## Keyboard
 

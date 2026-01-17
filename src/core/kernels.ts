@@ -227,3 +227,120 @@ export const KERNEL_PRESETS = {
     radius: 8,
   },
 } as const;
+
+// ============================================================================
+// Multi-Kernel Support
+// ============================================================================
+
+import type { MultiKernelConfig, SingleKernelParams } from "./types";
+
+/**
+ * Multi-kernel data containing all kernels for GPU upload
+ */
+export interface MultiKernelData {
+  kernels: KernelData[];
+  maxSize: number; // Size of largest kernel
+  textureArrayData: Float32Array; // Flattened data for texture array
+}
+
+/**
+ * Generate all kernels for a multi-kernel configuration
+ */
+export function generateMultiKernels(
+  config: MultiKernelConfig,
+): MultiKernelData {
+  const kernels: KernelData[] = [];
+
+  // Generate each kernel
+  for (const kernelParams of config.kernels) {
+    const kernelConfig: KernelConfig = {
+      shape: kernelParams.shape,
+      radius: kernelParams.radius,
+      peaks: kernelParams.peaks,
+    };
+
+    const kernel = generateKernel(kernelConfig);
+    const normalized = normalizeKernel(kernel);
+    kernels.push(normalized);
+  }
+
+  // Find maximum size for texture array
+  const maxSize = Math.max(...kernels.map((k) => k.size));
+
+  // Create texture array data (padded to max size)
+  const numKernels = kernels.length;
+  const textureArrayData = new Float32Array(numKernels * maxSize * maxSize);
+
+  for (let i = 0; i < numKernels; i++) {
+    const kernel = kernels[i];
+    const offset = i * maxSize * maxSize;
+
+    // Center the kernel in the padded area
+    const padding = Math.floor((maxSize - kernel.size) / 2);
+
+    for (let y = 0; y < kernel.size; y++) {
+      for (let x = 0; x < kernel.size; x++) {
+        const srcIdx = y * kernel.size + x;
+        const dstIdx = (y + padding) * maxSize + (x + padding);
+        textureArrayData[offset + dstIdx] = kernel.weights[srcIdx];
+      }
+    }
+  }
+
+  return { kernels, maxSize, textureArrayData };
+}
+
+/**
+ * Create a GPU texture array from multi-kernel data
+ */
+export function createKernelTextureArray(
+  device: GPUDevice,
+  multiKernelData: MultiKernelData,
+): GPUTexture {
+  const { kernels, maxSize, textureArrayData } = multiKernelData;
+  const numKernels = kernels.length;
+
+  const texture = device.createTexture({
+    label: "multi-kernel-texture-array",
+    size: [maxSize, maxSize, numKernels],
+    format: "r32float",
+    dimension: "2d",
+    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+  });
+
+  // Upload each kernel layer
+  for (let i = 0; i < numKernels; i++) {
+    const offset = i * maxSize * maxSize;
+    const layerData = textureArrayData.slice(
+      offset,
+      offset + maxSize * maxSize,
+    );
+
+    device.queue.writeTexture(
+      { texture, origin: [0, 0, i] },
+      layerData,
+      { bytesPerRow: maxSize * 4 },
+      { width: maxSize, height: maxSize, depthOrArrayLayers: 1 },
+    );
+  }
+
+  return texture;
+}
+
+/**
+ * Generate kernel weights as a Float32Array for a single kernel
+ * Useful for CPU-based simulation in CLI
+ */
+export function generateKernelWeights(
+  params: SingleKernelParams,
+): Float32Array {
+  const config: KernelConfig = {
+    shape: params.shape,
+    radius: params.radius,
+    peaks: params.peaks,
+  };
+
+  const kernel = generateKernel(config);
+  const normalized = normalizeKernel(kernel);
+  return normalized.weights;
+}

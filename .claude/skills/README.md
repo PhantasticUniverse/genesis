@@ -6,7 +6,7 @@ This directory contains domain-specific knowledge for Claude Code to use when wo
 
 | Skill        | Description                                                     |
 | ------------ | --------------------------------------------------------------- |
-| `lenia-core` | Core Lenia engine, parameters, multi-species presets            |
+| `lenia-core` | Core Lenia engine, parameters, multi-kernel, multi-species      |
 | `analysis`   | Symmetry detection, chaos analysis (Lyapunov), period detection |
 | `discovery`  | Genetic algorithm, fitness metrics, novelty search, replication |
 | `webgpu`     | GPU pipelines, texture pooling, spatial hashing                 |

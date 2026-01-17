@@ -9,6 +9,7 @@ import { registerAnalyzeCommands } from "./commands/analyze";
 import { registerBenchCommands } from "./commands/bench";
 import { registerEvolveCommands } from "./commands/evolve";
 import { registerEvaluateCommands } from "./commands/evaluate";
+import { registerMultiKernelCommands } from "./commands/multikernel";
 
 const program = new Command();
 
@@ -24,6 +25,7 @@ registerAnalyzeCommands(program);
 registerBenchCommands(program);
 registerEvolveCommands(program);
 registerEvaluateCommands(program);
+registerMultiKernelCommands(program);
 
 // Parse and execute
 program.parse(process.argv);

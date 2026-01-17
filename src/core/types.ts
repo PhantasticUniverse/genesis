@@ -117,3 +117,58 @@ export const DEFAULT_LENIA_KERNEL: KernelConfig = {
   dt: 0.1,
   weight: 1,
 };
+
+// ============================================================================
+// Multi-Kernel Lenia Types
+// ============================================================================
+
+/** Single kernel parameters for Multi-Kernel Lenia */
+export interface SingleKernelParams {
+  id: string;
+  shape: KernelShape;
+  radius: number; // R: kernel radius in pixels (5-30)
+  peaks: number[]; // b: kernel bump heights [0-1]
+  weight: number; // h: contribution weight (0-1.5)
+}
+
+/** Growth parameters for Multi-Kernel Lenia */
+export interface GrowthParams {
+  type: GrowthFunction;
+  mu: number; // growth center (0.05-0.4)
+  sigma: number; // growth width (0.005-0.1)
+}
+
+/** Kernel combination modes */
+export type KernelCombinationMode = "sum" | "average" | "weighted";
+
+/** Multi-Kernel Lenia configuration */
+export interface MultiKernelConfig {
+  kernels: SingleKernelParams[];
+  growthParams: GrowthParams[];
+  combinationMode: KernelCombinationMode;
+  dt: number;
+  maxKernels: number; // default 4
+}
+
+/** Default Multi-Kernel configuration (single kernel, backward compatible) */
+export const DEFAULT_MULTIKERNEL_CONFIG: MultiKernelConfig = {
+  kernels: [
+    {
+      id: "kernel-0",
+      shape: "polynomial",
+      radius: 13,
+      peaks: [0.5],
+      weight: 1.0,
+    },
+  ],
+  growthParams: [
+    {
+      type: "gaussian",
+      mu: 0.12,
+      sigma: 0.04,
+    },
+  ],
+  combinationMode: "sum",
+  dt: 0.1,
+  maxKernels: 4,
+};

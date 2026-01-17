@@ -50,6 +50,17 @@ import {
 import type { MultiChannelConfig } from "./channels";
 import { MULTICHANNEL_PRESETS } from "./channels";
 import {
+  createMultiKernelPipeline,
+  type MultiKernelPipeline,
+} from "../compute/webgpu/multi-kernel-pipeline";
+import type {
+  MultiKernelConfig,
+  SingleKernelParams,
+  GrowthParams,
+} from "./types";
+import { DEFAULT_MULTIKERNEL_CONFIG } from "./types";
+import { MULTIKERNEL_PRESETS } from "./multi-kernel";
+import {
   createParticleSystem,
   updateParticleSystem,
   depositToField,
@@ -157,6 +168,18 @@ export interface Engine {
   spawnParticles(count: number, options?: SpawnParticleOptions): void;
   clearParticles(): void;
   setParticlePreset(preset: ParticlePresetName): void;
+
+  // Multi-Kernel Lenia methods
+  enableMultiKernel(config?: MultiKernelConfig): void;
+  disableMultiKernel(): void;
+  isMultiKernelEnabled(): boolean;
+  setMultiKernelConfig(config: MultiKernelConfig): void;
+  getMultiKernelConfig(): MultiKernelConfig | null;
+  setMultiKernelPreset(name: string): void;
+  updateMultiKernel(index: number, params: Partial<SingleKernelParams>): void;
+  updateMultiKernelGrowth(index: number, params: Partial<GrowthParams>): void;
+  addMultiKernel(params?: SingleKernelParams, growth?: GrowthParams): void;
+  removeMultiKernel(index: number): void;
 
   // Getters
   getConfig(): GridConfig;
@@ -512,6 +535,18 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
   let multiChannelEnabled = false;
   let currentMultiChannelConfig = MULTICHANNEL_PRESETS["single"];
 
+  // Create multi-kernel pipeline
+  const multiKernelPipeline = createMultiKernelPipeline(
+    device,
+    gridConfig.width,
+    gridConfig.height,
+    DEFAULT_MULTIKERNEL_CONFIG,
+  );
+  let multiKernelEnabled = false;
+  let currentMultiKernelConfig: MultiKernelConfig = {
+    ...DEFAULT_MULTIKERNEL_CONFIG,
+  };
+
   // Create multi-channel textures (RGBA for up to 4 species)
   const createMultiChannelTexture = (label: string) =>
     device.createTexture({
@@ -817,6 +852,15 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
       const temp = multiChannelRead;
       multiChannelRead = multiChannelWrite;
       multiChannelWrite = temp;
+    } else if (multiKernelEnabled && currentParadigm === "continuous") {
+      // Multi-Kernel Lenia mode
+      multiKernelPipeline.dispatch(
+        commandEncoder,
+        readTexture,
+        writeTexture,
+        workgroupsX,
+        workgroupsY,
+      );
     } else if (currentParadigm === "continuous") {
       // Continuous CA (Lenia/SmoothLife)
       // Use the dispatch method which handles FFT vs direct convolution automatically
@@ -1285,6 +1329,7 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
       safeDestroy(() => conservationPipeline.destroy(), "conservationPipeline");
       safeDestroy(() => sensorimotorPipeline.destroy(), "sensorimotorPipeline");
       safeDestroy(() => multiChannelPipeline.destroy(), "multiChannelPipeline");
+      safeDestroy(() => multiKernelPipeline.destroy(), "multiKernelPipeline");
       safeDestroy(() => stagingBuffer.destroy(), "stagingBuffer");
       safeDestroy(() => sensorimotorMainA.destroy(), "sensorimotorMainA");
       safeDestroy(() => sensorimotorMainB.destroy(), "sensorimotorMainB");
@@ -1662,6 +1707,129 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
         fieldGradientCache = null;
       }
     },
+
+    // Multi-Kernel Lenia methods
+    enableMultiKernel(config?: MultiKernelConfig) {
+      const targetConfig = config ?? DEFAULT_MULTIKERNEL_CONFIG;
+      currentMultiKernelConfig = { ...targetConfig };
+      multiKernelPipeline.updateConfig(targetConfig);
+      multiKernelEnabled = true;
+
+      // Switch to continuous paradigm if not already
+      if (currentParadigm !== "continuous") {
+        currentParadigm = "continuous";
+      }
+
+      // Initialize with a lenia seed pattern
+      initializePattern(
+        device,
+        bufferManager.getReadTexture(),
+        gridConfig.width,
+        gridConfig.height,
+        "lenia-seed",
+      );
+      render();
+    },
+
+    disableMultiKernel() {
+      multiKernelEnabled = false;
+      currentMultiKernelConfig = { ...DEFAULT_MULTIKERNEL_CONFIG };
+    },
+
+    isMultiKernelEnabled() {
+      return multiKernelEnabled;
+    },
+
+    setMultiKernelConfig(config: MultiKernelConfig) {
+      currentMultiKernelConfig = { ...config };
+      multiKernelPipeline.updateConfig(config);
+    },
+
+    getMultiKernelConfig() {
+      if (!multiKernelEnabled) return null;
+      return { ...currentMultiKernelConfig };
+    },
+
+    setMultiKernelPreset(name: string) {
+      const preset = MULTIKERNEL_PRESETS[name];
+      if (preset) {
+        this.enableMultiKernel(preset);
+      }
+    },
+
+    updateMultiKernel(index: number, params: Partial<SingleKernelParams>) {
+      if (!multiKernelEnabled) return;
+      if (index < 0 || index >= currentMultiKernelConfig.kernels.length) return;
+
+      const kernel = currentMultiKernelConfig.kernels[index];
+      const updatedKernel = { ...kernel, ...params };
+      currentMultiKernelConfig.kernels[index] = updatedKernel;
+
+      multiKernelPipeline.updateKernelParams(
+        index,
+        updatedKernel.radius,
+        updatedKernel.weight,
+      );
+    },
+
+    updateMultiKernelGrowth(index: number, params: Partial<GrowthParams>) {
+      if (!multiKernelEnabled) return;
+      if (index < 0 || index >= currentMultiKernelConfig.growthParams.length)
+        return;
+
+      const growth = currentMultiKernelConfig.growthParams[index];
+      const updatedGrowth = { ...growth, ...params };
+      currentMultiKernelConfig.growthParams[index] = updatedGrowth;
+
+      multiKernelPipeline.updateGrowthParams(index, updatedGrowth);
+    },
+
+    addMultiKernel(params?: SingleKernelParams, growth?: GrowthParams) {
+      if (!multiKernelEnabled) return;
+      if (
+        currentMultiKernelConfig.kernels.length >=
+        currentMultiKernelConfig.maxKernels
+      )
+        return;
+
+      const newIndex = currentMultiKernelConfig.kernels.length;
+      const newKernel = params ?? {
+        id: `kernel-${newIndex}`,
+        shape: "polynomial" as const,
+        radius: 13,
+        peaks: [0.5],
+        weight: 0.5,
+      };
+      const newGrowth = growth ?? {
+        type: "gaussian" as const,
+        mu: 0.12,
+        sigma: 0.04,
+      };
+
+      currentMultiKernelConfig = {
+        ...currentMultiKernelConfig,
+        kernels: [...currentMultiKernelConfig.kernels, newKernel],
+        growthParams: [...currentMultiKernelConfig.growthParams, newGrowth],
+      };
+
+      multiKernelPipeline.updateConfig(currentMultiKernelConfig);
+    },
+
+    removeMultiKernel(index: number) {
+      if (!multiKernelEnabled) return;
+      if (currentMultiKernelConfig.kernels.length <= 1) return;
+      if (index < 0 || index >= currentMultiKernelConfig.kernels.length) return;
+
+      currentMultiKernelConfig = {
+        ...currentMultiKernelConfig,
+        kernels: currentMultiKernelConfig.kernels.filter((_, i) => i !== index),
+        growthParams: currentMultiKernelConfig.growthParams.filter(
+          (_, i) => i !== index,
+        ),
+      };
+
+      multiKernelPipeline.updateConfig(currentMultiKernelConfig);
+    },
   };
 
   // Store reference for async tracking updates
@@ -1698,3 +1866,7 @@ export type {
 };
 export type { SpawnParticleOptions, ParticlePresetName };
 // PARTICLE_LENIA_PRESETS is already exported where it's defined
+
+// Re-export multi-kernel types
+export type { MultiKernelConfig, SingleKernelParams, GrowthParams };
+export { MULTIKERNEL_PRESETS };

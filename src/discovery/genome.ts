@@ -246,3 +246,498 @@ export function decodeGenome(encoded: string): LeniaGenome {
     gn: parseInt(parts[6]) as 1 | 2 | 3,
   };
 }
+
+// ============================================================================
+// Multi-Kernel Genome
+// ============================================================================
+
+import type {
+  MultiKernelConfig,
+  KernelCombinationMode,
+  KernelShape,
+  GrowthFunction,
+} from "../core/types";
+
+/**
+ * Multi-Kernel Lenia Genome
+ * Encodes parameters for organisms with multiple convolution kernels
+ */
+export interface MultiKernelGenome {
+  T: number; // Time resolution (5-20)
+  kernelCount: number; // Number of kernels (1-4)
+  combinationMode: number; // 0=sum, 1=average, 2=weighted
+  R: number[]; // Radii per kernel (8-30 each)
+  b: number[][]; // Peaks per kernel (1-4 values each)
+  h: number[]; // Weights per kernel (0-1.5)
+  m: number[]; // Growth centers per kernel (0.05-0.4)
+  s: number[]; // Growth widths per kernel (0.005-0.08)
+  kn: number[]; // Kernel types per kernel (1-4)
+  gn: number[]; // Growth types per kernel (1-3)
+}
+
+// Parameter ranges for multi-kernel genomes
+export const MULTIKERNEL_GENOME_RANGES = {
+  T: { min: 5, max: 20 },
+  kernelCount: { min: 1, max: 4 },
+  combinationMode: { min: 0, max: 2 },
+  R: { min: 8, max: 30 },
+  b: { min: 0.1, max: 1.0 },
+  h: { min: 0.1, max: 1.5 },
+  m: { min: 0.05, max: 0.4 },
+  s: { min: 0.005, max: 0.08 },
+  kn: { min: 1, max: 4 },
+  gn: { min: 1, max: 3 },
+} as const;
+
+/**
+ * Generate a random multi-kernel genome
+ */
+export function randomMultiKernelGenome(
+  kernelCount?: number,
+): MultiKernelGenome {
+  const numKernels =
+    kernelCount ??
+    MULTIKERNEL_GENOME_RANGES.kernelCount.min +
+      Math.floor(
+        Math.random() *
+          (MULTIKERNEL_GENOME_RANGES.kernelCount.max -
+            MULTIKERNEL_GENOME_RANGES.kernelCount.min +
+            1),
+      );
+
+  const R: number[] = [];
+  const b: number[][] = [];
+  const h: number[] = [];
+  const m: number[] = [];
+  const s: number[] = [];
+  const kn: number[] = [];
+  const gn: number[] = [];
+
+  for (let i = 0; i < numKernels; i++) {
+    // Radius
+    R.push(
+      Math.round(
+        MULTIKERNEL_GENOME_RANGES.R.min +
+          Math.random() *
+            (MULTIKERNEL_GENOME_RANGES.R.max - MULTIKERNEL_GENOME_RANGES.R.min),
+      ),
+    );
+
+    // Peaks (1-3 per kernel)
+    const numPeaks = 1 + Math.floor(Math.random() * 3);
+    const peaks: number[] = [];
+    for (let j = 0; j < numPeaks; j++) {
+      peaks.push(
+        MULTIKERNEL_GENOME_RANGES.b.min +
+          Math.random() *
+            (MULTIKERNEL_GENOME_RANGES.b.max - MULTIKERNEL_GENOME_RANGES.b.min),
+      );
+    }
+    peaks.sort();
+    b.push(peaks);
+
+    // Weight
+    h.push(
+      MULTIKERNEL_GENOME_RANGES.h.min +
+        Math.random() *
+          (MULTIKERNEL_GENOME_RANGES.h.max - MULTIKERNEL_GENOME_RANGES.h.min),
+    );
+
+    // Growth center
+    m.push(
+      MULTIKERNEL_GENOME_RANGES.m.min +
+        Math.random() *
+          (MULTIKERNEL_GENOME_RANGES.m.max - MULTIKERNEL_GENOME_RANGES.m.min),
+    );
+
+    // Growth width
+    s.push(
+      MULTIKERNEL_GENOME_RANGES.s.min +
+        Math.random() *
+          (MULTIKERNEL_GENOME_RANGES.s.max - MULTIKERNEL_GENOME_RANGES.s.min),
+    );
+
+    // Kernel type
+    kn.push(1 + Math.floor(Math.random() * 4));
+
+    // Growth type
+    gn.push(1 + Math.floor(Math.random() * 3));
+  }
+
+  return {
+    T: Math.round(
+      MULTIKERNEL_GENOME_RANGES.T.min +
+        Math.random() *
+          (MULTIKERNEL_GENOME_RANGES.T.max - MULTIKERNEL_GENOME_RANGES.T.min),
+    ),
+    kernelCount: numKernels,
+    combinationMode: Math.floor(Math.random() * 3),
+    R,
+    b,
+    h,
+    m,
+    s,
+    kn,
+    gn,
+  };
+}
+
+/**
+ * Clone a multi-kernel genome
+ */
+export function cloneMultiKernelGenome(
+  genome: MultiKernelGenome,
+): MultiKernelGenome {
+  return {
+    T: genome.T,
+    kernelCount: genome.kernelCount,
+    combinationMode: genome.combinationMode,
+    R: [...genome.R],
+    b: genome.b.map((peaks) => [...peaks]),
+    h: [...genome.h],
+    m: [...genome.m],
+    s: [...genome.s],
+    kn: [...genome.kn],
+    gn: [...genome.gn],
+  };
+}
+
+/**
+ * Mutate a multi-kernel genome
+ */
+export function mutateMultiKernelGenome(
+  genome: MultiKernelGenome,
+  mutationRate: number = 0.1,
+): MultiKernelGenome {
+  const mutated = cloneMultiKernelGenome(genome);
+
+  // Gaussian mutation helper
+  const gaussMutate = (
+    value: number,
+    min: number,
+    max: number,
+    sigma: number,
+  ): number => {
+    if (Math.random() > mutationRate) return value;
+    const delta = (Math.random() * 2 - 1) * sigma * (max - min);
+    return Math.max(min, Math.min(max, value + delta));
+  };
+
+  // Mutate global params
+  mutated.T = Math.round(
+    gaussMutate(
+      mutated.T,
+      MULTIKERNEL_GENOME_RANGES.T.min,
+      MULTIKERNEL_GENOME_RANGES.T.max,
+      0.2,
+    ),
+  );
+
+  // Occasionally change combination mode
+  if (Math.random() < mutationRate * 0.3) {
+    mutated.combinationMode = Math.floor(Math.random() * 3);
+  }
+
+  // Mutate per-kernel params
+  for (let i = 0; i < mutated.kernelCount; i++) {
+    mutated.R[i] = Math.round(
+      gaussMutate(
+        mutated.R[i],
+        MULTIKERNEL_GENOME_RANGES.R.min,
+        MULTIKERNEL_GENOME_RANGES.R.max,
+        0.2,
+      ),
+    );
+
+    mutated.h[i] = gaussMutate(
+      mutated.h[i],
+      MULTIKERNEL_GENOME_RANGES.h.min,
+      MULTIKERNEL_GENOME_RANGES.h.max,
+      0.15,
+    );
+
+    mutated.m[i] = gaussMutate(
+      mutated.m[i],
+      MULTIKERNEL_GENOME_RANGES.m.min,
+      MULTIKERNEL_GENOME_RANGES.m.max,
+      0.15,
+    );
+
+    mutated.s[i] = gaussMutate(
+      mutated.s[i],
+      MULTIKERNEL_GENOME_RANGES.s.min,
+      MULTIKERNEL_GENOME_RANGES.s.max,
+      0.15,
+    );
+
+    // Mutate peaks
+    for (let j = 0; j < mutated.b[i].length; j++) {
+      mutated.b[i][j] = gaussMutate(
+        mutated.b[i][j],
+        MULTIKERNEL_GENOME_RANGES.b.min,
+        MULTIKERNEL_GENOME_RANGES.b.max,
+        0.15,
+      );
+    }
+    mutated.b[i].sort();
+
+    // Occasionally add/remove a peak
+    if (Math.random() < mutationRate * 0.5) {
+      if (Math.random() < 0.5 && mutated.b[i].length < 4) {
+        mutated.b[i].push(
+          MULTIKERNEL_GENOME_RANGES.b.min +
+            Math.random() *
+              (MULTIKERNEL_GENOME_RANGES.b.max -
+                MULTIKERNEL_GENOME_RANGES.b.min),
+        );
+        mutated.b[i].sort();
+      } else if (mutated.b[i].length > 1) {
+        const idx = Math.floor(Math.random() * mutated.b[i].length);
+        mutated.b[i].splice(idx, 1);
+      }
+    }
+
+    // Occasionally change kernel/growth type
+    if (Math.random() < mutationRate * 0.3) {
+      mutated.kn[i] = 1 + Math.floor(Math.random() * 4);
+    }
+    if (Math.random() < mutationRate * 0.3) {
+      mutated.gn[i] = 1 + Math.floor(Math.random() * 3);
+    }
+  }
+
+  // Occasionally add/remove a kernel
+  if (Math.random() < mutationRate * 0.2) {
+    if (
+      Math.random() < 0.5 &&
+      mutated.kernelCount < MULTIKERNEL_GENOME_RANGES.kernelCount.max
+    ) {
+      // Add a kernel
+      mutated.kernelCount++;
+      mutated.R.push(
+        Math.round(
+          MULTIKERNEL_GENOME_RANGES.R.min +
+            Math.random() *
+              (MULTIKERNEL_GENOME_RANGES.R.max -
+                MULTIKERNEL_GENOME_RANGES.R.min),
+        ),
+      );
+      mutated.b.push([0.5]);
+      mutated.h.push(0.5);
+      mutated.m.push(0.12);
+      mutated.s.push(0.04);
+      mutated.kn.push(1);
+      mutated.gn.push(1);
+    } else if (mutated.kernelCount > 1) {
+      // Remove a kernel
+      const idx = Math.floor(Math.random() * mutated.kernelCount);
+      mutated.kernelCount--;
+      mutated.R.splice(idx, 1);
+      mutated.b.splice(idx, 1);
+      mutated.h.splice(idx, 1);
+      mutated.m.splice(idx, 1);
+      mutated.s.splice(idx, 1);
+      mutated.kn.splice(idx, 1);
+      mutated.gn.splice(idx, 1);
+    }
+  }
+
+  return mutated;
+}
+
+/**
+ * Crossover two multi-kernel genomes
+ */
+export function crossoverMultiKernelGenomes(
+  parent1: MultiKernelGenome,
+  parent2: MultiKernelGenome,
+): MultiKernelGenome {
+  const alpha = 0.3;
+
+  const blend = (v1: number, v2: number, min: number, max: number): number => {
+    const minVal = Math.min(v1, v2);
+    const maxVal = Math.max(v1, v2);
+    const range = maxVal - minVal;
+    const lower = Math.max(min, minVal - alpha * range);
+    const upper = Math.min(max, maxVal + alpha * range);
+    return lower + Math.random() * (upper - lower);
+  };
+
+  // Average kernel count
+  const kernelCount = Math.round(
+    (parent1.kernelCount + parent2.kernelCount) / 2,
+  );
+
+  const R: number[] = [];
+  const b: number[][] = [];
+  const h: number[] = [];
+  const m: number[] = [];
+  const s: number[] = [];
+  const kn: number[] = [];
+  const gn: number[] = [];
+
+  for (let i = 0; i < kernelCount; i++) {
+    const p1Idx = Math.min(i, parent1.kernelCount - 1);
+    const p2Idx = Math.min(i, parent2.kernelCount - 1);
+
+    // Blend numeric params
+    R.push(
+      Math.round(
+        blend(
+          parent1.R[p1Idx],
+          parent2.R[p2Idx],
+          MULTIKERNEL_GENOME_RANGES.R.min,
+          MULTIKERNEL_GENOME_RANGES.R.max,
+        ),
+      ),
+    );
+
+    h.push(
+      blend(
+        parent1.h[p1Idx],
+        parent2.h[p2Idx],
+        MULTIKERNEL_GENOME_RANGES.h.min,
+        MULTIKERNEL_GENOME_RANGES.h.max,
+      ),
+    );
+
+    m.push(
+      blend(
+        parent1.m[p1Idx],
+        parent2.m[p2Idx],
+        MULTIKERNEL_GENOME_RANGES.m.min,
+        MULTIKERNEL_GENOME_RANGES.m.max,
+      ),
+    );
+
+    s.push(
+      blend(
+        parent1.s[p1Idx],
+        parent2.s[p2Idx],
+        MULTIKERNEL_GENOME_RANGES.s.min,
+        MULTIKERNEL_GENOME_RANGES.s.max,
+      ),
+    );
+
+    // Blend peaks
+    const numPeaks = Math.round(
+      (parent1.b[p1Idx].length + parent2.b[p2Idx].length) / 2,
+    );
+    const peaks: number[] = [];
+    for (let j = 0; j < numPeaks; j++) {
+      const p1Peak = parent1.b[p1Idx][Math.min(j, parent1.b[p1Idx].length - 1)];
+      const p2Peak = parent2.b[p2Idx][Math.min(j, parent2.b[p2Idx].length - 1)];
+      peaks.push(
+        blend(
+          p1Peak,
+          p2Peak,
+          MULTIKERNEL_GENOME_RANGES.b.min,
+          MULTIKERNEL_GENOME_RANGES.b.max,
+        ),
+      );
+    }
+    peaks.sort();
+    b.push(peaks);
+
+    // Pick kernel/growth types from one parent
+    kn.push(Math.random() < 0.5 ? parent1.kn[p1Idx] : parent2.kn[p2Idx]);
+    gn.push(Math.random() < 0.5 ? parent1.gn[p1Idx] : parent2.gn[p2Idx]);
+  }
+
+  return {
+    T: Math.round(
+      blend(
+        parent1.T,
+        parent2.T,
+        MULTIKERNEL_GENOME_RANGES.T.min,
+        MULTIKERNEL_GENOME_RANGES.T.max,
+      ),
+    ),
+    kernelCount,
+    combinationMode:
+      Math.random() < 0.5 ? parent1.combinationMode : parent2.combinationMode,
+    R,
+    b,
+    h,
+    m,
+    s,
+    kn,
+    gn,
+  };
+}
+
+/**
+ * Convert multi-kernel genome to engine configuration
+ */
+export function multiKernelGenomeToConfig(
+  genome: MultiKernelGenome,
+): MultiKernelConfig {
+  const kernelShapes: KernelShape[] = [
+    "polynomial",
+    "step",
+    "polynomial",
+    "gaussian",
+  ];
+  const growthTypes: GrowthFunction[] = ["polynomial", "gaussian", "step"];
+  const combinationModes: KernelCombinationMode[] = [
+    "sum",
+    "average",
+    "weighted",
+  ];
+
+  return {
+    kernels: genome.R.map((radius, i) => ({
+      id: `kernel-${i}`,
+      shape: kernelShapes[genome.kn[i] - 1] || "polynomial",
+      radius,
+      peaks: genome.b[i],
+      weight: genome.h[i],
+    })),
+    growthParams: genome.m.map((mu, i) => ({
+      type: growthTypes[genome.gn[i] - 1] || "gaussian",
+      mu,
+      sigma: genome.s[i],
+    })),
+    combinationMode: combinationModes[genome.combinationMode] || "weighted",
+    dt: 1 / genome.T,
+    maxKernels: 4,
+  };
+}
+
+/**
+ * Encode multi-kernel genome as a compact string
+ */
+export function encodeMultiKernelGenome(genome: MultiKernelGenome): string {
+  const parts = [
+    genome.T.toString(),
+    genome.kernelCount.toString(),
+    genome.combinationMode.toString(),
+    genome.R.join(","),
+    genome.b.map((peaks) => peaks.map((p) => p.toFixed(3)).join(":")).join(","),
+    genome.h.map((w) => w.toFixed(3)).join(","),
+    genome.m.map((mu) => mu.toFixed(4)).join(","),
+    genome.s.map((sigma) => sigma.toFixed(4)).join(","),
+    genome.kn.join(","),
+    genome.gn.join(","),
+  ];
+  return btoa(parts.join("|"));
+}
+
+/**
+ * Decode multi-kernel genome from compact string
+ */
+export function decodeMultiKernelGenome(encoded: string): MultiKernelGenome {
+  const parts = atob(encoded).split("|");
+  return {
+    T: parseInt(parts[0]),
+    kernelCount: parseInt(parts[1]),
+    combinationMode: parseInt(parts[2]),
+    R: parts[3].split(",").map((v) => parseInt(v)),
+    b: parts[4].split(",").map((p) => p.split(":").map(parseFloat)),
+    h: parts[5].split(",").map(parseFloat),
+    m: parts[6].split(",").map(parseFloat),
+    s: parts[7].split(",").map(parseFloat),
+    kn: parts[8].split(",").map((v) => parseInt(v)),
+    gn: parts[9].split(",").map((v) => parseInt(v)),
+  };
+}

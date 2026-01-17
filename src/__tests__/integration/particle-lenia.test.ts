@@ -10,6 +10,7 @@ import {
   depositToField,
   calculateFieldGradient,
   spawnRandomParticles,
+  addParticle,
   getActiveParticles,
   INTERACTION_PRESETS,
   type ParticleSystemState,
@@ -213,32 +214,30 @@ describe("Particle-Lenia Hybrid Integration", () => {
         friction: 0,
       });
 
-      // Use attractive preset
+      // Use attractive preset (equilibriumDistance: 25, maxRange: 80)
       state.interactionMatrix = INTERACTION_PRESETS.attractive(2);
 
-      // Spawn two particles nearby
-      spawnRandomParticles(state, 2, { centerX: 50, centerY: 50, spread: 20 });
+      // Add two particles at fixed positions with no initial velocity
+      // Place them 60 units apart (within maxRange of 80, above equilibrium of 25)
+      addParticle(state, 35, 50, 0, 0, 0); // particle at (35, 50)
+      addParticle(state, 65, 50, 0, 0, 0); // particle at (65, 50)
 
-      // Record initial distance
-      const p1 = state.particles[0];
-      const p2 = state.particles[1];
-      const initialDist = Math.sqrt(
-        Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2),
-      );
+      // Initial distance is 30 units
+      const initialDist = 30;
 
-      // Update several times
+      // Update several times - particles should attract toward equilibrium distance
       for (let i = 0; i < 50; i++) {
         updateParticleSystem(state);
       }
 
-      // Particles should have moved closer (attraction)
+      // Particles should have moved closer (attraction toward equilibrium ~25)
       const finalDist = Math.sqrt(
         Math.pow(state.particles[1].x - state.particles[0].x, 2) +
           Math.pow(state.particles[1].y - state.particles[0].y, 2),
       );
 
-      // Allow for some margin due to equilibrium distance
-      expect(finalDist).toBeLessThan(initialDist + 10);
+      // Distance should decrease since initial (30) > equilibrium (25)
+      expect(finalDist).toBeLessThan(initialDist);
     });
   });
 

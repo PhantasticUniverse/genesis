@@ -1,8 +1,8 @@
 # GENESIS
 
-**Generative Evolution & Neural Emergence System for Intelligent Simulation**
+**Artificial Life Observatory**
 
-A next-generation cellular automata platform powered by WebGPU.
+A next-generation cellular automata platform powered by WebGPU, featuring a bioluminescent scientific interface for exploring digital life.
 
 ## Features
 
@@ -14,6 +14,39 @@ A next-generation cellular automata platform powered by WebGPU.
 - **Neural CA Training** - GPU-accelerated IMGEP curriculum learning
 - **Mass Conservation** - Real-time mass tracking via GPU parallel reduction
 - **Organism Library** - Save, load, and export organisms to JSON
+
+## UI Design: Bioluminescent Observatory
+
+The interface is designed as a "Bioluminescent Observatory" - a window into digital life that feels like peering through a scientific instrument into another world.
+
+### Visual Aesthetic
+
+- **Cosmic Blacks** - Deep space backgrounds create infinite depth
+- **Bioluminescent Accents** - Cyan, magenta, amber, and green emerge like life from darkness
+- **Glass Morphism** - Panels feel like holographic scientific displays
+- **Observatory Portal** - Canvas wrapped with decorative corner brackets and breathing glow effects
+- **Organic Animations** - Micro-animations give the UI a sense of living presence
+
+### Typography
+
+- **Orbitron** - Display font for titles (futuristic, scientific)
+- **Inter** - Body font for UI labels (highly legible)
+- **JetBrains Mono** - Monospace for data values and parameters
+
+### Color System
+
+```css
+/* Cosmic Blacks */
+--genesis-void: #030306;
+--genesis-abyss: #0a0a12;
+--genesis-depth: #12121c;
+
+/* Bioluminescent Accents */
+--bio-cyan: #00f5ff;
+--bio-magenta: #ff00ff;
+--bio-amber: #ffaa00;
+--bio-green: #00ff88;
+```
 
 ## Quick Start
 
@@ -62,6 +95,7 @@ bun run cli sweep run --config sweep.json
 
 - React 19 + TypeScript + Tailwind CSS + Zustand
 - WebGPU compute shaders (WGSL)
+- Google Fonts (Orbitron, Inter, JetBrains Mono)
 - Vite + Bun
 
 ## License

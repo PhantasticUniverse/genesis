@@ -1,22 +1,912 @@
 @import "tailwindcss";
 
+/* =========================================
+   GENESIS - Bioluminescent Observatory Theme
+   ========================================= */
+
 :root {
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  /* Typography */
+  --font-display: "Orbitron", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Cosmic Blacks - Deep space backgrounds */
+  --genesis-void: #030306;
+  --genesis-abyss: #0a0a12;
+  --genesis-depth: #12121c;
+  --genesis-surface: #1a1a28;
+  --genesis-elevated: #222233;
+
+  /* Bioluminescent Accents - Life emerging from darkness */
+  --bio-cyan: #00f5ff;
+  --bio-cyan-dim: #00c4cc;
+  --bio-magenta: #ff00ff;
+  --bio-magenta-dim: #cc00cc;
+  --bio-amber: #ffaa00;
+  --bio-amber-dim: #cc8800;
+  --bio-green: #00ff88;
+  --bio-green-dim: #00cc6a;
+
+  /* Semantic States */
+  --state-running: #00ff88;
+  --state-paused: #6b7280;
+  --state-error: #ff4466;
+  --state-warning: #ffaa00;
+
+  /* Glass Morphism */
+  --glass-bg: rgba(18, 18, 28, 0.8);
+  --glass-bg-light: rgba(26, 26, 40, 0.6);
+  --glass-border: rgba(0, 245, 255, 0.15);
+  --glass-border-hover: rgba(0, 245, 255, 0.3);
+  --glass-blur: 12px;
+
+  /* Glow Effects */
+  --glow-cyan: 0 0 20px rgba(0, 245, 255, 0.4), 0 0 40px rgba(0, 245, 255, 0.2);
+  --glow-cyan-subtle: 0 0 10px rgba(0, 245, 255, 0.2);
+  --glow-magenta:
+    0 0 20px rgba(255, 0, 255, 0.4), 0 0 40px rgba(255, 0, 255, 0.2);
+  --glow-magenta-subtle: 0 0 10px rgba(255, 0, 255, 0.2);
+  --glow-amber:
+    0 0 20px rgba(255, 170, 0, 0.4), 0 0 40px rgba(255, 170, 0, 0.2);
+  --glow-amber-subtle: 0 0 10px rgba(255, 170, 0, 0.2);
+  --glow-green:
+    0 0 20px rgba(0, 255, 136, 0.4), 0 0 40px rgba(0, 255, 136, 0.2);
+  --glow-green-subtle: 0 0 10px rgba(0, 255, 136, 0.2);
+
   color-scheme: dark;
 }
+
+/* =========================================
+   Base Styles
+   ========================================= */
 
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #0a0a0a;
+  background-color: var(--genesis-abyss);
   color: #e5e5e5;
+  font-family: var(--font-body);
 }
 
 #root {
   min-height: 100vh;
+}
+
+/* =========================================
+   Keyframe Animations
+   ========================================= */
+
+/* Fade in with upward movement */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Portal border pulse */
+@keyframes portalPulse {
+  0%,
+  100% {
+    opacity: 0.6;
+    box-shadow:
+      inset 0 0 30px rgba(0, 245, 255, 0.1),
+      0 0 30px rgba(0, 245, 255, 0.2);
+  }
+  50% {
+    opacity: 1;
+    box-shadow:
+      inset 0 0 40px rgba(0, 245, 255, 0.15),
+      0 0 50px rgba(0, 245, 255, 0.3),
+      0 0 80px rgba(255, 0, 255, 0.1);
+  }
+}
+
+/* Breathing glow for running state */
+@keyframes breathingGlow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 20px rgba(0, 255, 136, 0.3),
+      0 0 40px rgba(0, 255, 136, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 30px rgba(0, 255, 136, 0.5),
+      0 0 60px rgba(0, 255, 136, 0.25),
+      0 0 90px rgba(0, 255, 136, 0.1);
+  }
+}
+
+/* Subtle pulse */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Slow spin for decorative elements */
+@keyframes slowSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Float drift for ambient orbs */
+@keyframes floatDrift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(30px, -20px) scale(1.05);
+  }
+  50% {
+    transform: translate(-20px, 30px) scale(0.95);
+  }
+  75% {
+    transform: translate(-30px, -10px) scale(1.02);
+  }
+}
+
+/* Staggered reveal for title letters */
+@keyframes letterReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Gradient shift for title */
+@keyframes gradientShift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Scan line effect */
+@keyframes scanLine {
+  0% {
+    top: -10%;
+  }
+  100% {
+    top: 110%;
+  }
+}
+
+/* Value flash when updated */
+@keyframes valueFlash {
+  0% {
+    color: var(--bio-cyan);
+    text-shadow: 0 0 10px var(--bio-cyan);
+  }
+  100% {
+    color: inherit;
+    text-shadow: none;
+  }
+}
+
+/* Button glow pulse */
+@keyframes glowPulse {
+  0%,
+  100% {
+    box-shadow: var(--glow-cyan-subtle);
+  }
+  50% {
+    box-shadow: var(--glow-cyan);
+  }
+}
+
+/* Corner bracket flicker */
+@keyframes bracketFlicker {
+  0%,
+  90%,
+  100% {
+    opacity: 1;
+  }
+  92%,
+  94%,
+  96% {
+    opacity: 0.5;
+  }
+}
+
+/* =========================================
+   Typography Utility Classes
+   ========================================= */
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* =========================================
+   Color Utility Classes
+   ========================================= */
+
+.text-bio-cyan {
+  color: var(--bio-cyan);
+}
+
+.text-bio-magenta {
+  color: var(--bio-magenta);
+}
+
+.text-bio-amber {
+  color: var(--bio-amber);
+}
+
+.text-bio-green {
+  color: var(--bio-green);
+}
+
+.bg-genesis-void {
+  background-color: var(--genesis-void);
+}
+
+.bg-genesis-abyss {
+  background-color: var(--genesis-abyss);
+}
+
+.bg-genesis-depth {
+  background-color: var(--genesis-depth);
+}
+
+.bg-genesis-surface {
+  background-color: var(--genesis-surface);
+}
+
+/* =========================================
+   Glass Morphism Utility Classes
+   ========================================= */
+
+.bg-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+}
+
+.bg-glass-light {
+  background: var(--glass-bg-light);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+}
+
+.bg-glass:hover,
+.bg-glass-light:hover {
+  border-color: var(--glass-border-hover);
+}
+
+/* =========================================
+   Glow Utility Classes
+   ========================================= */
+
+.glow-cyan {
+  box-shadow: var(--glow-cyan);
+}
+
+.glow-cyan-subtle {
+  box-shadow: var(--glow-cyan-subtle);
+}
+
+.glow-magenta {
+  box-shadow: var(--glow-magenta);
+}
+
+.glow-magenta-subtle {
+  box-shadow: var(--glow-magenta-subtle);
+}
+
+.glow-amber {
+  box-shadow: var(--glow-amber);
+}
+
+.glow-amber-subtle {
+  box-shadow: var(--glow-amber-subtle);
+}
+
+.glow-green {
+  box-shadow: var(--glow-green);
+}
+
+.glow-green-subtle {
+  box-shadow: var(--glow-green-subtle);
+}
+
+/* =========================================
+   Animation Utility Classes
+   ========================================= */
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-portal-pulse {
+  animation: portalPulse 4s ease-in-out infinite;
+}
+
+.animate-breathing-glow {
+  animation: breathingGlow 3s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-float-drift {
+  animation: floatDrift 20s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+.animate-value-flash {
+  animation: valueFlash 0.5s ease-out forwards;
+}
+
+/* Staggered animation delays */
+.animate-delay-100 {
+  animation-delay: 100ms;
+}
+.animate-delay-200 {
+  animation-delay: 200ms;
+}
+.animate-delay-300 {
+  animation-delay: 300ms;
+}
+.animate-delay-400 {
+  animation-delay: 400ms;
+}
+.animate-delay-500 {
+  animation-delay: 500ms;
+}
+.animate-delay-600 {
+  animation-delay: 600ms;
+}
+.animate-delay-700 {
+  animation-delay: 700ms;
+}
+
+/* =========================================
+   Observatory Portal Styles
+   ========================================= */
+
+.observatory-portal {
+  position: relative;
+  border-radius: 12px;
+  padding: 4px;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 245, 255, 0.2) 0%,
+    rgba(255, 0, 255, 0.1) 50%,
+    rgba(0, 245, 255, 0.2) 100%
+  );
+}
+
+.observatory-portal::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    var(--bio-cyan) 0%,
+    var(--bio-magenta) 50%,
+    var(--bio-cyan) 100%
+  );
+  opacity: 0.3;
+  z-index: -1;
+  filter: blur(8px);
+}
+
+.observatory-portal.running {
+  animation: breathingGlow 3s ease-in-out infinite;
+}
+
+.observatory-portal.running::before {
+  background: linear-gradient(
+    135deg,
+    var(--bio-green) 0%,
+    var(--bio-cyan) 50%,
+    var(--bio-green) 100%
+  );
+  opacity: 0.4;
+}
+
+/* Corner brackets */
+.portal-bracket {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--bio-cyan);
+  border-style: solid;
+  border-width: 0;
+  opacity: 0.8;
+  animation: bracketFlicker 8s ease-in-out infinite;
+}
+
+.portal-bracket.top-left {
+  top: 8px;
+  left: 8px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+
+.portal-bracket.top-right {
+  top: 8px;
+  right: 8px;
+  border-top-width: 2px;
+  border-right-width: 2px;
+}
+
+.portal-bracket.bottom-left {
+  bottom: 8px;
+  left: 8px;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+}
+
+.portal-bracket.bottom-right {
+  bottom: 8px;
+  right: 8px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+/* Scan line overlay */
+.portal-scanline {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+.portal-scanline::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--bio-cyan) 50%,
+    transparent 100%
+  );
+  opacity: 0.3;
+  animation: scanLine 4s linear infinite;
+}
+
+/* =========================================
+   Genesis Title Styles
+   ========================================= */
+
+.genesis-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.5rem;
+  background: linear-gradient(
+    90deg,
+    var(--bio-cyan) 0%,
+    var(--bio-green) 50%,
+    var(--bio-cyan) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 8s ease-in-out infinite;
+  letter-spacing: 0.15em;
+  text-shadow: 0 0 30px rgba(0, 245, 255, 0.3);
+}
+
+.genesis-title-letter {
+  display: inline-block;
+  opacity: 0;
+  animation: letterReveal 0.5s ease-out forwards;
+}
+
+.genesis-subtitle {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 0.875rem;
+  color: rgba(0, 245, 255, 0.6);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+/* =========================================
+   Ambient Background Orbs
+   ========================================= */
+
+.ambient-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+  animation: floatDrift 25s ease-in-out infinite;
+}
+
+.ambient-orb.cyan {
+  background: var(--bio-cyan);
+}
+
+.ambient-orb.magenta {
+  background: var(--bio-magenta);
+}
+
+.ambient-orb.amber {
+  background: var(--bio-amber);
+}
+
+/* =========================================
+   Button Styles
+   ========================================= */
+
+.btn-glow {
+  position: relative;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.btn-glow::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--bio-cyan), var(--bio-magenta));
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+}
+
+.btn-glow:hover::before {
+  opacity: 0.3;
+}
+
+.btn-glow:hover {
+  box-shadow: var(--glow-cyan-subtle);
+}
+
+.btn-glow.btn-start {
+  background: linear-gradient(135deg, #059669, #10b981);
+  border-color: var(--bio-green);
+}
+
+.btn-glow.btn-start:hover {
+  box-shadow: var(--glow-green);
+}
+
+.btn-glow.btn-stop {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  border-color: var(--state-error);
+}
+
+.btn-glow.btn-stop:hover {
+  box-shadow: 0 0 20px rgba(255, 68, 102, 0.4);
+}
+
+/* =========================================
+   Glass Panel Styles
+   ========================================= */
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 245, 255, 0.3) 50%,
+    transparent 100%
+  );
+}
+
+/* =========================================
+   Custom Range Slider
+   ========================================= */
+
+input[type="range"].genesis-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: var(--genesis-surface);
+  border-radius: 3px;
+  outline: none;
+  position: relative;
+}
+
+input[type="range"].genesis-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--genesis-elevated);
+  border: 2px solid var(--bio-cyan);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--glow-cyan-subtle);
+}
+
+input[type="range"].genesis-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: var(--glow-cyan);
+}
+
+input[type="range"].genesis-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--genesis-elevated);
+  border: 2px solid var(--bio-cyan);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--glow-cyan-subtle);
+}
+
+input[type="range"].genesis-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: var(--glow-cyan);
+}
+
+/* =========================================
+   Custom Select
+   ========================================= */
+
+select.genesis-select {
+  background: var(--genesis-surface);
+  border: 1px solid rgba(0, 245, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  color: #e5e5e5;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300f5ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+}
+
+select.genesis-select:hover {
+  border-color: rgba(0, 245, 255, 0.4);
+}
+
+select.genesis-select:focus {
+  border-color: var(--bio-cyan);
+  box-shadow: var(--glow-cyan-subtle);
+}
+
+/* =========================================
+   Status Indicator
+   ========================================= */
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--state-paused);
+}
+
+.status-dot.running {
+  background: var(--state-running);
+  box-shadow: 0 0 10px var(--state-running);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status-dot.error {
+  background: var(--state-error);
+  box-shadow: 0 0 10px var(--state-error);
+}
+
+/* =========================================
+   Stat Card Styles
+   ========================================= */
+
+.stat-card {
+  background: var(--genesis-surface);
+  border: 1px solid rgba(0, 245, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  border-color: rgba(0, 245, 255, 0.25);
+  box-shadow: var(--glow-cyan-subtle);
+}
+
+.stat-card .stat-label {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 0.25rem;
+}
+
+.stat-card .stat-value {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--bio-cyan);
+}
+
+/* =========================================
+   HUD Performance Monitor
+   ========================================= */
+
+.hud-monitor {
+  background: linear-gradient(
+    135deg,
+    rgba(18, 18, 28, 0.95) 0%,
+    rgba(26, 26, 40, 0.9) 100%
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 245, 255, 0.2);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hud-monitor::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--bio-cyan) 20%,
+    var(--bio-cyan) 80%,
+    transparent 100%
+  );
+  opacity: 0.5;
+}
+
+.hud-monitor::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: rgba(0, 245, 255, 0.2);
+}
+
+/* =========================================
+   Progress Bar
+   ========================================= */
+
+.progress-bar {
+  height: 4px;
+  background: var(--genesis-surface);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--bio-cyan), var(--bio-magenta));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progress-bar.success .progress-fill {
+  background: linear-gradient(90deg, var(--bio-green), var(--bio-cyan));
+}
+
+/* =========================================
+   Badge Styles
+   ========================================= */
+
+.badge-glow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  border: 1px solid;
+}
+
+.badge-glow.cyan {
+  background: rgba(0, 245, 255, 0.1);
+  border-color: rgba(0, 245, 255, 0.3);
+  color: var(--bio-cyan);
+}
+
+.badge-glow.magenta {
+  background: rgba(255, 0, 255, 0.1);
+  border-color: rgba(255, 0, 255, 0.3);
+  color: var(--bio-magenta);
+}
+
+.badge-glow.amber {
+  background: rgba(255, 170, 0, 0.1);
+  border-color: rgba(255, 170, 0, 0.3);
+  color: var(--bio-amber);
+}
+
+.badge-glow.green {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: rgba(0, 255, 136, 0.3);
+  color: var(--bio-green);
+}
+
+/* =========================================
+   Expand/Collapse Animation
+   ========================================= */
+
+.panel-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.panel-content.expanded {
+  grid-template-rows: 1fr;
+}
+
+.panel-content > div {
+  overflow: hidden;
+}
+
+.expand-icon {
+  transition: transform 0.3s ease;
+}
+
+.expand-icon.expanded {
+  transform: rotate(180deg);
 }

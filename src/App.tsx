@@ -1,6 +1,6 @@
 /**
- * GENESIS - Ultimate Cellular Automata Platform
- * Main Application Component
+ * GENESIS - Artificial Life Observatory
+ * Bioluminescent Observatory Theme
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -31,6 +31,62 @@ import { genomeToParams, type LeniaGenome } from "./discovery/genome";
 
 type SimulationMode = "2d" | "3d";
 
+/** Animated title with staggered letter reveal */
+function GenesisTitle() {
+  const letters = "GENESIS".split("");
+  return (
+    <h1 className="genesis-title">
+      {letters.map((letter, i) => (
+        <span
+          key={i}
+          className="genesis-title-letter"
+          style={{ animationDelay: `${i * 80}ms` }}
+        >
+          {letter}
+        </span>
+      ))}
+    </h1>
+  );
+}
+
+/** Ambient background orbs for depth effect */
+function AmbientOrbs() {
+  return (
+    <>
+      <div
+        className="ambient-orb cyan"
+        style={{
+          width: "400px",
+          height: "400px",
+          top: "10%",
+          left: "-5%",
+          animationDelay: "0s",
+        }}
+      />
+      <div
+        className="ambient-orb magenta"
+        style={{
+          width: "300px",
+          height: "300px",
+          top: "60%",
+          right: "-10%",
+          animationDelay: "-8s",
+        }}
+      />
+      <div
+        className="ambient-orb amber"
+        style={{
+          width: "250px",
+          height: "250px",
+          bottom: "5%",
+          left: "30%",
+          animationDelay: "-15s",
+        }}
+      />
+    </>
+  );
+}
+
 function App() {
   // WebGPU compatibility check
   const { result: webgpuCheck, checking: webgpuChecking } = useWebGPUCheck();
@@ -40,10 +96,11 @@ function App() {
   // Simulation mode (2D or 3D)
   const [mode, setMode] = useState<SimulationMode>("2d");
 
-  // 2D Engine
-  const { canvasRef, engine, error, isLoading } = useEngine({
+  // 2D Engine (with CPU fallback)
+  const { canvasRef, engine, error, isLoading, isCPUMode } = useEngine({
     gridConfig: DEFAULT_GRID_CONFIG,
     autoStart: false,
+    allowCPUFallback: true,
   });
 
   // 3D Engine (lazy initialization)
@@ -121,7 +178,7 @@ function App() {
   }, [mode, engine3D, isLoading3D, initialize3D]);
 
   // Get the current active engine based on mode
-  const activeEngine = mode === "2d" ? engine : null;
+  const _activeEngine = mode === "2d" ? engine : null; // Used for future features
   const currentError = mode === "2d" ? error : error3D;
   const currentLoading = mode === "2d" ? isLoading : isLoading3D;
 
@@ -170,43 +227,61 @@ function App() {
   // Get current engine based on mode
   const currentEngineForMonitor = mode === "2d" ? engine : engine3D;
 
+  // Check if simulation is running for visual effects
+  const isRunning = mode === "2d" ? engine?.running : engine3D?.running;
+
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-8">
+    <div className="min-h-screen bg-genesis-abyss text-white p-6 md:p-8 relative overflow-hidden">
+      {/* Ambient Background Orbs */}
+      <AmbientOrbs />
+
       {/* Floating Performance Monitor */}
       <PerformanceMonitor engine={currentEngineForMonitor} floating />
 
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto relative z-10">
         {/* Header */}
-        <header className="mb-8">
-          <div className="flex justify-between items-start">
+        <header className="mb-8 animate-fade-in-up">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
-                GENESIS
-              </h1>
-              <p className="text-zinc-400 mt-2">
-                Generative Evolution & Neural Emergence System for Intelligent
-                Simulation
+              <div className="flex items-center gap-4">
+                <GenesisTitle />
+                {isCPUMode && mode === "2d" && (
+                  <span className="badge-glow amber">
+                    <span
+                      className="status-dot"
+                      style={{
+                        background: "var(--bio-amber)",
+                        width: "6px",
+                        height: "6px",
+                      }}
+                    />
+                    CPU Mode
+                  </span>
+                )}
+              </div>
+              <p className="genesis-subtitle mt-2">
+                Artificial Life Observatory
               </p>
             </div>
 
             {/* 2D/3D Mode Toggle */}
-            <div className="flex items-center gap-2 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
+            <div className="flex items-center gap-1 bg-glass rounded-lg p-1">
               <button
                 onClick={() => handleModeSwitch("2d")}
-                className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                   mode === "2d"
-                    ? "bg-green-600 text-white"
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-800"
+                    ? "bg-gradient-to-r from-cyan-600 to-teal-600 text-white glow-cyan-subtle"
+                    : "text-zinc-400 hover:text-bio-cyan hover:bg-genesis-surface"
                 }`}
               >
                 2D
               </button>
               <button
                 onClick={() => handleModeSwitch("3d")}
-                className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                   mode === "3d"
-                    ? "bg-purple-600 text-white"
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-800"
+                    ? "bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white glow-magenta-subtle"
+                    : "text-zinc-400 hover:text-bio-magenta hover:bg-genesis-surface"
                 }`}
               >
                 3D
@@ -233,7 +308,7 @@ function App() {
         )}
 
         {/* Main Content */}
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col lg:flex-row gap-6 animate-fade-in-up animate-delay-200">
           {/* Canvas */}
           <div className="flex-shrink-0">
             {/* 2D Canvas */}
@@ -242,6 +317,7 @@ function App() {
               width={DEFAULT_GRID_CONFIG.width}
               height={DEFAULT_GRID_CONFIG.height}
               className={`w-full max-w-[512px] aspect-square ${mode !== "2d" ? "hidden" : ""}`}
+              isRunning={mode === "2d" && !!engine?.running}
             />
             {/* 3D Canvas */}
             <Canvas
@@ -249,6 +325,7 @@ function App() {
               width={512}
               height={512}
               className={`w-full max-w-[512px] aspect-square ${mode !== "3d" ? "hidden" : ""}`}
+              isRunning={mode === "3d" && !!engine3D?.running}
             />
           </div>
 
@@ -262,20 +339,20 @@ function App() {
                 </PanelErrorBoundary>
 
                 {/* Info Panel */}
-                <div className="mt-6 p-4 bg-zinc-900 rounded-lg border border-zinc-800">
-                  <h3 className="font-medium text-zinc-300 mb-2">About</h3>
-                  <p className="text-sm text-zinc-500">
+                <div className="mt-6 p-4 glass-panel">
+                  <h3 className="font-medium text-bio-cyan mb-2 font-display text-sm tracking-wide">
+                    About
+                  </h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">
                     GENESIS is a next-generation cellular automata platform
                     powered by WebGPU. Features{" "}
-                    <span className="text-green-400">Discrete CA</span>,{" "}
-                    <span className="text-purple-400">Continuous CA</span>{" "}
+                    <span className="text-bio-green">Discrete CA</span>,{" "}
+                    <span className="text-bio-magenta">Continuous CA</span>{" "}
                     (Lenia),{" "}
-                    <span className="text-orange-400">Neural CA Training</span>,{" "}
-                    <span className="text-emerald-400">
-                      Multi-Species Ecology
-                    </span>
+                    <span className="text-bio-amber">Neural CA Training</span>,{" "}
+                    <span className="text-bio-cyan">Multi-Species Ecology</span>
                     , and{" "}
-                    <span className="text-blue-400">Pattern Discovery</span>.
+                    <span className="text-bio-magenta">Pattern Discovery</span>.
                   </p>
                 </div>
 
@@ -333,13 +410,16 @@ function App() {
                 </PanelErrorBoundary>
 
                 {/* 3D Info Panel */}
-                <div className="mt-6 p-4 bg-zinc-900 rounded-lg border border-zinc-800">
-                  <h3 className="font-medium text-zinc-300 mb-2">3D Lenia</h3>
-                  <p className="text-sm text-zinc-500">
+                <div className="mt-6 p-4 glass-panel">
+                  <h3 className="font-medium text-bio-magenta mb-2 font-display text-sm tracking-wide">
+                    3D Lenia
+                  </h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">
                     Explore volumetric cellular automata in 3D space. Use the{" "}
-                    <span className="text-purple-400">slice viewer</span> to see
-                    cross-sections through the simulation, or select different{" "}
-                    <span className="text-purple-400">organism presets</span> to
+                    <span className="text-bio-magenta">slice viewer</span> to
+                    see cross-sections through the simulation, or select
+                    different{" "}
+                    <span className="text-bio-cyan">organism presets</span> to
                     observe different behaviors.
                   </p>
                 </div>
@@ -347,42 +427,54 @@ function App() {
             )}
 
             {/* Keyboard Shortcuts */}
-            <div className="mt-4 text-xs text-zinc-600">
-              <p className="font-medium text-zinc-500 mb-1">
+            <div className="mt-6 p-4 glass-panel">
+              <p className="font-display text-xs text-bio-cyan tracking-wide mb-3">
                 Keyboard Shortcuts
               </p>
-              <ul className="space-y-1">
-                <li>
-                  <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded">Space</kbd>{" "}
-                  Toggle simulation
-                </li>
-                <li>
-                  <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded">S</kbd>{" "}
-                  Step once
-                </li>
-                <li>
-                  <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded">R</kbd>{" "}
-                  Reset
-                </li>
-              </ul>
+              <div className="flex flex-wrap gap-4 text-xs">
+                <div className="flex items-center gap-2">
+                  <kbd className="px-2 py-1 bg-genesis-surface border border-[rgba(0,245,255,0.2)] rounded font-mono text-bio-cyan">
+                    Space
+                  </kbd>
+                  <span className="text-zinc-400">Toggle</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <kbd className="px-2 py-1 bg-genesis-surface border border-[rgba(0,245,255,0.2)] rounded font-mono text-bio-cyan">
+                    S
+                  </kbd>
+                  <span className="text-zinc-400">Step</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <kbd className="px-2 py-1 bg-genesis-surface border border-[rgba(0,245,255,0.2)] rounded font-mono text-bio-cyan">
+                    R
+                  </kbd>
+                  <span className="text-zinc-400">Reset</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <footer className="mt-12 text-center text-zinc-600 text-sm">
-          <p>Built with WebGPU + React + TypeScript</p>
+        <footer className="mt-12 text-center animate-fade-in-up animate-delay-500">
+          <p className="text-xs text-zinc-600 tracking-wider">
+            Built with <span className="text-bio-cyan">WebGPU</span> +{" "}
+            <span className="text-bio-magenta">React</span> +{" "}
+            <span className="text-bio-green">TypeScript</span>
+          </p>
         </footer>
       </div>
 
-      {/* WebGPU Compatibility Modal */}
+      {/* WebGPU Compatibility Modal - only show if not in CPU fallback mode */}
       {!webgpuChecking &&
         webgpuCheck &&
         !webgpuCheck.available &&
+        !isCPUMode &&
         !dismissedCompatibilityWarning && (
           <WebGPUCompatibilityModal
             checkResult={webgpuCheck}
             onDismiss={() => setDismissedCompatibilityWarning(true)}
+            isCPUFallback={false}
           />
         )}
     </div>

@@ -1,6 +1,6 @@
-# GENESIS - Cellular Automata Platform
+# GENESIS - Artificial Life Observatory
 
-WebGPU-powered artificial life simulation platform optimized for both human and AI researchers.
+WebGPU-powered artificial life simulation platform with a bioluminescent scientific interface.
 
 ## Quick Start
 
@@ -10,7 +10,9 @@ bun install && bun run dev
 
 ## Stack
 
-React 19, TypeScript, Tailwind, Zustand | WebGPU + WGSL | Vite + Bun
+React 19, TypeScript, Tailwind CSS, Zustand | WebGPU + WGSL | Vite + Bun
+
+**UI Theme:** Bioluminescent Observatory with Orbitron, Inter, JetBrains Mono fonts
 
 ## Directory Structure
 
@@ -23,11 +25,64 @@ src/
 ├── training/       # Neural CA (GPU + CPU)
 ├── analysis/       # Symmetry, chaos, periodicity, statistics
 ├── persistence/    # Save/load organisms
-├── ui/components/  # React panels + ErrorBoundary
+├── ui/components/  # React panels (Bioluminescent theme)
 ├── cli/            # CLI + parameter sweep
 ├── mcp/            # MCP server for AI interaction
 └── patterns/       # Lenia presets
 ```
+
+## UI Architecture
+
+### Theme System (src/index.css)
+
+CSS custom properties define the bioluminescent color system:
+
+```css
+/* Cosmic Blacks */
+--genesis-void: #030306;      /* Deepest background */
+--genesis-abyss: #0a0a12;     /* Main background */
+--genesis-depth: #12121c;     /* Panel backgrounds */
+--genesis-surface: #1a1a28;   /* Elevated surfaces */
+
+/* Bioluminescent Accents */
+--bio-cyan: #00f5ff;          /* Primary accent */
+--bio-magenta: #ff00ff;       /* Discovery/evolution */
+--bio-amber: #ffaa00;         /* Warnings, CPU mode */
+--bio-green: #00ff88;         /* Running state */
+```
+
+### Key UI Components
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `Canvas` | `Canvas.tsx` | Observatory Portal with corner brackets, breathing glow |
+| `ExpandablePanel` | `common/ExpandablePanel.tsx` | Glass morphism collapsible panels |
+| `Controls` | `Controls.tsx` | Playback buttons with glow effects |
+| `PerformanceMonitor` | `PerformanceMonitor.tsx` | HUD-style floating FPS display |
+| `RangeSlider` | `common/RangeSlider.tsx` | Custom slider with gradient fill |
+| `StatGrid` | `common/StatGrid.tsx` | Stat cards with glass styling |
+
+### CSS Utility Classes
+
+```css
+.glass-panel      /* Backdrop blur + border */
+.btn-glow         /* Button with hover glow */
+.btn-start        /* Green gradient start button */
+.btn-stop         /* Red gradient stop button */
+.genesis-select   /* Styled dropdown with cyan accent */
+.genesis-slider   /* Custom range input */
+.stat-card        /* Individual stat display */
+.observatory-portal  /* Canvas wrapper with effects */
+.status-dot       /* Pulsing status indicator */
+```
+
+### Animation Keyframes
+
+- `fadeInUp` - Page element entrance
+- `breathingGlow` - Running state canvas glow
+- `portalPulse` - Idle portal border animation
+- `gradientShift` - Title gradient movement
+- `letterReveal` - Staggered title animation
 
 ## Key Parameters (Stable Lenia)
 
@@ -54,26 +109,13 @@ engine.setBoundaryMode('periodic' | 'clamped' | 'reflected' | 'zero')
 ## Seeded RNG
 
 ```typescript
-import {
-  setSeed,
-  random,
-  randomInt,
-  randomFloat,
-  randomBool,
-} from "./core/random";
+import { setSeed, random, randomInt, randomFloat, randomBool } from "./core/random";
 
 setSeed(12345); // Set global seed for reproducibility
-random(); // 0-1 float
-randomInt(min, max); // Integer in [min, max]
-randomFloat(min, max); // Float in [min, max]
-randomBool(0.5); // Boolean with probability
-```
-
-CLI commands support `--seed` for reproducible experiments:
-
-```bash
-bun run cli evolve run --seed 42 --generations 10
-bun run cli multikernel evolve --seed 42 --generations 5
+random();       // 0-1 float
+randomInt(min, max);    // Integer in [min, max]
+randomFloat(min, max);  // Float in [min, max]
+randomBool(0.5);        // Boolean with probability
 ```
 
 ## Commands

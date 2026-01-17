@@ -1,6 +1,6 @@
 /**
- * Controls Component
- * Control panel for discrete and continuous CA
+ * Controls Component - Bioluminescent Theme
+ * Control panel with glowing buttons and glass styling
  */
 
 import { useState } from "react";
@@ -114,30 +114,27 @@ export function Controls({ engine }: ControlsProps) {
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 bg-zinc-900 rounded-lg border border-zinc-800">
+    <div className="flex flex-col gap-4 glass-panel p-5">
       {/* Stats */}
       {showStats && (
-        <div className="flex gap-4 text-sm text-zinc-400">
-          <span>
-            Step:{" "}
-            <span className="text-green-400 font-mono">
-              {step.toLocaleString()}
-            </span>
-          </span>
-          <span>
-            FPS: <span className="text-green-400 font-mono">{fps}</span>
-          </span>
+        <div className="flex gap-6 text-sm">
+          <div className="stat-card flex-1">
+            <div className="stat-label">Step</div>
+            <div className="stat-value font-mono">{step.toLocaleString()}</div>
+          </div>
+          <div className="stat-card flex-1">
+            <div className="stat-label">FPS</div>
+            <div className="stat-value font-mono">{fps}</div>
+          </div>
         </div>
       )}
 
       {/* Playback Controls */}
-      <div className="flex gap-2">
+      <div className="flex gap-3">
         <button
           onClick={toggle}
-          className={`px-4 py-2 rounded font-medium transition-colors ${
-            running
-              ? "bg-red-600 hover:bg-red-700 text-white"
-              : "bg-green-600 hover:bg-green-700 text-white"
+          className={`btn-glow flex-1 px-4 py-2.5 rounded-lg font-medium transition-all duration-300 ${
+            running ? "btn-stop text-white" : "btn-start text-white"
           }`}
         >
           {running ? "Stop" : "Start"}
@@ -146,28 +143,28 @@ export function Controls({ engine }: ControlsProps) {
         <button
           onClick={() => stepOnce()}
           disabled={running}
-          className="px-4 py-2 rounded font-medium bg-zinc-700 hover:bg-zinc-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="btn-glow px-4 py-2.5 rounded-lg font-medium bg-genesis-surface text-white border border-[rgba(0,245,255,0.2)] hover:border-bio-cyan disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300"
         >
           Step
         </button>
 
         <button
           onClick={() => reset(currentPattern)}
-          className="px-4 py-2 rounded font-medium bg-zinc-700 hover:bg-zinc-600 text-white transition-colors"
+          className="btn-glow px-4 py-2.5 rounded-lg font-medium bg-genesis-surface text-white border border-[rgba(0,245,255,0.2)] hover:border-bio-cyan transition-all duration-300"
         >
           Reset
         </button>
       </div>
 
       {/* Paradigm Selector */}
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-zinc-500 uppercase tracking-wide">
+      <div className="flex flex-col gap-2">
+        <label className="text-xs text-bio-cyan font-display tracking-wider uppercase">
           Mode
         </label>
         <select
           onChange={handleParadigmChange}
           value={paradigm}
-          className="px-3 py-2 rounded bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="genesis-select"
         >
           <option value="discrete">Discrete (Game of Life)</option>
           <option value="continuous">Continuous (Lenia)</option>
@@ -177,14 +174,14 @@ export function Controls({ engine }: ControlsProps) {
       {/* Presets - Different based on paradigm */}
       <div className="flex gap-4">
         {paradigm === "discrete" ? (
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-zinc-500 uppercase tracking-wide">
+          <div className="flex flex-col gap-2 flex-1">
+            <label className="text-xs text-bio-cyan font-display tracking-wider uppercase">
               Rule
             </label>
             <select
               onChange={handlePresetChange}
               defaultValue="game-of-life"
-              className="px-3 py-2 rounded bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="genesis-select"
             >
               <optgroup label="Classic">
                 <option value="game-of-life">Game of Life (B3/S23)</option>
@@ -218,14 +215,14 @@ export function Controls({ engine }: ControlsProps) {
             </select>
           </div>
         ) : (
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-zinc-500 uppercase tracking-wide">
+          <div className="flex flex-col gap-2 flex-1">
+            <label className="text-xs text-bio-cyan font-display tracking-wider uppercase">
               Preset
             </label>
             <select
               onChange={handleContinuousPresetChange}
               defaultValue="lenia-orbium"
-              className="px-3 py-2 rounded bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="genesis-select"
             >
               {Object.entries(CONTINUOUS_PRESET_NAMES).map(([key, name]) => (
                 <option key={key} value={key}>
@@ -236,14 +233,14 @@ export function Controls({ engine }: ControlsProps) {
           </div>
         )}
 
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-zinc-500 uppercase tracking-wide">
+        <div className="flex flex-col gap-2 flex-1">
+          <label className="text-xs text-bio-cyan font-display tracking-wider uppercase">
             Pattern
           </label>
           <select
             onChange={handlePatternChange}
             defaultValue={paradigm === "discrete" ? "random" : "lenia-seed"}
-            className="px-3 py-2 rounded bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="genesis-select"
           >
             {paradigm === "discrete" ? (
               <>
@@ -264,14 +261,14 @@ export function Controls({ engine }: ControlsProps) {
       </div>
 
       {/* Colormap Selector */}
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-zinc-500 uppercase tracking-wide">
+      <div className="flex flex-col gap-2">
+        <label className="text-xs text-bio-cyan font-display tracking-wider uppercase">
           Colormap
         </label>
         <select
           onChange={handleColormapChange}
           defaultValue="viridis"
-          className="px-3 py-2 rounded bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="genesis-select"
         >
           {(Object.keys(COLORMAP_IDS) as ColormapName[]).map((key) => (
             <option key={key} value={key}>
@@ -283,14 +280,14 @@ export function Controls({ engine }: ControlsProps) {
 
       {/* Boundary Mode Selector (continuous only) */}
       {paradigm === "continuous" && (
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-zinc-500 uppercase tracking-wide">
+        <div className="flex flex-col gap-2">
+          <label className="text-xs text-bio-cyan font-display tracking-wider uppercase">
             Boundary
           </label>
           <select
             onChange={handleBoundaryModeChange}
             defaultValue="periodic"
-            className="px-3 py-2 rounded bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="genesis-select"
           >
             {BOUNDARY_MODES.map((mode) => (
               <option key={mode} value={mode}>
@@ -302,10 +299,12 @@ export function Controls({ engine }: ControlsProps) {
       )}
 
       {/* Current Rule Display */}
-      <div className="text-xs text-zinc-500 font-mono">
-        {paradigm === "discrete"
-          ? `B${discreteRule.birth.join("")}/S${discreteRule.survival.join("")}`
-          : "Continuous CA (Lenia/SmoothLife)"}
+      <div className="pt-2 border-t border-[rgba(0,245,255,0.1)]">
+        <span className="text-xs text-zinc-500 font-mono">
+          {paradigm === "discrete"
+            ? `B${discreteRule.birth.join("")}/S${discreteRule.survival.join("")}`
+            : "Continuous CA (Lenia/SmoothLife)"}
+        </span>
       </div>
     </div>
   );

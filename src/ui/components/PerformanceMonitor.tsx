@@ -1,9 +1,9 @@
 /**
- * Performance Monitoring Component
- * Displays real-time performance metrics including FPS, step count, and memory usage
+ * Performance Monitoring Component - HUD Style
+ * Bioluminescent HUD-style display with real-time metrics
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useSimulationStore } from "../stores/simulation-store";
 import { ExpandablePanel, StatGrid } from "./common";
 
@@ -33,10 +33,80 @@ interface PerformanceMetrics {
  * FPS color based on performance
  */
 function getFpsColor(fps: number): string {
-  if (fps >= 55) return "text-green-400";
-  if (fps >= 30) return "text-yellow-400";
-  if (fps >= 15) return "text-orange-400";
-  return "text-red-400";
+  if (fps >= 55) return "text-bio-green";
+  if (fps >= 30) return "text-bio-amber";
+  if (fps >= 15) return "text-bio-amber";
+  return "text-[var(--state-error)]";
+}
+
+/**
+ * FPS numeric color for CSS
+ */
+function getFpsColorHex(fps: number): string {
+  if (fps >= 55) return "#00ff88";
+  if (fps >= 30) return "#ffaa00";
+  if (fps >= 15) return "#ffaa00";
+  return "#ff4466";
+}
+
+/**
+ * Mini FPS graph with gradient fill
+ */
+function FpsGraph({ history, max = 60 }: { history: number[]; max?: number }) {
+  if (history.length === 0) return null;
+
+  const width = 100;
+  const height = 24;
+  const points = history.slice(-50);
+
+  if (points.length < 2) return null;
+
+  const pathData = points
+    .map((fps, i) => {
+      const x = (i / (points.length - 1)) * width;
+      const y = height - (Math.min(fps, max) / max) * height;
+      return `${i === 0 ? "M" : "L"} ${x} ${y}`;
+    })
+    .join(" ");
+
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="w-full h-6 mt-1"
+      preserveAspectRatio="none"
+    >
+      <defs>
+        <linearGradient id="fpsGradientHUD" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="var(--bio-cyan)" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="var(--bio-cyan)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {/* Fill under the line */}
+      <path
+        d={`${pathData} L ${width} ${height} L 0 ${height} Z`}
+        fill="url(#fpsGradientHUD)"
+      />
+      {/* The line itself */}
+      <path
+        d={pathData}
+        fill="none"
+        stroke="var(--bio-cyan)"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Target line at 60fps */}
+      <line
+        x1="0"
+        y1={height - (60 / max) * height}
+        x2={width}
+        y2={height - (60 / max) * height}
+        stroke="rgba(0, 245, 255, 0.3)"
+        strokeWidth="0.5"
+        strokeDasharray="2,2"
+      />
+    </svg>
+  );
 }
 
 /**
@@ -58,77 +128,23 @@ function PerformanceBar({
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-xs">
-        <span className="text-zinc-500">{label}</span>
-        <span className={color}>{value.toFixed(1)}</span>
+        <span className="text-zinc-500 font-display tracking-wide uppercase">
+          {label}
+        </span>
+        <span className={color} style={{ fontFamily: "var(--font-mono)" }}>
+          {value.toFixed(1)}
+        </span>
       </div>
-      <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-genesis-surface rounded-full overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all ${color.replace("text-", "bg-")}`}
-          style={{ width: `${percentage}%` }}
+          className="h-full rounded-full transition-all duration-300"
+          style={{
+            width: `${percentage}%`,
+            background: `linear-gradient(90deg, ${getFpsColorHex(value)}80, ${getFpsColorHex(value)})`,
+          }}
         />
       </div>
     </div>
-  );
-}
-
-/**
- * Mini FPS graph
- */
-function FpsGraph({ history, max = 60 }: { history: number[]; max?: number }) {
-  if (history.length === 0) return null;
-
-  const width = 100;
-  const height = 24;
-  const points = history.slice(-50); // Last 50 samples
-
-  // Need at least 2 points to draw a line
-  if (points.length < 2) return null;
-
-  const pathData = points
-    .map((fps, i) => {
-      const x = (i / (points.length - 1)) * width;
-      const y = height - (Math.min(fps, max) / max) * height;
-      return `${i === 0 ? "M" : "L"} ${x} ${y}`;
-    })
-    .join(" ");
-
-  return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      className="w-full h-6 mt-1"
-      preserveAspectRatio="none"
-    >
-      <defs>
-        <linearGradient id="fpsGradient" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="rgb(74, 222, 128)" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="rgb(74, 222, 128)" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      {/* Fill under the line */}
-      <path
-        d={`${pathData} L ${width} ${height} L 0 ${height} Z`}
-        fill="url(#fpsGradient)"
-      />
-      {/* The line itself */}
-      <path
-        d={pathData}
-        fill="none"
-        stroke="rgb(74, 222, 128)"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* Target line at 60fps */}
-      <line
-        x1="0"
-        y1={height - (60 / max) * height}
-        x2={width}
-        y2={height - (60 / max) * height}
-        stroke="rgb(113, 113, 122)"
-        strokeWidth="0.5"
-        strokeDasharray="2,2"
-      />
-    </svg>
   );
 }
 
@@ -183,37 +199,45 @@ export function PerformanceMonitor({
   const isRunning = engine?.running ?? storeState.running;
 
   if (floating) {
-    // Floating overlay version (compact)
+    // HUD-style floating overlay
     return (
-      <div className="fixed top-4 right-4 bg-zinc-900/95 backdrop-blur-sm border border-zinc-700 rounded-lg p-3 shadow-lg z-40 min-w-[140px]">
-        <div className="flex items-center gap-2 mb-2">
-          <div
-            className={`w-2 h-2 rounded-full ${isRunning ? "bg-green-500 animate-pulse" : "bg-zinc-600"}`}
-          />
-          <span className="text-xs text-zinc-400">
-            {isRunning ? "Running" : "Paused"}
+      <div className="fixed top-4 right-4 hud-monitor p-4 shadow-lg z-40 min-w-[160px]">
+        <div className="flex items-center gap-2 mb-3">
+          <span className={`status-dot ${isRunning ? "running" : ""}`} />
+          <span className="text-xs text-zinc-400 font-display tracking-wide uppercase">
+            {isRunning ? "Observing" : "Paused"}
           </span>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex justify-between items-baseline">
-            <span className="text-xs text-zinc-500">FPS</span>
+        <div className="space-y-3">
+          {/* Large FPS Display */}
+          <div className="text-center">
             <span
-              className={`text-xl font-mono font-bold ${getFpsColor(metrics.fps)}`}
+              className={`text-3xl font-mono font-bold ${getFpsColor(metrics.fps)}`}
+              style={{
+                textShadow: `0 0 20px ${getFpsColorHex(metrics.fps)}40`,
+              }}
             >
               {Math.round(metrics.fps)}
             </span>
+            <span className="text-xs text-zinc-500 ml-1 font-display">FPS</span>
           </div>
 
-          <div className="flex justify-between items-baseline">
-            <span className="text-xs text-zinc-500">Step</span>
-            <span className="text-sm font-mono text-zinc-300">
+          {/* Step Counter */}
+          <div className="flex justify-between items-baseline px-1">
+            <span className="text-xs text-zinc-500 font-display tracking-wide uppercase">
+              Step
+            </span>
+            <span className="font-mono text-bio-cyan text-sm">
               {metrics.step.toLocaleString()}
             </span>
           </div>
         </div>
 
-        <FpsGraph history={metrics.fpsHistory} />
+        {/* Mini Graph */}
+        <div className="mt-2 pt-2 border-t border-[rgba(0,245,255,0.1)]">
+          <FpsGraph history={metrics.fpsHistory} />
+        </div>
       </div>
     );
   }
@@ -222,16 +246,17 @@ export function PerformanceMonitor({
   return (
     <ExpandablePanel
       title="Performance"
-      titleColor="text-cyan-400"
+      titleColor="text-bio-cyan"
       defaultExpanded={defaultExpanded}
+      accent="cyan"
       statusBadge={
         isRunning
           ? {
               text: `${Math.round(metrics.fps)} FPS`,
               color:
                 metrics.fps >= 30
-                  ? "bg-green-900 text-green-400"
-                  : "bg-yellow-900 text-yellow-400",
+                  ? "bg-[rgba(0,255,136,0.15)] border-bio-green text-bio-green"
+                  : "bg-[rgba(255,170,0,0.15)] border-bio-amber text-bio-amber",
             }
           : undefined
       }
@@ -260,8 +285,10 @@ export function PerformanceMonitor({
 
         {/* FPS Graph */}
         <div>
-          <div className="text-xs text-zinc-500 mb-1">FPS History</div>
-          <div className="p-2 bg-zinc-800 rounded">
+          <div className="text-xs text-bio-cyan font-display tracking-wide uppercase mb-2">
+            FPS History
+          </div>
+          <div className="p-3 bg-genesis-surface rounded-lg border border-[rgba(0,245,255,0.1)]">
             <FpsGraph history={metrics.fpsHistory} />
           </div>
         </div>
@@ -283,30 +310,24 @@ export function PerformanceMonitor({
         </div>
 
         {/* Min/Max Range */}
-        <div className="flex justify-between text-xs p-2 bg-zinc-800 rounded">
+        <div className="flex justify-between text-xs p-3 bg-genesis-surface rounded-lg border border-[rgba(0,245,255,0.1)]">
           <span className="text-zinc-500">
             Min:{" "}
-            <span className="text-orange-400">
+            <span className="text-bio-amber font-mono">
               {Math.round(metrics.minFps)}
             </span>
           </span>
           <span className="text-zinc-500">
             Max:{" "}
-            <span className="text-green-400">{Math.round(metrics.maxFps)}</span>
+            <span className="text-bio-green font-mono">
+              {Math.round(metrics.maxFps)}
+            </span>
           </span>
         </div>
 
         {/* Status Indicator */}
-        <div className="flex items-center gap-2 p-2 bg-zinc-800 rounded">
-          <div
-            className={`w-2.5 h-2.5 rounded-full ${
-              isRunning
-                ? metrics.fps >= 30
-                  ? "bg-green-500"
-                  : "bg-yellow-500"
-                : "bg-zinc-600"
-            }`}
-          />
+        <div className="flex items-center gap-2 p-3 bg-genesis-surface rounded-lg border border-[rgba(0,245,255,0.1)]">
+          <span className={`status-dot ${isRunning ? "running" : ""}`} />
           <span className="text-xs text-zinc-400">
             {isRunning
               ? metrics.fps >= 55

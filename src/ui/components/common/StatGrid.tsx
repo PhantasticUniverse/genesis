@@ -1,6 +1,6 @@
 /**
- * Stat Grid Component
- * Grid of labeled statistics with consistent styling
+ * Stat Grid Component - Bioluminescent Theme
+ * Grid of labeled statistics with glass card styling
  */
 
 export interface StatItem {
@@ -8,7 +8,7 @@ export interface StatItem {
   label: string;
   /** Value to display */
   value: string | number;
-  /** Optional color class for the value (e.g., 'text-green-400') */
+  /** Optional color class for the value (e.g., 'text-bio-cyan') */
   color?: string;
 }
 
@@ -23,11 +23,11 @@ export function StatGrid({ stats, columns = 2 }: StatGridProps) {
   const gridClass = columns === 3 ? "grid-cols-3" : "grid-cols-2";
 
   return (
-    <div className={`grid ${gridClass} gap-2 text-xs`}>
+    <div className={`grid ${gridClass} gap-3 text-xs`}>
       {stats.map((stat, index) => (
-        <div key={index} className="p-2 bg-zinc-800 rounded">
-          <div className="text-zinc-500">{stat.label}</div>
-          <div className={`font-mono ${stat.color || "text-zinc-300"}`}>
+        <div key={index} className="stat-card">
+          <div className="stat-label">{stat.label}</div>
+          <div className={`stat-value ${stat.color || "text-bio-cyan"}`}>
             {stat.value}
           </div>
         </div>

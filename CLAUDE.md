@@ -54,10 +54,19 @@ engine.setBoundaryMode('periodic' | 'clamped' | 'reflected' | 'zero')
 ## Seeded RNG
 
 ```typescript
-import { createSeededRandom, globalRandom } from './core/random';
-const rng = createSeededRandom(12345);  // Reproducible
-rng.next();  // 0-1 float
-rng.nextInt(min, max);  // Integer range
+import { setSeed, random, randomInt, randomFloat, randomBool } from './core/random';
+
+setSeed(12345);           // Set global seed for reproducibility
+random();                 // 0-1 float
+randomInt(min, max);      // Integer in [min, max]
+randomFloat(min, max);    // Float in [min, max]
+randomBool(0.5);          // Boolean with probability
+```
+
+CLI commands support `--seed` for reproducible experiments:
+```bash
+bun run cli evolve run --seed 42 --generations 10
+bun run cli multikernel evolve --seed 42 --generations 5
 ```
 
 ## Commands
@@ -73,7 +82,12 @@ bun run cli           # CLI (no WebGPU required)
 
 ## Testing
 
-1200+ tests covering: core, discovery, agency, compute, analysis, persistence, render, cli, mcp
+1215 tests covering: core, discovery, agency, compute, analysis, persistence, render, cli, mcp
+
+```bash
+bun run test              # Run all tests
+bun run test:coverage     # With coverage report
+```
 
 ## Keyboard
 
@@ -107,3 +121,4 @@ const server = createGenesisMCPServer();
 
 - Sensorimotor obstacles: Visual rendering subtle
 - WebGPU types: Show compile errors but work at runtime
+- WebGPU initialization: Times out after 5s if GPU unavailable (shows compatibility modal)

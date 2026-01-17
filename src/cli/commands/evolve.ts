@@ -163,6 +163,23 @@ export function registerEvolveCommands(program: Command): void {
       const steps = parseInt(options.steps);
       const format = options.format as OutputFormat;
 
+      // Input validation
+      const errors: string[] = [];
+      if (populationSize < 2)
+        errors.push("Population must be at least 2");
+      if (generations < 1)
+        errors.push("Generations must be at least 1");
+      if (size < 8)
+        errors.push("Grid size must be at least 8");
+      if (steps < 1)
+        errors.push("Steps must be at least 1");
+
+      if (errors.length > 0) {
+        console.error("Invalid parameters:");
+        errors.forEach((e) => console.error(`  - ${e}`));
+        process.exit(1);
+      }
+
       // Initialize seeded RNG
       const seed = options.seed ? parseInt(options.seed) : setSeed();
       if (options.seed) {

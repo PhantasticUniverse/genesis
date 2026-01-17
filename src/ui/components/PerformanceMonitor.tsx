@@ -81,6 +81,9 @@ function FpsGraph({ history, max = 60 }: { history: number[]; max?: number }) {
   const height = 24;
   const points = history.slice(-50); // Last 50 samples
 
+  // Need at least 2 points to draw a line
+  if (points.length < 2) return null;
+
   const pathData = points
     .map((fps, i) => {
       const x = (i / (points.length - 1)) * width;

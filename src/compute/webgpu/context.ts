@@ -20,6 +20,7 @@ export function isWebGPUAvailable(): boolean {
 
 /**
  * Initialize WebGPU context with device and adapter
+ * Includes timeout to prevent indefinite hanging
  */
 export async function initWebGPU(): Promise<WebGPUContext> {
   if (!isWebGPUAvailable()) {
@@ -29,10 +30,19 @@ export async function initWebGPU(): Promise<WebGPUContext> {
     );
   }
 
-  // Request adapter (connection to GPU)
-  const adapter = await navigator.gpu.requestAdapter({
+  // Request adapter with timeout (5 seconds)
+  const timeoutPromise = new Promise<null>((_, reject) =>
+    setTimeout(
+      () => reject(new Error("WebGPU adapter request timed out")),
+      5000
+    )
+  );
+
+  const adapterPromise = navigator.gpu.requestAdapter({
     powerPreference: "high-performance",
   });
+
+  const adapter = await Promise.race([adapterPromise, timeoutPromise]);
 
   if (!adapter) {
     throw new Error(

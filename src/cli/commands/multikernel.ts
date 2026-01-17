@@ -363,6 +363,7 @@ export function registerMultiKernelCommands(program: Command): void {
     .option("--inline <json>", "Inline JSON config")
     .option("--size <n>", "Grid size", "64")
     .option("--steps <n>", "Simulation steps", "100")
+    .option("--seed <n>", "Random seed for reproducibility")
     .option("-f, --format <format>", "Output format (json|table)", "json")
     .option("-o, --output <file>", "Output file for results")
     .action(async (options) => {
@@ -370,7 +371,13 @@ export function registerMultiKernelCommands(program: Command): void {
       const steps = parseInt(options.steps);
       const format = options.format as OutputFormat;
 
+      // Initialize seeded RNG
+      if (options.seed) {
+        setSeed(parseInt(options.seed));
+      }
+
       printHeader("Multi-Kernel Lenia Simulation");
+      console.log(`Seed: ${getSeed()}`);
 
       // Determine config source
       let config: MultiKernelConfig;

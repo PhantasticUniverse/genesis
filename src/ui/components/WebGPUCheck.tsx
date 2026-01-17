@@ -47,6 +47,7 @@ export interface WebGPUCheckResult {
 
 /**
  * Check WebGPU availability with detailed error info
+ * Includes a timeout to prevent indefinite hanging when GPU is partially available
  */
 export async function checkWebGPUSupport(): Promise<WebGPUCheckResult> {
   // Check if navigator.gpu exists
@@ -55,17 +56,26 @@ export async function checkWebGPUSupport(): Promise<WebGPUCheckResult> {
   }
 
   try {
-    // Try to get adapter
-    const adapter = await navigator.gpu.requestAdapter({
+    // Try to get adapter with timeout (5 seconds)
+    const timeoutPromise = new Promise<null>((_, reject) =>
+      setTimeout(() => reject(new Error("timeout")), 5000)
+    );
+
+    const adapterPromise = navigator.gpu.requestAdapter({
       powerPreference: "high-performance",
     });
+
+    const adapter = await Promise.race([adapterPromise, timeoutPromise]);
 
     if (!adapter) {
       return { available: false, reason: "no_adapter" };
     }
 
     return { available: true };
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message === "timeout") {
+      return { available: false, reason: "no_adapter" };
+    }
     return { available: false, reason: "unknown" };
   }
 }

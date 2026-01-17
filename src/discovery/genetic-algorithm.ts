@@ -11,6 +11,7 @@ import {
   cloneGenome,
   encodeGenome,
 } from "./genome";
+import { random, randomInt } from "../core/random";
 import {
   type FitnessMetrics,
   type BehaviorVector,
@@ -195,7 +196,7 @@ export function tournamentSelect(
   const tournament: Individual[] = [];
 
   for (let i = 0; i < tournamentSize; i++) {
-    const idx = Math.floor(Math.random() * population.length);
+    const idx = randomInt(0, population.length - 1);
     tournament.push(population[idx]);
   }
 
@@ -266,7 +267,7 @@ export function evolvePopulation(
     let birthType: "mutation" | "crossover";
 
     // Crossover
-    if (Math.random() < config.crossoverRate) {
+    if (random() < config.crossoverRate) {
       childGenome = crossoverGenomes(parent1.genome, parent2.genome);
       parentIds = [parent1.id, parent2.id];
       birthType = "crossover";

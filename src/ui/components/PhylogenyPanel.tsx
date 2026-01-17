@@ -3,17 +3,23 @@
  * Visualizes evolutionary tree from genetic algorithm
  */
 
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import type { GAController } from '../../discovery/genetic-algorithm';
-import type { PhyloTree, PhyloNode } from '../../discovery/phylogeny';
-import { genomeToParams, type LeniaGenome } from '../../discovery/genome';
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import type { GAController } from "../../discovery/genetic-algorithm";
+import type { PhyloTree, PhyloNode } from "../../discovery/phylogeny";
+import { genomeToParams, type LeniaGenome } from "../../discovery/genome";
 
 interface PhylogenyPanelProps {
   gaController: GAController | null;
-  onSelectOrganism?: (params: ReturnType<typeof genomeToParams>, genome: LeniaGenome) => void;
+  onSelectOrganism?: (
+    params: ReturnType<typeof genomeToParams>,
+    genome: LeniaGenome,
+  ) => void;
 }
 
-export function PhylogenyPanel({ gaController, onSelectOrganism }: PhylogenyPanelProps) {
+export function PhylogenyPanel({
+  gaController,
+  onSelectOrganism,
+}: PhylogenyPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [viewBox, setViewBox] = useState({ x: -200, y: -20, w: 400, h: 300 });
@@ -29,8 +35,10 @@ export function PhylogenyPanel({ gaController, onSelectOrganism }: PhylogenyPane
   useEffect(() => {
     if (!tree || tree.nodes.size === 0) return;
 
-    let minX = Infinity, maxX = -Infinity;
-    let minY = Infinity, maxY = -Infinity;
+    let minX = Infinity,
+      maxX = -Infinity;
+    let minY = Infinity,
+      maxY = -Infinity;
 
     for (const node of tree.nodes.values()) {
       if (node.x !== undefined && node.y !== undefined) {
@@ -53,14 +61,17 @@ export function PhylogenyPanel({ gaController, onSelectOrganism }: PhylogenyPane
   }, [tree?.generations, tree?.totalNodes]);
 
   // Handle node click
-  const handleNodeClick = useCallback((node: PhyloNode) => {
-    setSelectedNodeId(node.id);
+  const handleNodeClick = useCallback(
+    (node: PhyloNode) => {
+      setSelectedNodeId(node.id);
 
-    if (onSelectOrganism) {
-      const params = genomeToParams(node.genome);
-      onSelectOrganism(params, node.genome);
-    }
-  }, [onSelectOrganism]);
+      if (onSelectOrganism) {
+        const params = genomeToParams(node.genome);
+        onSelectOrganism(params, node.genome);
+      }
+    },
+    [onSelectOrganism],
+  );
 
   // Pan handling
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -70,14 +81,17 @@ export function PhylogenyPanel({ gaController, onSelectOrganism }: PhylogenyPane
     }
   }, []);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (isDragging) {
-      const dx = (e.clientX - dragStart.x) * (viewBox.w / 400);
-      const dy = (e.clientY - dragStart.y) * (viewBox.h / 300);
-      setViewBox(v => ({ ...v, x: v.x - dx, y: v.y - dy }));
-      setDragStart({ x: e.clientX, y: e.clientY });
-    }
-  }, [isDragging, dragStart, viewBox]);
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (isDragging) {
+        const dx = (e.clientX - dragStart.x) * (viewBox.w / 400);
+        const dy = (e.clientY - dragStart.y) * (viewBox.h / 300);
+        setViewBox((v) => ({ ...v, x: v.x - dx, y: v.y - dy }));
+        setDragStart({ x: e.clientX, y: e.clientY });
+      }
+    },
+    [isDragging, dragStart, viewBox],
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -87,34 +101,40 @@ export function PhylogenyPanel({ gaController, onSelectOrganism }: PhylogenyPane
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     const scale = e.deltaY > 0 ? 1.1 : 0.9;
-    setViewBox(v => ({
-      x: v.x + v.w * (1 - scale) / 2,
-      y: v.y + v.h * (1 - scale) / 2,
+    setViewBox((v) => ({
+      x: v.x + (v.w * (1 - scale)) / 2,
+      y: v.y + (v.h * (1 - scale)) / 2,
       w: v.w * scale,
       h: v.h * scale,
     }));
   }, []);
 
   // Get node color based on fitness/novelty
-  const getNodeColor = useCallback((node: PhyloNode) => {
-    if (node.isArchived) return '#a855f7'; // Purple for archived
-    if (node.isAlive) {
-      // Color by fitness (green gradient)
-      const f = Math.min(1, node.fitness / (tree?.maxFitness || 1));
-      const r = Math.round(50 + (1 - f) * 150);
-      const g = Math.round(100 + f * 155);
-      const b = Math.round(50 + (1 - f) * 100);
-      return `rgb(${r}, ${g}, ${b})`;
-    }
-    return '#52525b'; // Zinc for dead
-  }, [tree?.maxFitness]);
+  const getNodeColor = useCallback(
+    (node: PhyloNode) => {
+      if (node.isArchived) return "#a855f7"; // Purple for archived
+      if (node.isAlive) {
+        // Color by fitness (green gradient)
+        const f = Math.min(1, node.fitness / (tree?.maxFitness || 1));
+        const r = Math.round(50 + (1 - f) * 150);
+        const g = Math.round(100 + f * 155);
+        const b = Math.round(50 + (1 - f) * 100);
+        return `rgb(${r}, ${g}, ${b})`;
+      }
+      return "#52525b"; // Zinc for dead
+    },
+    [tree?.maxFitness],
+  );
 
   // Get edge color
   const getEdgeColor = useCallback((type: string) => {
     switch (type) {
-      case 'elite': return '#fbbf24'; // Amber
-      case 'crossover': return '#3b82f6'; // Blue
-      default: return '#6b7280'; // Gray
+      case "elite":
+        return "#fbbf24"; // Amber
+      case "crossover":
+        return "#3b82f6"; // Blue
+      default:
+        return "#6b7280"; // Gray
     }
   }, []);
 
@@ -122,20 +142,24 @@ export function PhylogenyPanel({ gaController, onSelectOrganism }: PhylogenyPane
   const nodeElements = useMemo(() => {
     if (!tree) return null;
 
-    return Array.from(tree.nodes.values()).map(node => {
+    return Array.from(tree.nodes.values()).map((node) => {
       if (node.x === undefined || node.y === undefined) return null;
 
       const isSelected = node.id === selectedNodeId;
       const radius = isSelected ? 8 : node.isAlive ? 6 : 4;
 
       return (
-        <g key={node.id} onClick={() => handleNodeClick(node)} style={{ cursor: 'pointer' }}>
+        <g
+          key={node.id}
+          onClick={() => handleNodeClick(node)}
+          style={{ cursor: "pointer" }}
+        >
           <circle
             cx={node.x}
             cy={node.y}
             r={radius}
             fill={getNodeColor(node)}
-            stroke={isSelected ? '#fff' : 'none'}
+            stroke={isSelected ? "#fff" : "none"}
             strokeWidth={2}
           />
           {isSelected && (
@@ -182,7 +206,8 @@ export function PhylogenyPanel({ gaController, onSelectOrganism }: PhylogenyPane
   }, [tree, getEdgeColor]);
 
   // Selected node info
-  const selectedNode = selectedNodeId && tree ? tree.nodes.get(selectedNodeId) : null;
+  const selectedNode =
+    selectedNodeId && tree ? tree.nodes.get(selectedNodeId) : null;
 
   if (!gaController) return null;
 
@@ -200,7 +225,7 @@ export function PhylogenyPanel({ gaController, onSelectOrganism }: PhylogenyPane
             </span>
           )}
         </div>
-        <span className="text-zinc-500">{isExpanded ? '−' : '+'}</span>
+        <span className="text-zinc-500">{isExpanded ? "−" : "+"}</span>
       </button>
 
       {isExpanded && (
@@ -216,21 +241,30 @@ export function PhylogenyPanel({ gaController, onSelectOrganism }: PhylogenyPane
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div className="p-2 bg-zinc-800 rounded">
                 <div className="text-zinc-500">Generations</div>
-                <div className="text-zinc-300 font-mono">{stats.generations}</div>
+                <div className="text-zinc-300 font-mono">
+                  {stats.generations}
+                </div>
               </div>
               <div className="p-2 bg-zinc-800 rounded">
                 <div className="text-zinc-500">Alive</div>
-                <div className="text-green-400 font-mono">{stats.aliveCount}</div>
+                <div className="text-green-400 font-mono">
+                  {stats.aliveCount}
+                </div>
               </div>
               <div className="p-2 bg-zinc-800 rounded">
                 <div className="text-zinc-500">Archived</div>
-                <div className="text-purple-400 font-mono">{stats.archivedCount}</div>
+                <div className="text-purple-400 font-mono">
+                  {stats.archivedCount}
+                </div>
               </div>
             </div>
           )}
 
           {/* Tree visualization */}
-          <div className="relative bg-zinc-950 rounded-lg overflow-hidden" style={{ height: 250 }}>
+          <div
+            className="relative bg-zinc-950 rounded-lg overflow-hidden"
+            style={{ height: 250 }}
+          >
             {tree && tree.nodes.size > 0 ? (
               <svg
                 ref={svgRef}
@@ -242,7 +276,7 @@ export function PhylogenyPanel({ gaController, onSelectOrganism }: PhylogenyPane
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 onWheel={handleWheel}
-                style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+                style={{ cursor: isDragging ? "grabbing" : "grab" }}
               >
                 {/* Edges first (behind nodes) */}
                 <g>{edgeElements}</g>
@@ -285,29 +319,41 @@ export function PhylogenyPanel({ gaController, onSelectOrganism }: PhylogenyPane
             <div className="p-3 bg-zinc-800 rounded text-xs space-y-2">
               <div className="flex justify-between">
                 <span className="text-zinc-400">Node ID</span>
-                <span className="font-mono text-zinc-300">{selectedNode.id}</span>
+                <span className="font-mono text-zinc-300">
+                  {selectedNode.id}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-400">Generation</span>
-                <span className="font-mono text-zinc-300">{selectedNode.generation}</span>
+                <span className="font-mono text-zinc-300">
+                  {selectedNode.generation}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-400">Fitness</span>
-                <span className="font-mono text-green-400">{selectedNode.fitness.toFixed(3)}</span>
+                <span className="font-mono text-green-400">
+                  {selectedNode.fitness.toFixed(3)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-400">Novelty</span>
-                <span className="font-mono text-purple-400">{selectedNode.novelty.toFixed(3)}</span>
+                <span className="font-mono text-purple-400">
+                  {selectedNode.novelty.toFixed(3)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-400">Parents</span>
                 <span className="font-mono text-zinc-300">
-                  {selectedNode.parentIds.length > 0 ? selectedNode.parentIds.join(', ') : 'None (root)'}
+                  {selectedNode.parentIds.length > 0
+                    ? selectedNode.parentIds.join(", ")
+                    : "None (root)"}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-400">Children</span>
-                <span className="font-mono text-zinc-300">{selectedNode.childIds.length}</span>
+                <span className="font-mono text-zinc-300">
+                  {selectedNode.childIds.length}
+                </span>
               </div>
 
               {/* Genome params */}
@@ -326,7 +372,9 @@ export function PhylogenyPanel({ gaController, onSelectOrganism }: PhylogenyPane
           {/* Info */}
           <div className="text-xs text-zinc-600">
             <p>The tree shows evolutionary relationships between organisms.</p>
-            <p className="mt-1">Vertical axis = generations, horizontal = diversity.</p>
+            <p className="mt-1">
+              Vertical axis = generations, horizontal = diversity.
+            </p>
           </div>
         </div>
       )}

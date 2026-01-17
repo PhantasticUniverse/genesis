@@ -3,7 +3,7 @@
  * Extracts behavior vectors from creature trajectories for novelty search and fitness evaluation
  */
 
-import type { TrackerState } from './creature-tracker';
+import type { TrackerState } from "./creature-tracker";
 
 /**
  * Behavior vector representing key features of creature behavior
@@ -17,20 +17,20 @@ export interface BehaviorVector {
   avgY: number;
 
   // Movement features
-  totalDistance: number;      // Total path length
-  displacement: number;       // Start-to-end distance
-  avgSpeed: number;           // Average velocity magnitude
-  maxSpeed: number;           // Peak velocity
-  pathEfficiency: number;     // displacement / totalDistance
+  totalDistance: number; // Total path length
+  displacement: number; // Start-to-end distance
+  avgSpeed: number; // Average velocity magnitude
+  maxSpeed: number; // Peak velocity
+  pathEfficiency: number; // displacement / totalDistance
 
   // Shape features
   avgMass: number;
   massVariance: number;
-  survivalTime: number;       // Frames creature survived
+  survivalTime: number; // Frames creature survived
 
   // Direction features
-  avgHeading: number;         // Average movement direction
-  headingVariance: number;    // How much direction changes
+  avgHeading: number; // Average movement direction
+  headingVariance: number; // How much direction changes
 }
 
 /**
@@ -71,7 +71,7 @@ export interface TrajectoryCollector {
 export function createTrajectoryCollector(
   gridWidth: number,
   gridHeight: number,
-  maxLength: number = 1000
+  maxLength: number = 1000,
 ): TrajectoryCollector {
   return {
     trajectories: new Map(),
@@ -86,7 +86,7 @@ export function createTrajectoryCollector(
  */
 export function updateTrajectories(
   collector: TrajectoryCollector,
-  tracker: TrackerState
+  tracker: TrackerState,
 ): void {
   const frame = tracker.frame;
 
@@ -134,7 +134,7 @@ export function updateTrajectories(
 export function extractBehaviorVector(
   trajectory: TrajectoryPoint[],
   gridWidth: number,
-  gridHeight: number
+  gridHeight: number,
 ): BehaviorVector | null {
   if (trajectory.length < 2) {
     return null;
@@ -144,7 +144,8 @@ export function extractBehaviorVector(
   const last = trajectory[trajectory.length - 1];
 
   // Position features
-  let sumX = 0, sumY = 0;
+  let sumX = 0,
+    sumY = 0;
   for (const p of trajectory) {
     sumX += p.x;
     sumY += p.y;
@@ -156,7 +157,8 @@ export function extractBehaviorVector(
   let totalDistance = 0;
   let maxSpeed = 0;
   let sumSpeed = 0;
-  let sumHeadingX = 0, sumHeadingY = 0;
+  let sumHeadingX = 0,
+    sumHeadingY = 0;
   const headings: number[] = [];
 
   for (let i = 1; i < trajectory.length; i++) {
@@ -181,13 +183,14 @@ export function extractBehaviorVector(
   }
 
   const displacement = Math.sqrt(
-    (last.x - first.x) ** 2 + (last.y - first.y) ** 2
+    (last.x - first.x) ** 2 + (last.y - first.y) ** 2,
   );
   const avgSpeed = sumSpeed / (trajectory.length - 1);
   const pathEfficiency = totalDistance > 0 ? displacement / totalDistance : 0;
 
   // Mass features
-  let sumMass = 0, sumMass2 = 0;
+  let sumMass = 0,
+    sumMass2 = 0;
   for (const p of trajectory) {
     sumMass += p.mass;
     sumMass2 += p.mass * p.mass;
@@ -280,7 +283,7 @@ export function evaluateGoalFitness(
   goalRadius: number,
   obstacleField?: Float32Array,
   gridWidth?: number,
-  gridHeight?: number
+  gridHeight?: number,
 ): GoalFitness {
   if (trajectory.length === 0) {
     return {
@@ -321,7 +324,9 @@ export function evaluateGoalFitness(
 
   const last = trajectory[trajectory.length - 1];
   const first = trajectory[0];
-  const distanceToGoal = Math.sqrt((last.x - goalX) ** 2 + (last.y - goalY) ** 2);
+  const distanceToGoal = Math.sqrt(
+    (last.x - goalX) ** 2 + (last.y - goalY) ** 2,
+  );
 
   // Calculate path efficiency
   let totalDistance = 0;
@@ -331,7 +336,9 @@ export function evaluateGoalFitness(
     totalDistance += Math.sqrt((curr.x - prev.x) ** 2 + (curr.y - prev.y) ** 2);
   }
 
-  const directDistance = Math.sqrt((first.x - goalX) ** 2 + (first.y - goalY) ** 2);
+  const directDistance = Math.sqrt(
+    (first.x - goalX) ** 2 + (first.y - goalY) ** 2,
+  );
   const pathEfficiency = totalDistance > 0 ? directDistance / totalDistance : 0;
 
   return {
@@ -359,7 +366,7 @@ export function calculateFitnessScore(
     survivalWeight: 1.0,
     efficiencyWeight: 2.0,
     collisionPenalty: 5.0,
-  }
+  },
 ): number {
   let score = 0;
 
@@ -368,7 +375,8 @@ export function calculateFitnessScore(
     score += weights.goalWeight;
     // Bonus for reaching quickly
     if (goalFitness.timeToGoal !== null) {
-      score += weights.goalWeight * 0.5 * Math.exp(-goalFitness.timeToGoal / 100);
+      score +=
+        weights.goalWeight * 0.5 * Math.exp(-goalFitness.timeToGoal / 100);
     }
   } else {
     // Partial credit for getting close

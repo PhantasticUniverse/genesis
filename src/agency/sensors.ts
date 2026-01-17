@@ -7,17 +7,9 @@
  * Sobel-like gradient detection kernels
  * Returns dx, dy components of gradient
  */
-export const SOBEL_X = new Float32Array([
-  -1, 0, 1,
-  -2, 0, 2,
-  -1, 0, 1,
-]);
+export const SOBEL_X = new Float32Array([-1, 0, 1, -2, 0, 2, -1, 0, 1]);
 
-export const SOBEL_Y = new Float32Array([
-  -1, -2, -1,
-   0,  0,  0,
-   1,  2,  1,
-]);
+export const SOBEL_Y = new Float32Array([-1, -2, -1, 0, 0, 0, 1, 2, 1]);
 
 /**
  * Larger gradient kernel for smoother sensing
@@ -52,7 +44,10 @@ export function createGradientKernel(radius: number): {
  * Proximity sensor kernel
  * Detects nearby objects with distance falloff
  */
-export function createProximityKernel(radius: number, decay: number = 0.9): Float32Array {
+export function createProximityKernel(
+  radius: number,
+  decay: number = 0.9,
+): Float32Array {
   const size = radius * 2 + 1;
   const kernel = new Float32Array(size * size);
   let sum = 0;
@@ -86,16 +81,19 @@ export function createProximityKernel(radius: number, decay: number = 0.9): Floa
 export function createMotorKernel(
   radius: number,
   direction: { x: number; y: number },
-  strength: number = 1.0
+  strength: number = 1.0,
 ): Float32Array {
   const size = radius * 2 + 1;
   const kernel = new Float32Array(size * size);
 
   // Normalize direction
-  const dirLen = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
-  const normDir = dirLen > 0
-    ? { x: direction.x / dirLen, y: direction.y / dirLen }
-    : { x: 0, y: 0 };
+  const dirLen = Math.sqrt(
+    direction.x * direction.x + direction.y * direction.y,
+  );
+  const normDir =
+    dirLen > 0
+      ? { x: direction.x / dirLen, y: direction.y / dirLen }
+      : { x: 0, y: 0 };
 
   let sum = 0;
   for (let dy = -radius; dy <= radius; dy++) {
@@ -107,7 +105,9 @@ export function createMotorKernel(
         // Dot product with direction gives directional bias
         const dot = (dx * normDir.x + dy * normDir.y) / dist;
         // Gaussian base + directional bias
-        const gaussValue = Math.exp(-dist * dist / (2 * (radius / 2) * (radius / 2)));
+        const gaussValue = Math.exp(
+          (-dist * dist) / (2 * (radius / 2) * (radius / 2)),
+        );
         const biasedValue = gaussValue * (1 + strength * dot);
         kernel[idx] = Math.max(0, biasedValue);
         sum += kernel[idx];
@@ -147,10 +147,15 @@ export const DEFAULT_SENSOR_CONFIG: SensorConfig = {
 /**
  * Create all sensor kernels for the system
  */
-export function createSensorKernels(config: SensorConfig = DEFAULT_SENSOR_CONFIG) {
+export function createSensorKernels(
+  config: SensorConfig = DEFAULT_SENSOR_CONFIG,
+) {
   return {
     gradient: createGradientKernel(config.gradientRadius),
-    proximity: createProximityKernel(config.proximityRadius, config.proximityDecay),
+    proximity: createProximityKernel(
+      config.proximityRadius,
+      config.proximityDecay,
+    ),
     motorBase: createMotorKernel(config.motorRadius, { x: 0, y: 0 }, 0),
   };
 }

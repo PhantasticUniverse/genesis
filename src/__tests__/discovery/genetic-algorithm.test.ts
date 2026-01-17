@@ -3,7 +3,7 @@
  * Tests for GA controller, population evolution, and novelty search
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   createPopulation,
   calculateNovelty,
@@ -16,8 +16,8 @@ import {
   type Individual,
   type GAState,
   type GAConfig,
-} from '../../discovery/genetic-algorithm';
-import type { FitnessMetrics, BehaviorVector } from '../../discovery/fitness';
+} from "../../discovery/genetic-algorithm";
+import type { FitnessMetrics, BehaviorVector } from "../../discovery/fitness";
 
 // Helper to create a mock individual with behavior
 function createMockIndividual(overrides: Partial<Individual> = {}): Individual {
@@ -37,7 +37,7 @@ function createMockIndividual(overrides: Partial<Individual> = {}): Individual {
     id: `ind-${Math.random().toString(36).substr(2, 9)}`,
     generation: 0,
     parentIds: [],
-    birthType: 'random',
+    birthType: "random",
     ...overrides,
   };
 }
@@ -66,68 +66,68 @@ function createMockBehavior(seed: number = 0): BehaviorVector {
   };
 }
 
-describe('genetic algorithm', () => {
-  describe('createPopulation', () => {
-    it('creates population of correct size', () => {
+describe("genetic algorithm", () => {
+  describe("createPopulation", () => {
+    it("creates population of correct size", () => {
       const pop = createPopulation(10);
       expect(pop.length).toBe(10);
     });
 
-    it('creates population with null fitness initially', () => {
+    it("creates population with null fitness initially", () => {
       const pop = createPopulation(5);
-      pop.forEach(ind => {
+      pop.forEach((ind) => {
         expect(ind.fitness).toBeNull();
         expect(ind.behavior).toBeNull();
       });
     });
 
-    it('creates population with unique IDs', () => {
+    it("creates population with unique IDs", () => {
       const pop = createPopulation(10);
-      const ids = new Set(pop.map(ind => ind.id));
+      const ids = new Set(pop.map((ind) => ind.id));
       expect(ids.size).toBe(10);
     });
 
-    it('creates population at generation 0', () => {
+    it("creates population at generation 0", () => {
       const pop = createPopulation(5);
-      pop.forEach(ind => {
+      pop.forEach((ind) => {
         expect(ind.generation).toBe(0);
       });
     });
 
-    it('creates population with random birth type', () => {
+    it("creates population with random birth type", () => {
       const pop = createPopulation(5);
-      pop.forEach(ind => {
-        expect(ind.birthType).toBe('random');
+      pop.forEach((ind) => {
+        expect(ind.birthType).toBe("random");
       });
     });
 
-    it('creates population with empty parent IDs', () => {
+    it("creates population with empty parent IDs", () => {
       const pop = createPopulation(5);
-      pop.forEach(ind => {
+      pop.forEach((ind) => {
         expect(ind.parentIds).toEqual([]);
       });
     });
 
-    it('handles zero size', () => {
+    it("handles zero size", () => {
       const pop = createPopulation(0);
       expect(pop.length).toBe(0);
     });
   });
 
-  describe('calculateNovelty', () => {
-    it('returns 0 for individual without behavior', () => {
+  describe("calculateNovelty", () => {
+    it("returns 0 for individual without behavior", () => {
       const ind = createMockIndividual({ behavior: null });
       const novelty = calculateNovelty(ind, [], [], 5);
       expect(novelty).toBe(0);
     });
 
-    it('returns 1 for only individual with behavior', () => {
+    it("returns 1 for only individual with behavior", () => {
       const ind = createMockIndividual({ behavior: createMockBehavior() });
       const novelty = calculateNovelty(ind, [], [], 5);
       expect(novelty).toBe(1);
     });
 
-    it('returns 1 when no other individuals have behavior', () => {
+    it("returns 1 when no other individuals have behavior", () => {
       const ind = createMockIndividual({ behavior: createMockBehavior() });
       const others = [
         createMockIndividual({ behavior: null }),
@@ -137,19 +137,19 @@ describe('genetic algorithm', () => {
       expect(novelty).toBe(1);
     });
 
-    it('calculates distance to nearest neighbors', () => {
+    it("calculates distance to nearest neighbors", () => {
       const ind = createMockIndividual({
-        id: 'test',
+        id: "test",
         behavior: createMockBehavior(0),
       });
 
       const similar = createMockIndividual({
-        id: 'similar',
+        id: "similar",
         behavior: createMockBehavior(0.1), // Very similar
       });
 
       const different = createMockIndividual({
-        id: 'different',
+        id: "different",
         behavior: createMockBehavior(10), // Very different
       });
 
@@ -159,9 +159,9 @@ describe('genetic algorithm', () => {
       expect(noveltyWithSimilar).toBeLessThan(noveltyWithDifferent);
     });
 
-    it('excludes self from comparison', () => {
+    it("excludes self from comparison", () => {
       const ind = createMockIndividual({
-        id: 'self',
+        id: "self",
         behavior: createMockBehavior(),
       });
 
@@ -170,7 +170,7 @@ describe('genetic algorithm', () => {
       expect(novelty).toBe(1); // Should treat as if no others
     });
 
-    it('uses k nearest neighbors', () => {
+    it("uses k nearest neighbors", () => {
       const ind = createMockIndividual({ behavior: createMockBehavior(0) });
 
       // Create neighbors at different distances
@@ -187,40 +187,49 @@ describe('genetic algorithm', () => {
       expect(noveltyK3).toBeGreaterThan(noveltyK2);
     });
 
-    it('combines population and archive', () => {
+    it("combines population and archive", () => {
       const ind = createMockIndividual({ behavior: createMockBehavior(0) });
 
-      const popNeighbor = createMockIndividual({ behavior: createMockBehavior(1) });
-      const archiveNeighbor = createMockIndividual({ behavior: createMockBehavior(2) });
+      const popNeighbor = createMockIndividual({
+        behavior: createMockBehavior(1),
+      });
+      const archiveNeighbor = createMockIndividual({
+        behavior: createMockBehavior(2),
+      });
 
       const noveltyPopOnly = calculateNovelty(ind, [popNeighbor], [], 5);
-      const noveltyBoth = calculateNovelty(ind, [popNeighbor], [archiveNeighbor], 5);
+      const noveltyBoth = calculateNovelty(
+        ind,
+        [popNeighbor],
+        [archiveNeighbor],
+        5,
+      );
 
       // With archive neighbor closer in behavior space, novelty changes
       expect(noveltyPopOnly).not.toBe(noveltyBoth);
     });
   });
 
-  describe('tournamentSelect', () => {
-    it('selects from population', () => {
+  describe("tournamentSelect", () => {
+    it("selects from population", () => {
       const population = [
-        createMockIndividual({ id: 'a', fitness: createMockFitness(0.8) }),
-        createMockIndividual({ id: 'b', fitness: createMockFitness(0.5) }),
-        createMockIndividual({ id: 'c', fitness: createMockFitness(0.3) }),
+        createMockIndividual({ id: "a", fitness: createMockFitness(0.8) }),
+        createMockIndividual({ id: "b", fitness: createMockFitness(0.5) }),
+        createMockIndividual({ id: "c", fitness: createMockFitness(0.3) }),
       ];
 
       const selected = tournamentSelect(population, 2, 0);
-      expect(population.some(ind => ind.id === selected.id)).toBe(true);
+      expect(population.some((ind) => ind.id === selected.id)).toBe(true);
     });
 
-    it('tends to select fitter individuals', () => {
+    it("tends to select fitter individuals", () => {
       const highFit = createMockIndividual({
-        id: 'high',
+        id: "high",
         fitness: createMockFitness(1.0),
         novelty: 0,
       });
       const lowFit = createMockIndividual({
-        id: 'low',
+        id: "low",
         fitness: createMockFitness(0.0),
         novelty: 0,
       });
@@ -229,21 +238,21 @@ describe('genetic algorithm', () => {
       let highCount = 0;
       for (let i = 0; i < 100; i++) {
         const selected = tournamentSelect(population, 2, 0); // No novelty weight
-        if (selected.id === 'high') highCount++;
+        if (selected.id === "high") highCount++;
       }
 
       // High fitness should be selected more often
       expect(highCount).toBeGreaterThan(50);
     });
 
-    it('considers novelty with weight', () => {
+    it("considers novelty with weight", () => {
       const highFitLowNovelty = createMockIndividual({
-        id: 'fit',
+        id: "fit",
         fitness: createMockFitness(1.0),
         novelty: 0,
       });
       const lowFitHighNovelty = createMockIndividual({
-        id: 'novel',
+        id: "novel",
         fitness: createMockFitness(0.0),
         novelty: 1.0,
       });
@@ -253,15 +262,15 @@ describe('genetic algorithm', () => {
       let novelCount = 0;
       for (let i = 0; i < 100; i++) {
         const selected = tournamentSelect(population, 2, 1.0);
-        if (selected.id === 'novel') novelCount++;
+        if (selected.id === "novel") novelCount++;
       }
 
       expect(novelCount).toBeGreaterThan(50);
     });
   });
 
-  describe('evolvePopulation', () => {
-    it('creates new generation with correct size', () => {
+  describe("evolvePopulation", () => {
+    it("creates new generation with correct size", () => {
       const state: GAState = {
         population: createPopulation(30).map((ind, i) => ({
           ...ind,
@@ -289,7 +298,7 @@ describe('genetic algorithm', () => {
       expect(newPop.length).toBe(30);
     });
 
-    it('increments generation', () => {
+    it("increments generation", () => {
       const state: GAState = {
         population: createPopulation(10).map((ind, i) => ({
           ...ind,
@@ -307,7 +316,7 @@ describe('genetic algorithm', () => {
       expect(newPop[0].generation).toBe(6);
     });
 
-    it('preserves elites', () => {
+    it("preserves elites", () => {
       const state: GAState = {
         population: createPopulation(10).map((ind, i) => ({
           ...ind,
@@ -333,12 +342,12 @@ describe('genetic algorithm', () => {
       };
 
       const newPop = evolvePopulation(state, config);
-      const elites = newPop.filter(ind => ind.birthType === 'elite');
+      const elites = newPop.filter((ind) => ind.birthType === "elite");
 
       expect(elites.length).toBe(2);
     });
 
-    it('resets fitness and behavior for new individuals', () => {
+    it("resets fitness and behavior for new individuals", () => {
       const state: GAState = {
         population: createPopulation(10).map((ind, i) => ({
           ...ind,
@@ -355,13 +364,13 @@ describe('genetic algorithm', () => {
       const newPop = evolvePopulation(state);
 
       // All new individuals should have null fitness/behavior
-      newPop.forEach(ind => {
+      newPop.forEach((ind) => {
         expect(ind.fitness).toBeNull();
         expect(ind.behavior).toBeNull();
       });
     });
 
-    it('tracks parent IDs for offspring', () => {
+    it("tracks parent IDs for offspring", () => {
       const state: GAState = {
         population: createPopulation(10).map((ind, i) => ({
           ...ind,
@@ -378,15 +387,15 @@ describe('genetic algorithm', () => {
       const newPop = evolvePopulation(state);
 
       // Non-elite individuals should have parent IDs
-      const nonElites = newPop.filter(ind => ind.birthType !== 'elite');
-      nonElites.forEach(ind => {
+      const nonElites = newPop.filter((ind) => ind.birthType !== "elite");
+      nonElites.forEach((ind) => {
         expect(ind.parentIds.length).toBeGreaterThan(0);
       });
     });
   });
 
-  describe('updateArchive', () => {
-    it('adds novel individuals to archive', () => {
+  describe("updateArchive", () => {
+    it("adds novel individuals to archive", () => {
       const archive: Individual[] = [];
       const population = [
         createMockIndividual({
@@ -399,7 +408,7 @@ describe('genetic algorithm', () => {
       expect(newArchive.length).toBe(1);
     });
 
-    it('does not add individuals below novelty threshold', () => {
+    it("does not add individuals below novelty threshold", () => {
       const archive: Individual[] = [];
       const population = [
         createMockIndividual({
@@ -412,7 +421,7 @@ describe('genetic algorithm', () => {
       expect(newArchive.length).toBe(0);
     });
 
-    it('does not add individuals without behavior', () => {
+    it("does not add individuals without behavior", () => {
       const archive: Individual[] = [];
       const population = [
         createMockIndividual({
@@ -425,37 +434,42 @@ describe('genetic algorithm', () => {
       expect(newArchive.length).toBe(0);
     });
 
-    it('trims archive to max size', () => {
+    it("trims archive to max size", () => {
       const archive: Individual[] = [];
-      const population = Array(20).fill(null).map((_, i) =>
-        createMockIndividual({
-          novelty: 0.5 + i * 0.01,
-          behavior: createMockBehavior(i),
-        })
-      );
+      const population = Array(20)
+        .fill(null)
+        .map((_, i) =>
+          createMockIndividual({
+            novelty: 0.5 + i * 0.01,
+            behavior: createMockBehavior(i),
+          }),
+        );
 
       const newArchive = updateArchive(archive, population, 10, 0.3);
       expect(newArchive.length).toBe(10);
     });
 
-    it('keeps most novel when trimming', () => {
+    it("keeps most novel when trimming", () => {
       const archive: Individual[] = [];
-      const population = Array(20).fill(null).map((_, i) =>
-        createMockIndividual({
-          id: `ind-${i}`,
-          novelty: i * 0.05 + 0.3, // Higher i = higher novelty
-          behavior: createMockBehavior(i),
-        })
-      );
+      const population = Array(20)
+        .fill(null)
+        .map((_, i) =>
+          createMockIndividual({
+            id: `ind-${i}`,
+            novelty: i * 0.05 + 0.3, // Higher i = higher novelty
+            behavior: createMockBehavior(i),
+          }),
+        );
 
       const newArchive = updateArchive(archive, population, 10, 0.3);
 
       // Should keep the 10 most novel (indices 10-19)
-      const avgNovelty = newArchive.reduce((sum, ind) => sum + ind.novelty, 0) / 10;
+      const avgNovelty =
+        newArchive.reduce((sum, ind) => sum + ind.novelty, 0) / 10;
       expect(avgNovelty).toBeGreaterThan(0.6);
     });
 
-    it('clones genomes when archiving', () => {
+    it("clones genomes when archiving", () => {
       const archive: Individual[] = [];
       const original = createMockIndividual({
         novelty: 0.5,
@@ -472,8 +486,8 @@ describe('genetic algorithm', () => {
     });
   });
 
-  describe('createGAController', () => {
-    it('creates controller with default config', () => {
+  describe("createGAController", () => {
+    it("creates controller with default config", () => {
       const controller = createGAController();
       const config = controller.getConfig();
 
@@ -481,7 +495,7 @@ describe('genetic algorithm', () => {
       expect(config.eliteCount).toBe(3);
     });
 
-    it('creates controller with custom config', () => {
+    it("creates controller with custom config", () => {
       const controller = createGAController({
         populationSize: 50,
         eliteCount: 5,
@@ -492,13 +506,13 @@ describe('genetic algorithm', () => {
       expect(config.eliteCount).toBe(5);
     });
 
-    it('initializes population', () => {
+    it("initializes population", () => {
       const controller = createGAController({ populationSize: 10 });
       const population = controller.getPopulation();
       expect(population.length).toBe(10);
     });
 
-    it('getNextToEvaluate returns individual without fitness', () => {
+    it("getNextToEvaluate returns individual without fitness", () => {
       const controller = createGAController({ populationSize: 5 });
       const next = controller.getNextToEvaluate();
 
@@ -506,12 +520,12 @@ describe('genetic algorithm', () => {
       expect(next!.fitness).toBeNull();
     });
 
-    it('getNextToEvaluate returns null when all evaluated', () => {
+    it("getNextToEvaluate returns null when all evaluated", () => {
       const controller = createGAController({ populationSize: 2 });
       const state = controller.getState();
 
       // Manually set fitness for all
-      state.population.forEach(ind => {
+      state.population.forEach((ind) => {
         ind.fitness = createMockFitness();
         ind.behavior = createMockBehavior();
       });
@@ -519,7 +533,7 @@ describe('genetic algorithm', () => {
       expect(controller.getNextToEvaluate()).toBeNull();
     });
 
-    it('setFitness updates individual', () => {
+    it("setFitness updates individual", () => {
       const controller = createGAController({ populationSize: 5 });
       const ind = controller.getPopulation()[0];
       const fitness = createMockFitness(0.8);
@@ -527,40 +541,56 @@ describe('genetic algorithm', () => {
 
       controller.setFitness(ind.id, fitness, behavior);
 
-      const updated = controller.getPopulation().find(i => i.id === ind.id);
+      const updated = controller.getPopulation().find((i) => i.id === ind.id);
       expect(updated!.fitness).toBe(fitness);
       expect(updated!.behavior).toBe(behavior);
     });
 
-    it('setFitness updates best individual', () => {
+    it("setFitness updates best individual", () => {
       const controller = createGAController({ populationSize: 2 });
       const pop = controller.getPopulation();
 
-      controller.setFitness(pop[0].id, createMockFitness(0.3), createMockBehavior());
+      controller.setFitness(
+        pop[0].id,
+        createMockFitness(0.3),
+        createMockBehavior(),
+      );
       expect(controller.getState().bestFitness).toBe(0.3);
 
-      controller.setFitness(pop[1].id, createMockFitness(0.8), createMockBehavior(1));
+      controller.setFitness(
+        pop[1].id,
+        createMockFitness(0.8),
+        createMockBehavior(1),
+      );
       expect(controller.getState().bestFitness).toBe(0.8);
       expect(controller.getState().bestIndividual!.id).toBe(pop[1].id);
     });
 
-    it('isGenerationComplete returns false when not all evaluated', () => {
+    it("isGenerationComplete returns false when not all evaluated", () => {
       const controller = createGAController({ populationSize: 5 });
       expect(controller.isGenerationComplete()).toBe(false);
     });
 
-    it('isGenerationComplete returns true when all evaluated', () => {
+    it("isGenerationComplete returns true when all evaluated", () => {
       const controller = createGAController({ populationSize: 2 });
       const pop = controller.getPopulation();
 
-      controller.setFitness(pop[0].id, createMockFitness(), createMockBehavior());
+      controller.setFitness(
+        pop[0].id,
+        createMockFitness(),
+        createMockBehavior(),
+      );
       expect(controller.isGenerationComplete()).toBe(false);
 
-      controller.setFitness(pop[1].id, createMockFitness(), createMockBehavior(1));
+      controller.setFitness(
+        pop[1].id,
+        createMockFitness(),
+        createMockBehavior(1),
+      );
       expect(controller.isGenerationComplete()).toBe(true);
     });
 
-    it('evolve only works when generation complete', () => {
+    it("evolve only works when generation complete", () => {
       const controller = createGAController({ populationSize: 2 });
 
       // Not complete yet
@@ -569,20 +599,32 @@ describe('genetic algorithm', () => {
 
       // Complete generation
       const pop = controller.getPopulation();
-      controller.setFitness(pop[0].id, createMockFitness(), createMockBehavior());
-      controller.setFitness(pop[1].id, createMockFitness(), createMockBehavior(1));
+      controller.setFitness(
+        pop[0].id,
+        createMockFitness(),
+        createMockBehavior(),
+      );
+      controller.setFitness(
+        pop[1].id,
+        createMockFitness(),
+        createMockBehavior(1),
+      );
 
       controller.evolve();
       expect(controller.getState().generation).toBe(1);
     });
 
-    it('reset creates new population', () => {
+    it("reset creates new population", () => {
       const controller = createGAController({ populationSize: 5 });
 
       // Evaluate some individuals and evolve
       const pop = controller.getPopulation();
       pop.forEach((ind, i) => {
-        controller.setFitness(ind.id, createMockFitness(i / 5), createMockBehavior(i));
+        controller.setFitness(
+          ind.id,
+          createMockFitness(i / 5),
+          createMockBehavior(i),
+        );
       });
       controller.evolve();
 
@@ -597,12 +639,12 @@ describe('genetic algorithm', () => {
       expect(controller.getState().bestIndividual).toBeNull();
     });
 
-    it('getArchive returns archive', () => {
+    it("getArchive returns archive", () => {
       const controller = createGAController({ populationSize: 2 });
       expect(controller.getArchive()).toEqual([]);
     });
 
-    it('getPhyloTree returns tree', () => {
+    it("getPhyloTree returns tree", () => {
       const controller = createGAController({ populationSize: 2 });
       const tree = controller.getPhyloTree();
       expect(tree).toBeDefined();
@@ -610,8 +652,8 @@ describe('genetic algorithm', () => {
     });
   });
 
-  describe('isEvaluated', () => {
-    it('returns true when individual has fitness and behavior', () => {
+  describe("isEvaluated", () => {
+    it("returns true when individual has fitness and behavior", () => {
       const ind = createMockIndividual({
         fitness: createMockFitness(),
         behavior: createMockBehavior(),
@@ -619,7 +661,7 @@ describe('genetic algorithm', () => {
       expect(isEvaluated(ind)).toBe(true);
     });
 
-    it('returns false when individual has no fitness', () => {
+    it("returns false when individual has no fitness", () => {
       const ind = createMockIndividual({
         fitness: null,
         behavior: createMockBehavior(),
@@ -627,7 +669,7 @@ describe('genetic algorithm', () => {
       expect(isEvaluated(ind)).toBe(false);
     });
 
-    it('returns false when individual has no behavior', () => {
+    it("returns false when individual has no behavior", () => {
       const ind = createMockIndividual({
         fitness: createMockFitness(),
         behavior: null,
@@ -635,19 +677,19 @@ describe('genetic algorithm', () => {
       expect(isEvaluated(ind)).toBe(false);
     });
 
-    it('returns false when individual has neither', () => {
+    it("returns false when individual has neither", () => {
       const ind = createMockIndividual();
       expect(isEvaluated(ind)).toBe(false);
     });
   });
 
-  describe('hasBehavior', () => {
-    it('returns true when individual has behavior', () => {
+  describe("hasBehavior", () => {
+    it("returns true when individual has behavior", () => {
       const ind = createMockIndividual({ behavior: createMockBehavior() });
       expect(hasBehavior(ind)).toBe(true);
     });
 
-    it('returns false when individual has no behavior', () => {
+    it("returns false when individual has no behavior", () => {
       const ind = createMockIndividual({ behavior: null });
       expect(hasBehavior(ind)).toBe(false);
     });

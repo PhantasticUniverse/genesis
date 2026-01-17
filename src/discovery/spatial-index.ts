@@ -5,7 +5,7 @@
  * Reduces novelty calculation from O(n²) to O(n log n) for large populations
  */
 
-import type { BehaviorVector } from './fitness';
+import type { BehaviorVector } from "./fitness";
 
 /**
  * Weights for behavior distance calculation
@@ -24,12 +24,12 @@ export const BEHAVIOR_WEIGHTS = {
  * Dimension names in order for KD-tree traversal
  */
 const DIMENSIONS: (keyof BehaviorVector)[] = [
-  'avgMass',
-  'massVariance',
-  'avgSpeed',
-  'avgEntropy',
-  'boundingSize',
-  'lifespan',
+  "avgMass",
+  "massVariance",
+  "avgSpeed",
+  "avgEntropy",
+  "boundingSize",
+  "lifespan",
 ];
 
 /**
@@ -55,7 +55,10 @@ interface NearestCandidate<T> {
 /**
  * Calculate weighted squared distance between two behavior vectors
  */
-export function weightedSquaredDistance(a: BehaviorVector, b: BehaviorVector): number {
+export function weightedSquaredDistance(
+  a: BehaviorVector,
+  b: BehaviorVector,
+): number {
   let sum = 0;
   for (const dim of DIMENSIONS) {
     const diff = a[dim] - b[dim];
@@ -82,7 +85,7 @@ export class BehaviorKDTree<T> {
    * Build a KD-tree from an array of items
    */
   static build<T>(
-    items: Array<{ behavior: BehaviorVector; data: T }>
+    items: Array<{ behavior: BehaviorVector; data: T }>,
   ): BehaviorKDTree<T> {
     const tree = new BehaviorKDTree<T>();
 
@@ -102,7 +105,7 @@ export class BehaviorKDTree<T> {
    */
   private buildRecursive(
     items: Array<{ behavior: BehaviorVector; data: T }>,
-    depth: number
+    depth: number,
   ): KDNode<T> | null {
     if (items.length === 0) return null;
 
@@ -145,7 +148,7 @@ export class BehaviorKDTree<T> {
   kNearest(
     query: BehaviorVector,
     k: number,
-    excludeFn?: (data: T) => boolean
+    excludeFn?: (data: T) => boolean,
   ): Array<{ distance: number; data: T; point: BehaviorVector }> {
     if (this.root === null || k <= 0) {
       return [];
@@ -170,7 +173,7 @@ export class BehaviorKDTree<T> {
     query: BehaviorVector,
     k: number,
     candidates: NearestCandidate<T>[],
-    excludeFn?: (data: T) => boolean
+    excludeFn?: (data: T) => boolean,
   ): void {
     if (node === null) return;
 
@@ -220,7 +223,7 @@ export class BehaviorKDTree<T> {
   noveltyScore(
     query: BehaviorVector,
     k: number,
-    excludeFn?: (data: T) => boolean
+    excludeFn?: (data: T) => boolean,
   ): number {
     const neighbors = this.kNearest(query, k, excludeFn);
 
@@ -237,13 +240,13 @@ export class BehaviorKDTree<T> {
  * Create a behavior KD-tree from individuals with behavior vectors
  */
 export function createBehaviorIndex<T extends { id: string }>(
-  items: Array<{ behavior: BehaviorVector | null; data: T }>
+  items: Array<{ behavior: BehaviorVector | null; data: T }>,
 ): BehaviorKDTree<T> {
   // Filter to items with behavior vectors
-  const validItems = items
-    .filter((item): item is { behavior: BehaviorVector; data: T } =>
-      item.behavior !== null
-    );
+  const validItems = items.filter(
+    (item): item is { behavior: BehaviorVector; data: T } =>
+      item.behavior !== null,
+  );
 
   return BehaviorKDTree.build(validItems);
 }

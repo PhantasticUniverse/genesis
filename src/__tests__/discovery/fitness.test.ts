@@ -3,7 +3,7 @@
  * Tests core fitness calculations for organism evaluation
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 import {
   calculateMass,
   calculateCentroid,
@@ -16,42 +16,42 @@ import {
   calculateOverallFitness,
   behaviorDistance,
   type BehaviorVector,
-} from '../../discovery/fitness';
+} from "../../discovery/fitness";
 
-describe('fitness functions', () => {
-  describe('calculateMass', () => {
-    it('returns 0 for empty grid', () => {
+describe("fitness functions", () => {
+  describe("calculateMass", () => {
+    it("returns 0 for empty grid", () => {
       const state = new Float32Array(100);
       expect(calculateMass(state)).toBe(0);
     });
 
-    it('sums all values correctly', () => {
+    it("sums all values correctly", () => {
       const state = new Float32Array([0.5, 0.5, 1.0, 0]);
       expect(calculateMass(state)).toBe(2.0);
     });
 
-    it('handles single cell with value', () => {
+    it("handles single cell with value", () => {
       const state = new Float32Array(100);
       state[50] = 0.75;
       expect(calculateMass(state)).toBe(0.75);
     });
 
-    it('handles full grid', () => {
+    it("handles full grid", () => {
       const state = new Float32Array(100);
       state.fill(0.1);
       expect(calculateMass(state)).toBeCloseTo(10, 5);
     });
   });
 
-  describe('calculateCentroid', () => {
-    it('returns center for empty grid', () => {
+  describe("calculateCentroid", () => {
+    it("returns center for empty grid", () => {
       const state = new Float32Array(100);
       const centroid = calculateCentroid(state, 10, 10);
       expect(centroid.x).toBe(5);
       expect(centroid.y).toBe(5);
     });
 
-    it('returns correct position for single point', () => {
+    it("returns correct position for single point", () => {
       // 5x5 grid with single point at (2, 3)
       const state = new Float32Array(25);
       state[3 * 5 + 2] = 1; // y=3, x=2
@@ -60,7 +60,7 @@ describe('fitness functions', () => {
       expect(centroid.y).toBe(3);
     });
 
-    it('returns mass-weighted center for multiple points', () => {
+    it("returns mass-weighted center for multiple points", () => {
       // 4x4 grid with two points
       const state = new Float32Array(16);
       state[0] = 1; // (0, 0)
@@ -70,7 +70,7 @@ describe('fitness functions', () => {
       expect(centroid.y).toBe(1.5);
     });
 
-    it('weights by value correctly', () => {
+    it("weights by value correctly", () => {
       // 4x4 grid with weighted points
       const state = new Float32Array(16);
       state[0] = 3; // (0, 0) weight 3
@@ -81,14 +81,14 @@ describe('fitness functions', () => {
     });
   });
 
-  describe('calculateEntropy', () => {
-    it('returns 0 for uniform grid (all zeros)', () => {
+  describe("calculateEntropy", () => {
+    it("returns 0 for uniform grid (all zeros)", () => {
       const state = new Float32Array(100);
       const entropy = calculateEntropy(state, 10);
       expect(entropy).toBe(0);
     });
 
-    it('returns 0 for uniform grid (all ones)', () => {
+    it("returns 0 for uniform grid (all ones)", () => {
       const state = new Float32Array(100);
       state.fill(1);
       const entropy = calculateEntropy(state, 10);
@@ -96,7 +96,7 @@ describe('fitness functions', () => {
       expect(entropy).toBe(0);
     });
 
-    it('returns high entropy for varied distribution', () => {
+    it("returns high entropy for varied distribution", () => {
       const state = new Float32Array(100);
       // Create varied distribution across bins
       for (let i = 0; i < 100; i++) {
@@ -106,7 +106,7 @@ describe('fitness functions', () => {
       expect(entropy).toBeGreaterThan(0.5);
     });
 
-    it('returns maximum entropy for uniform distribution', () => {
+    it("returns maximum entropy for uniform distribution", () => {
       const state = new Float32Array(100);
       // 10 values in each of 10 bins
       for (let i = 0; i < 100; i++) {
@@ -118,8 +118,8 @@ describe('fitness functions', () => {
     });
   });
 
-  describe('calculateBoundingBox', () => {
-    it('returns correct bounds for single point', () => {
+  describe("calculateBoundingBox", () => {
+    it("returns correct bounds for single point", () => {
       const state = new Float32Array(100);
       state[55] = 0.5; // (5, 5) in 10x10 grid
       const bbox = calculateBoundingBox(state, 10, 10);
@@ -130,7 +130,7 @@ describe('fitness functions', () => {
       expect(bbox.size).toBe(0);
     });
 
-    it('returns correct bounds for rectangular region', () => {
+    it("returns correct bounds for rectangular region", () => {
       const state = new Float32Array(100);
       // Fill 3x2 region starting at (2, 3)
       state[3 * 10 + 2] = 0.5;
@@ -148,7 +148,7 @@ describe('fitness functions', () => {
       expect(bbox.size).toBe(2); // max(4-2, 4-3) = 2
     });
 
-    it('ignores values below threshold', () => {
+    it("ignores values below threshold", () => {
       const state = new Float32Array(100);
       state[0] = 0.005; // Below default threshold of 0.01
       state[99] = 0.5;
@@ -160,13 +160,13 @@ describe('fitness functions', () => {
     });
   });
 
-  describe('calculateSymmetry', () => {
-    it('returns 0 for empty grid', () => {
+  describe("calculateSymmetry", () => {
+    it("returns 0 for empty grid", () => {
       const state = new Float32Array(100);
       expect(calculateSymmetry(state, 10, 10)).toBe(0);
     });
 
-    it('returns high score for horizontally symmetric pattern', () => {
+    it("returns high score for horizontally symmetric pattern", () => {
       // Create a horizontally symmetric pattern in a 10x10 grid
       // Pattern: vertical line in the center
       const state = new Float32Array(100);
@@ -180,7 +180,7 @@ describe('fitness functions', () => {
       expect(symmetry).toBeGreaterThan(0.6);
     });
 
-    it('returns high score for vertically symmetric pattern', () => {
+    it("returns high score for vertically symmetric pattern", () => {
       // Create a vertically symmetric pattern: horizontal line in the center
       const state = new Float32Array(100);
       const centerY = 5;
@@ -193,7 +193,7 @@ describe('fitness functions', () => {
       expect(symmetry).toBeGreaterThan(0.6);
     });
 
-    it('returns high score for rotationally symmetric pattern', () => {
+    it("returns high score for rotationally symmetric pattern", () => {
       // Create a 180° rotationally symmetric pattern: diagonal
       const state = new Float32Array(100);
       // Diagonal from (2,2) to (7,7)
@@ -204,7 +204,7 @@ describe('fitness functions', () => {
       expect(symmetry).toBeGreaterThan(0.5);
     });
 
-    it('returns high score for perfectly symmetric circle', () => {
+    it("returns high score for perfectly symmetric circle", () => {
       // Create a circular pattern (symmetric in all directions)
       const state = new Float32Array(400); // 20x20 grid
       const centerX = 10;
@@ -226,7 +226,7 @@ describe('fitness functions', () => {
       expect(symmetry).toBeGreaterThan(0.8);
     });
 
-    it('returns lower score for asymmetric pattern', () => {
+    it("returns lower score for asymmetric pattern", () => {
       // Create an asymmetric L-shaped pattern
       const state = new Float32Array(100);
       // Vertical part of L
@@ -243,7 +243,7 @@ describe('fitness functions', () => {
       expect(symmetry).toBeLessThan(0.7);
     });
 
-    it('handles single point', () => {
+    it("handles single point", () => {
       const state = new Float32Array(100);
       state[55] = 1; // Single point at (5, 5)
       // Single point has perfect symmetry
@@ -251,7 +251,7 @@ describe('fitness functions', () => {
       expect(symmetry).toBe(1);
     });
 
-    it('returns score between 0 and 1', () => {
+    it("returns score between 0 and 1", () => {
       // Random pattern
       const state = new Float32Array(100);
       for (let i = 0; i < 100; i++) {
@@ -263,7 +263,7 @@ describe('fitness functions', () => {
       expect(symmetry).toBeLessThanOrEqual(1);
     });
 
-    it('handles cross pattern with high symmetry', () => {
+    it("handles cross pattern with high symmetry", () => {
       // Cross is symmetric horizontally, vertically, and rotationally
       const state = new Float32Array(225); // 15x15 grid
       const center = 7;
@@ -282,18 +282,18 @@ describe('fitness functions', () => {
     });
   });
 
-  describe('calculateSurvivalFitness', () => {
-    it('returns 0 for short history', () => {
+  describe("calculateSurvivalFitness", () => {
+    it("returns 0 for short history", () => {
       const history = [100, 100, 100];
       expect(calculateSurvivalFitness(history, 100, 100)).toBe(0);
     });
 
-    it('returns 1 for perfect survival', () => {
+    it("returns 1 for perfect survival", () => {
       const history = Array(100).fill(100);
       expect(calculateSurvivalFitness(history, 100)).toBe(1);
     });
 
-    it('returns 0.5 for half survival', () => {
+    it("returns 0.5 for half survival", () => {
       const history = [
         ...Array(50).fill(100),
         ...Array(50).fill(5), // Below threshold
@@ -301,49 +301,52 @@ describe('fitness functions', () => {
       expect(calculateSurvivalFitness(history, 100)).toBe(0.5);
     });
 
-    it('uses threshold of 10% initial mass', () => {
+    it("uses threshold of 10% initial mass", () => {
       const history = [
         ...Array(80).fill(15), // Above 10% of 100
-        ...Array(20).fill(5),  // Below 10% of 100
+        ...Array(20).fill(5), // Below 10% of 100
       ];
       expect(calculateSurvivalFitness(history, 100)).toBe(0.8);
     });
   });
 
-  describe('calculateStabilityFitness', () => {
-    it('returns 0 for short history', () => {
+  describe("calculateStabilityFitness", () => {
+    it("returns 0 for short history", () => {
       expect(calculateStabilityFitness([1, 2, 3])).toBe(0);
     });
 
-    it('returns 1 for perfectly stable mass', () => {
+    it("returns 1 for perfectly stable mass", () => {
       const history = Array(20).fill(100);
       expect(calculateStabilityFitness(history)).toBe(1);
     });
 
-    it('returns low value for high variance', () => {
+    it("returns low value for high variance", () => {
       const history = [10, 90, 10, 90, 10, 90, 10, 90, 10, 90];
       const fitness = calculateStabilityFitness(history);
       expect(fitness).toBeLessThan(0.3);
     });
 
-    it('returns 0 for zero mean', () => {
+    it("returns 0 for zero mean", () => {
       const history = Array(20).fill(0);
       expect(calculateStabilityFitness(history)).toBe(0);
     });
   });
 
-  describe('calculateMovementFitness', () => {
-    it('returns 0 for short history', () => {
-      const history = [{ x: 0, y: 0 }, { x: 1, y: 1 }];
+  describe("calculateMovementFitness", () => {
+    it("returns 0 for short history", () => {
+      const history = [
+        { x: 0, y: 0 },
+        { x: 1, y: 1 },
+      ];
       expect(calculateMovementFitness(history, 100, 100)).toBe(0);
     });
 
-    it('returns 0 for stationary organism', () => {
+    it("returns 0 for stationary organism", () => {
       const history = Array(30).fill({ x: 50, y: 50 });
       expect(calculateMovementFitness(history, 100, 100)).toBe(0);
     });
 
-    it('rewards consistent movement', () => {
+    it("rewards consistent movement", () => {
       // Moving 1 pixel per step consistently
       const history = [];
       for (let i = 0; i < 30; i++) {
@@ -353,7 +356,7 @@ describe('fitness functions', () => {
       expect(fitness).toBeGreaterThan(0.3);
     });
 
-    it('handles toroidal wrapping', () => {
+    it("handles toroidal wrapping", () => {
       // Movement that wraps around
       const history = [
         { x: 98, y: 50 },
@@ -371,8 +374,8 @@ describe('fitness functions', () => {
     });
   });
 
-  describe('calculateOverallFitness', () => {
-    it('combines all metrics with correct weights', () => {
+  describe("calculateOverallFitness", () => {
+    it("combines all metrics with correct weights", () => {
       const metrics = {
         survival: 1,
         stability: 1,
@@ -388,7 +391,7 @@ describe('fitness functions', () => {
       expect(result.overall).toBe(1);
     });
 
-    it('weights survival highest', () => {
+    it("weights survival highest", () => {
       const highSurvival = calculateOverallFitness({
         survival: 1,
         stability: 0,
@@ -411,7 +414,7 @@ describe('fitness functions', () => {
       expect(highSurvival.overall).toBeGreaterThan(highSymmetry.overall);
     });
 
-    it('preserves original metrics', () => {
+    it("preserves original metrics", () => {
       const metrics = {
         survival: 0.8,
         stability: 0.7,
@@ -432,8 +435,8 @@ describe('fitness functions', () => {
     });
   });
 
-  describe('behaviorDistance', () => {
-    it('returns 0 for identical vectors', () => {
+  describe("behaviorDistance", () => {
+    it("returns 0 for identical vectors", () => {
       const v: BehaviorVector = {
         avgMass: 100,
         massVariance: 10,
@@ -446,7 +449,7 @@ describe('fitness functions', () => {
       expect(behaviorDistance(v, v)).toBe(0);
     });
 
-    it('calculates weighted Euclidean distance', () => {
+    it("calculates weighted Euclidean distance", () => {
       const v1: BehaviorVector = {
         avgMass: 0,
         massVariance: 0,
@@ -470,7 +473,7 @@ describe('fitness functions', () => {
       expect(behaviorDistance(v1, v2)).toBe(1);
     });
 
-    it('applies lifespan weight correctly', () => {
+    it("applies lifespan weight correctly", () => {
       const v1: BehaviorVector = {
         avgMass: 0,
         massVariance: 0,
@@ -494,7 +497,7 @@ describe('fitness functions', () => {
       expect(behaviorDistance(v1, v2)).toBeCloseTo(Math.sqrt(2), 5);
     });
 
-    it('is symmetric', () => {
+    it("is symmetric", () => {
       const v1: BehaviorVector = {
         avgMass: 100,
         massVariance: 10,

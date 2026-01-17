@@ -8,7 +8,7 @@ export interface Grid3DConfig {
   width: number;
   height: number;
   depth: number;
-  precision?: 'f16' | 'f32';
+  precision?: "f16" | "f32";
 }
 
 /** 3D Kernel configuration (spherical) */
@@ -50,10 +50,10 @@ export interface Organism3D {
 }
 
 /** 3D View modes */
-export type View3DMode = 'slice' | 'volume';
+export type View3DMode = "slice" | "volume";
 
 /** Slice plane orientations */
-export type SlicePlane = 'xy' | 'xz' | 'yz';
+export type SlicePlane = "xy" | "xz" | "yz";
 
 /** 3D View configuration */
 export interface View3DConfig {
@@ -82,7 +82,7 @@ export const DEFAULT_GRID_3D_CONFIG: Grid3DConfig = {
   width: 64,
   height: 64,
   depth: 64,
-  precision: 'f32',
+  precision: "f32",
 };
 
 export const DEFAULT_LENIA_3D_PARAMS: Lenia3DParams = {
@@ -100,8 +100,8 @@ export const DEFAULT_KERNEL_3D_CONFIG: Kernel3DConfig = {
 };
 
 export const DEFAULT_VIEW_3D_CONFIG: View3DConfig = {
-  mode: 'slice',
-  slicePlane: 'xy',
+  mode: "slice",
+  slicePlane: "xy",
   slicePosition: 32, // Middle of 64-depth grid
   cameraRotationX: 30,
   cameraRotationY: 45,
@@ -110,9 +110,9 @@ export const DEFAULT_VIEW_3D_CONFIG: View3DConfig = {
 
 /** Preset grid sizes for 3D simulation */
 export const GRID_3D_PRESETS: Record<string, Grid3DConfig> = {
-  small: { width: 32, height: 32, depth: 32, precision: 'f32' },
-  medium: { width: 64, height: 64, depth: 64, precision: 'f32' },
-  large: { width: 128, height: 128, depth: 128, precision: 'f32' },
+  small: { width: 32, height: 32, depth: 32, precision: "f32" },
+  medium: { width: 64, height: 64, depth: 64, precision: "f32" },
+  large: { width: 128, height: 128, depth: 128, precision: "f32" },
 };
 
 /** Calculate total voxel count */
@@ -122,7 +122,7 @@ export function getVoxelCount(config: Grid3DConfig): number {
 
 /** Calculate memory usage in bytes (for ping-pong buffers) */
 export function getMemoryUsage(config: Grid3DConfig): number {
-  const bytesPerVoxel = config.precision === 'f16' ? 2 : 4;
+  const bytesPerVoxel = config.precision === "f16" ? 2 : 4;
   return getVoxelCount(config) * bytesPerVoxel * 2; // x2 for ping-pong
 }
 
@@ -131,7 +131,7 @@ export function coords3DToIndex(
   x: number,
   y: number,
   z: number,
-  config: Grid3DConfig
+  config: Grid3DConfig,
 ): number {
   return z * config.width * config.height + y * config.width + x;
 }
@@ -139,7 +139,7 @@ export function coords3DToIndex(
 /** Convert flat array index to 3D coordinates */
 export function indexToCoords3D(
   index: number,
-  config: Grid3DConfig
+  config: Grid3DConfig,
 ): { x: number; y: number; z: number } {
   const z = Math.floor(index / (config.width * config.height));
   const remainder = index % (config.width * config.height);

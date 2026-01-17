@@ -3,13 +3,13 @@
  * Generates spherical convolution kernels for 3D cellular automata
  */
 
-import type { Kernel3DConfig, Grid3DConfig } from './types-3d';
+import type { Kernel3DConfig, Grid3DConfig } from "./types-3d";
 
 export interface Kernel3DData {
   weights: Float32Array;
-  size: number;           // Width/height/depth of kernel (2*radius + 1)
+  size: number; // Width/height/depth of kernel (2*radius + 1)
   radius: number;
-  sum: number;            // Sum of all weights (for normalization verification)
+  sum: number; // Sum of all weights (for normalization verification)
 }
 
 /**
@@ -17,7 +17,11 @@ export interface Kernel3DData {
  * Uses the formula: (1 - d^2)^4 centered at peak position
  * Maximum at d=0 (peak position), decays smoothly to 0 at d=1 (edge)
  */
-function polynomialBump3D(r: number, peakPosition: number, peakWidth: number): number {
+function polynomialBump3D(
+  r: number,
+  peakPosition: number,
+  peakWidth: number,
+): number {
   const d = Math.abs(r - peakPosition) / peakWidth;
   if (d >= 1) return 0;
 
@@ -100,7 +104,10 @@ export function normalize3DKernel(kernel: Kernel3DData): Kernel3DData {
  * Generate a 3D Gaussian kernel
  * Useful for smoothing and basic convolution operations
  */
-export function generateGaussian3DKernel(radius: number, sigma?: number): Kernel3DData {
+export function generateGaussian3DKernel(
+  radius: number,
+  sigma?: number,
+): Kernel3DData {
   const size = 2 * radius + 1;
   const s = sigma ?? radius / 3;
   const totalVoxels = size * size * size;
@@ -138,7 +145,7 @@ export function generateGaussian3DKernel(radius: number, sigma?: number): Kernel
 export function generateShell3DKernel(
   radius: number,
   shellPosition: number,
-  shellWidth: number
+  shellWidth: number,
 ): Kernel3DData {
   return generate3DKernel({
     radius,
@@ -151,12 +158,15 @@ export function generateShell3DKernel(
 /**
  * Create a GPU 3D texture from kernel data
  */
-export function createKernel3DTexture(device: GPUDevice, kernel: Kernel3DData): GPUTexture {
+export function createKernel3DTexture(
+  device: GPUDevice,
+  kernel: Kernel3DData,
+): GPUTexture {
   const texture = device.createTexture({
-    label: 'kernel-3d-texture',
+    label: "kernel-3d-texture",
     size: [kernel.size, kernel.size, kernel.size],
-    format: 'r32float',
-    dimension: '3d',
+    format: "r32float",
+    dimension: "3d",
     usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
   });
 
@@ -167,7 +177,11 @@ export function createKernel3DTexture(device: GPUDevice, kernel: Kernel3DData): 
       bytesPerRow: kernel.size * 4,
       rowsPerImage: kernel.size,
     },
-    { width: kernel.size, height: kernel.size, depthOrArrayLayers: kernel.size }
+    {
+      width: kernel.size,
+      height: kernel.size,
+      depthOrArrayLayers: kernel.size,
+    },
   );
 
   return texture;
@@ -178,8 +192,8 @@ export function createKernel3DTexture(device: GPUDevice, kernel: Kernel3DData): 
  */
 export function extractKernelSlice(
   kernel: Kernel3DData,
-  plane: 'xy' | 'xz' | 'yz',
-  position: number
+  plane: "xy" | "xz" | "yz",
+  position: number,
 ): Float32Array {
   const { size, weights } = kernel;
   const slice = new Float32Array(size * size);
@@ -190,15 +204,15 @@ export function extractKernelSlice(
       let index: number;
 
       switch (plane) {
-        case 'xy':
+        case "xy":
           // Z = position, iterate X and Y
           index = clampedPos * size * size + a * size + b;
           break;
-        case 'xz':
+        case "xz":
           // Y = position, iterate X and Z
           index = a * size * size + clampedPos * size + b;
           break;
-        case 'yz':
+        case "yz":
           // X = position, iterate Y and Z
           index = a * size * size + b * size + clampedPos;
           break;
@@ -245,7 +259,7 @@ export function getKernel3DStats(kernel: Kernel3DData): {
 // Preset 3D kernel configurations
 export const KERNEL_3D_PRESETS: Record<string, Kernel3DConfig> = {
   // Standard Lenia-style single peak at 0.5 radius
-  'lenia-standard': {
+  "lenia-standard": {
     radius: 13,
     peakPositions: [0.5],
     peakWidths: [0.23],
@@ -253,7 +267,7 @@ export const KERNEL_3D_PRESETS: Record<string, Kernel3DConfig> = {
   },
 
   // Narrower kernel for more localized interactions
-  'lenia-narrow': {
+  "lenia-narrow": {
     radius: 10,
     peakPositions: [0.5],
     peakWidths: [0.15],
@@ -261,7 +275,7 @@ export const KERNEL_3D_PRESETS: Record<string, Kernel3DConfig> = {
   },
 
   // Dual-ring kernel for complex patterns
-  'lenia-dual-ring': {
+  "lenia-dual-ring": {
     radius: 15,
     peakPositions: [0.3, 0.7],
     peakWidths: [0.15, 0.15],
@@ -269,7 +283,7 @@ export const KERNEL_3D_PRESETS: Record<string, Kernel3DConfig> = {
   },
 
   // Outer shell kernel (SmoothLife-like)
-  'shell': {
+  shell: {
     radius: 12,
     peakPositions: [0.8],
     peakWidths: [0.2],

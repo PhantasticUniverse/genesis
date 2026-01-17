@@ -6,10 +6,18 @@
  * - FFT convolution: O(N² × log(N)), better for large kernels (R >= 16)
  */
 
-import { createFFTPipeline, shouldUseFFT, type FFTPipeline } from './fft-pipeline';
-import { generateKernel, type KernelConfig, type KernelData } from '../../core/kernels';
+import {
+  createFFTPipeline,
+  shouldUseFFT,
+  type FFTPipeline,
+} from "./fft-pipeline";
+import {
+  generateKernel,
+  type KernelConfig,
+  type KernelData,
+} from "../../core/kernels";
 
-export type ConvolutionMethod = 'direct' | 'fft' | 'auto';
+export type ConvolutionMethod = "direct" | "fft" | "auto";
 
 export interface ConvolutionConfig {
   method: ConvolutionMethod;
@@ -18,7 +26,7 @@ export interface ConvolutionConfig {
 
 export interface ConvolutionManager {
   // Get current method being used
-  getMethod: () => 'direct' | 'fft';
+  getMethod: () => "direct" | "fft";
 
   // Update kernel configuration
   setKernel: (config: KernelConfig) => void;
@@ -39,9 +47,9 @@ export interface ConvolutionManager {
 export function createConvolutionManager(
   device: GPUDevice,
   gridSize: number,
-  initialConfig: ConvolutionConfig
+  initialConfig: ConvolutionConfig,
 ): ConvolutionManager {
-  let currentMethod: 'direct' | 'fft' = 'direct';
+  let currentMethod: "direct" | "fft" = "direct";
   let kernelData: KernelData = generateKernel(initialConfig.kernelConfig);
   let fftPipeline: FFTPipeline | null = null;
 
@@ -49,16 +57,16 @@ export function createConvolutionManager(
   function updateMethod(config: KernelConfig) {
     const radius = config.radius;
 
-    if (initialConfig.method === 'auto') {
-      currentMethod = shouldUseFFT(radius, gridSize) ? 'fft' : 'direct';
-    } else if (initialConfig.method === 'fft') {
-      currentMethod = 'fft';
+    if (initialConfig.method === "auto") {
+      currentMethod = shouldUseFFT(radius, gridSize) ? "fft" : "direct";
+    } else if (initialConfig.method === "fft") {
+      currentMethod = "fft";
     } else {
-      currentMethod = 'direct';
+      currentMethod = "direct";
     }
 
     // Initialize FFT pipeline if needed
-    if (currentMethod === 'fft' && !fftPipeline) {
+    if (currentMethod === "fft" && !fftPipeline) {
       // FFT requires power of 2 size
       const fftSize = nextPowerOf2(gridSize);
       fftPipeline = createFFTPipeline(device, fftSize);
@@ -67,7 +75,7 @@ export function createConvolutionManager(
     // Update kernel
     kernelData = generateKernel(config);
 
-    if (currentMethod === 'fft' && fftPipeline) {
+    if (currentMethod === "fft" && fftPipeline) {
       fftPipeline.setKernel(kernelData.weights, kernelData.size);
     }
   }
@@ -89,7 +97,7 @@ export function createConvolutionManager(
     },
 
     isUsingFFT() {
-      return currentMethod === 'fft';
+      return currentMethod === "fft";
     },
 
     destroy() {
@@ -137,7 +145,7 @@ export async function benchmarkConvolution(
   device: GPUDevice,
   gridSize: number,
   kernelRadius: number,
-  iterations: number = 100
+  iterations: number = 100,
 ): Promise<{ directMs: number; fftMs: number }> {
   // This would be implemented to actually measure performance
   // For now, return estimated values based on complexity analysis

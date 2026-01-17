@@ -3,7 +3,7 @@
  * WebGPU canvas for rendering the cellular automata
  */
 
-import { forwardRef } from 'react';
+import { forwardRef } from "react";
 
 interface CanvasProps {
   width?: number;
@@ -12,7 +12,7 @@ interface CanvasProps {
 }
 
 export const Canvas = forwardRef<HTMLCanvasElement, CanvasProps>(
-  ({ width = 512, height = 512, className = '' }, ref) => {
+  ({ width = 512, height = 512, className = "" }, ref) => {
     return (
       <canvas
         ref={ref}
@@ -20,11 +20,11 @@ export const Canvas = forwardRef<HTMLCanvasElement, CanvasProps>(
         height={height}
         className={`border border-zinc-700 rounded-lg ${className}`}
         style={{
-          imageRendering: 'pixelated',
+          imageRendering: "pixelated",
         }}
       />
     );
-  }
+  },
 );
 
-Canvas.displayName = 'Canvas';
+Canvas.displayName = "Canvas";

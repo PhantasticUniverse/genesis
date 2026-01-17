@@ -3,7 +3,7 @@
  * Mass-conserving continuous CA with advection dynamics
  */
 
-import flowLeniaShader from './shaders/flow-lenia.wgsl?raw';
+import flowLeniaShader from "./shaders/flow-lenia.wgsl?raw";
 
 /** Flow-Lenia configuration */
 export interface FlowLeniaConfig {
@@ -66,7 +66,7 @@ export interface FlowLeniaPipeline {
  */
 export function createFlowLeniaPipeline(
   device: GPUDevice,
-  config: Partial<FlowLeniaConfig> = {}
+  config: Partial<FlowLeniaConfig> = {},
 ): FlowLeniaPipeline {
   const fullConfig: FlowLeniaConfig = { ...DEFAULT_FLOW_CONFIG, ...config };
   const { width, height } = fullConfig;
@@ -75,7 +75,7 @@ export function createFlowLeniaPipeline(
   const stateTextures: [GPUTexture, GPUTexture] = [
     device.createTexture({
       size: [width, height],
-      format: 'r32float',
+      format: "r32float",
       usage:
         GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.STORAGE_BINDING |
@@ -84,7 +84,7 @@ export function createFlowLeniaPipeline(
     }),
     device.createTexture({
       size: [width, height],
-      format: 'r32float',
+      format: "r32float",
       usage:
         GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.STORAGE_BINDING |
@@ -116,22 +116,22 @@ export function createFlowLeniaPipeline(
       {
         binding: 0,
         visibility: GPUShaderStage.COMPUTE,
-        texture: { sampleType: 'unfilterable-float' },
+        texture: { sampleType: "unfilterable-float" },
       },
       {
         binding: 1,
         visibility: GPUShaderStage.COMPUTE,
-        texture: { sampleType: 'unfilterable-float' },
+        texture: { sampleType: "unfilterable-float" },
       },
       {
         binding: 2,
         visibility: GPUShaderStage.COMPUTE,
-        storageTexture: { access: 'write-only', format: 'r32float' },
+        storageTexture: { access: "write-only", format: "r32float" },
       },
       {
         binding: 3,
         visibility: GPUShaderStage.COMPUTE,
-        buffer: { type: 'uniform' },
+        buffer: { type: "uniform" },
       },
     ],
   });
@@ -145,7 +145,7 @@ export function createFlowLeniaPipeline(
     layout: pipelineLayout,
     compute: {
       module: shaderModule,
-      entryPoint: 'main',
+      entryPoint: "main",
     },
   });
 
@@ -153,7 +153,7 @@ export function createFlowLeniaPipeline(
     layout: pipelineLayout,
     compute: {
       module: shaderModule,
-      entryPoint: 'flow_reintegration',
+      entryPoint: "flow_reintegration",
     },
   });
 
@@ -187,7 +187,7 @@ export function createFlowLeniaPipeline(
         { texture: stateTextures[currentBuffer] },
         state,
         { bytesPerRow: width * 4, rowsPerImage: height },
-        [width, height]
+        [width, height],
       );
     },
 
@@ -196,7 +196,7 @@ export function createFlowLeniaPipeline(
       commandEncoder.copyTextureToBuffer(
         { texture: stateTextures[currentBuffer] },
         { buffer: stagingBuffer, bytesPerRow: width * 4, rowsPerImage: height },
-        [width, height]
+        [width, height],
       );
       device.queue.submit([commandEncoder.finish()]);
 
@@ -232,7 +232,9 @@ export function createFlowLeniaPipeline(
       });
 
       // Choose pipeline based on reintegration setting
-      const pipeline = fullConfig.useReintegration ? reintegrationPipeline : mainPipeline;
+      const pipeline = fullConfig.useReintegration
+        ? reintegrationPipeline
+        : mainPipeline;
 
       const passEncoder = commandEncoder.beginComputePass();
       passEncoder.setPipeline(pipeline);
@@ -245,7 +247,7 @@ export function createFlowLeniaPipeline(
       passEncoder.end();
 
       // Swap buffers
-      currentBuffer = 1 - currentBuffer as 0 | 1;
+      currentBuffer = (1 - currentBuffer) as 0 | 1;
     },
 
     getOutputTexture(): GPUTexture {

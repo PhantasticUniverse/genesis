@@ -19,7 +19,7 @@ export interface PeriodResult {
   /** Multiple candidate periods with their strengths */
   candidates: Array<{ period: number; strength: number }>;
   /** Classification of behavior */
-  behavior: 'static' | 'periodic' | 'quasi-periodic' | 'chaotic';
+  behavior: "static" | "periodic" | "quasi-periodic" | "chaotic";
   /** Auto-correlation values */
   autocorrelation: number[];
 }
@@ -50,10 +50,7 @@ export const DEFAULT_PERIOD_CONFIG: PeriodConfig = {
  * Calculate auto-correlation of a time series
  * Returns correlation for each lag from 1 to maxLag
  */
-export function autocorrelation(
-  series: number[],
-  maxLag: number
-): number[] {
+export function autocorrelation(series: number[], maxLag: number): number[] {
   const n = series.length;
   if (n < 2) return [];
 
@@ -79,7 +76,7 @@ export function autocorrelation(
     for (let i = 0; i < n - lag; i++) {
       covariance += (series[i] - mean) * (series[i + lag] - mean);
     }
-    covariance /= (n - lag);
+    covariance /= n - lag;
     result.push(covariance / variance);
   }
 
@@ -89,10 +86,7 @@ export function autocorrelation(
 /**
  * Calculate cross-correlation between two time series
  */
-export function crossCorrelation(
-  series1: number[],
-  series2: number[]
-): number {
+export function crossCorrelation(series1: number[], series2: number[]): number {
   if (series1.length !== series2.length || series1.length === 0) {
     return 0;
   }
@@ -122,7 +116,7 @@ export function crossCorrelation(
  */
 export function findAutocorrelationPeaks(
   acf: number[],
-  threshold: number = 0.5
+  threshold: number = 0.5,
 ): Array<{ lag: number; value: number }> {
   const peaks: Array<{ lag: number; value: number }> = [];
 
@@ -143,7 +137,10 @@ export function findAutocorrelationPeaks(
  * Simple hash for Float32Array state (for exact period detection)
  * Uses sampling for large arrays
  */
-export function hashState(state: Float32Array, sampleSize: number = 100): string {
+export function hashState(
+  state: Float32Array,
+  sampleSize: number = 100,
+): string {
   const step = Math.max(1, Math.floor(state.length / sampleSize));
   const samples: number[] = [];
 
@@ -152,7 +149,7 @@ export function hashState(state: Float32Array, sampleSize: number = 100): string
     samples.push(Math.round(state[i] * 1000));
   }
 
-  return samples.join(',');
+  return samples.join(",");
 }
 
 /**
@@ -168,7 +165,7 @@ export interface StateFeatures {
 export function extractFeatures(
   state: Float32Array,
   width: number,
-  height: number
+  height: number,
 ): StateFeatures {
   let mass = 0;
   let sumX = 0;
@@ -219,15 +216,19 @@ export function extractFeatures(
  */
 export function detectExactPeriod(
   stateHistory: Float32Array[],
-  maxPeriod: number
+  maxPeriod: number,
 ): number {
   if (stateHistory.length < 2) return 0;
 
-  const hashes = stateHistory.map(s => hashState(s));
+  const hashes = stateHistory.map((s) => hashState(s));
   const lastHash = hashes[hashes.length - 1];
 
   // Look for exact matches going backwards
-  for (let period = 1; period <= Math.min(maxPeriod, stateHistory.length - 1); period++) {
+  for (
+    let period = 1;
+    period <= Math.min(maxPeriod, stateHistory.length - 1);
+    period++
+  ) {
     const compareIdx = stateHistory.length - 1 - period;
     if (hashes[compareIdx] === lastHash) {
       // Verify the period by checking more states
@@ -254,7 +255,7 @@ export function detectExactPeriod(
  */
 export function detectPeriodFromFeatures(
   features: StateFeatures[],
-  config: Partial<PeriodConfig> = {}
+  config: Partial<PeriodConfig> = {},
 ): PeriodResult {
   const fullConfig = { ...DEFAULT_PERIOD_CONFIG, ...config };
   const { maxPeriod, correlationThreshold, staticThreshold } = fullConfig;
@@ -265,13 +266,13 @@ export function detectPeriodFromFeatures(
       confidence: 0,
       isExactPeriod: false,
       candidates: [],
-      behavior: 'static',
+      behavior: "static",
       autocorrelation: [],
     };
   }
 
   // Extract mass series (most reliable feature for period detection)
-  const massSeries = features.map(f => f.mass);
+  const massSeries = features.map((f) => f.mass);
 
   // Check if static (constant mass)
   const massRange = Math.max(...massSeries) - Math.min(...massSeries);
@@ -282,39 +283,43 @@ export function detectPeriodFromFeatures(
       confidence: 1,
       isExactPeriod: false,
       candidates: [],
-      behavior: 'static',
+      behavior: "static",
       autocorrelation: [],
     };
   }
 
   // Calculate autocorrelation
-  const acf = autocorrelation(massSeries, Math.min(maxPeriod, features.length - 1));
+  const acf = autocorrelation(
+    massSeries,
+    Math.min(maxPeriod, features.length - 1),
+  );
 
   // Find peaks
   const peaks = findAutocorrelationPeaks(acf, correlationThreshold * 0.5);
 
   // Build candidates list
   const candidates = peaks
-    .filter(p => p.value >= correlationThreshold * 0.5)
+    .filter((p) => p.value >= correlationThreshold * 0.5)
     .slice(0, 5)
-    .map(p => ({ period: p.lag, strength: p.value }));
+    .map((p) => ({ period: p.lag, strength: p.value }));
 
   // Determine best period
   let bestPeriod = 0;
   let confidence = 0;
-  let behavior: 'static' | 'periodic' | 'quasi-periodic' | 'chaotic' = 'chaotic';
+  let behavior: "static" | "periodic" | "quasi-periodic" | "chaotic" =
+    "chaotic";
 
   if (peaks.length > 0 && peaks[0].value >= correlationThreshold) {
     bestPeriod = peaks[0].lag;
     confidence = peaks[0].value;
-    behavior = 'periodic';
+    behavior = "periodic";
 
     // Check for quasi-periodicity (multiple incommensurate periods)
     if (peaks.length >= 2 && peaks[1].value >= correlationThreshold * 0.8) {
       const ratio = peaks[0].lag / peaks[1].lag;
       // If ratio is not close to an integer, it's quasi-periodic
       if (Math.abs(ratio - Math.round(ratio)) > 0.1) {
-        behavior = 'quasi-periodic';
+        behavior = "quasi-periodic";
       }
     }
   }
@@ -336,7 +341,7 @@ export function detectPeriod(
   stateHistory: Float32Array[],
   width: number,
   height: number,
-  config: Partial<PeriodConfig> = {}
+  config: Partial<PeriodConfig> = {},
 ): PeriodResult {
   const fullConfig = { ...DEFAULT_PERIOD_CONFIG, ...config };
 
@@ -346,7 +351,7 @@ export function detectPeriod(
       confidence: 0,
       isExactPeriod: false,
       candidates: [],
-      behavior: 'static',
+      behavior: "static",
       autocorrelation: [],
     };
   }
@@ -358,7 +363,7 @@ export function detectPeriod(
   }
 
   // Extract features for correlation-based detection
-  const features = stateHistory.map(s => extractFeatures(s, width, height));
+  const features = stateHistory.map((s) => extractFeatures(s, width, height));
   const result = detectPeriodFromFeatures(features, fullConfig);
 
   // If exact period found, use it
@@ -368,7 +373,7 @@ export function detectPeriod(
       period: exactPeriod,
       isExactPeriod: true,
       confidence: 1,
-      behavior: exactPeriod === 1 ? 'static' : 'periodic',
+      behavior: exactPeriod === 1 ? "static" : "periodic",
     };
   }
 
@@ -390,7 +395,7 @@ export class PeriodTracker {
     width: number,
     height: number,
     config: Partial<PeriodConfig> = {},
-    maxHistory: number = 500
+    maxHistory: number = 500,
   ) {
     this.width = width;
     this.height = height;
@@ -422,7 +427,7 @@ export class PeriodTracker {
         confidence: 0,
         isExactPeriod: false,
         candidates: [],
-        behavior: 'static',
+        behavior: "static",
         autocorrelation: [],
       };
     }
@@ -431,7 +436,11 @@ export class PeriodTracker {
     let exactPeriod = 0;
     if (this.config.checkExactMatch && this.hashes.length >= 2) {
       const lastHash = this.hashes[this.hashes.length - 1];
-      for (let period = 1; period <= Math.min(this.config.maxPeriod, this.hashes.length - 1); period++) {
+      for (
+        let period = 1;
+        period <= Math.min(this.config.maxPeriod, this.hashes.length - 1);
+        period++
+      ) {
         const idx = this.hashes.length - 1 - period;
         if (this.hashes[idx] === lastHash) {
           exactPeriod = period;
@@ -448,7 +457,7 @@ export class PeriodTracker {
         period: exactPeriod,
         isExactPeriod: true,
         confidence: 1,
-        behavior: exactPeriod === 1 ? 'static' : 'periodic',
+        behavior: exactPeriod === 1 ? "static" : "periodic",
       };
     }
 
@@ -474,31 +483,29 @@ export class PeriodTracker {
 /**
  * Classify period behavior
  */
-export function classifyPeriodBehavior(
-  result: PeriodResult
-): string {
-  if (result.behavior === 'static') {
-    return 'Fixed point (no change)';
+export function classifyPeriodBehavior(result: PeriodResult): string {
+  if (result.behavior === "static") {
+    return "Fixed point (no change)";
   }
 
   if (result.isExactPeriod) {
     if (result.period === 1) {
-      return 'Fixed point (static)';
+      return "Fixed point (static)";
     } else if (result.period === 2) {
-      return 'Period-2 oscillator';
+      return "Period-2 oscillator";
     } else {
       return `Period-${result.period} cycle`;
     }
   }
 
   switch (result.behavior) {
-    case 'periodic':
+    case "periodic":
       return `Approximately period-${result.period} (${(result.confidence * 100).toFixed(0)}% confidence)`;
-    case 'quasi-periodic':
-      return 'Quasi-periodic (multiple frequencies)';
-    case 'chaotic':
-      return 'Aperiodic/chaotic';
+    case "quasi-periodic":
+      return "Quasi-periodic (multiple frequencies)";
+    case "chaotic":
+      return "Aperiodic/chaotic";
     default:
-      return 'Unknown';
+      return "Unknown";
   }
 }

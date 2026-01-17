@@ -15,7 +15,7 @@ import {
   backwardPass,
   mseLoss,
   createTargetState,
-} from './differentiable-ca';
+} from "./differentiable-ca";
 import {
   type AdamState,
   type ParameterGroup,
@@ -24,7 +24,7 @@ import {
   clipGradientNorm,
   warmupLR,
   cosineLR,
-} from './optimizer';
+} from "./optimizer";
 
 export interface TrainingConfig {
   // Simulation parameters
@@ -38,10 +38,10 @@ export interface TrainingConfig {
   maxGradientNorm: number;
 
   // Curriculum parameters
-  initialDifficulty: number;   // Starting distance (0-1)
-  maxDifficulty: number;       // Max distance (0-1)
-  successThreshold: number;    // Loss threshold for success
-  successRateTarget: number;   // Target success rate to increase difficulty
+  initialDifficulty: number; // Starting distance (0-1)
+  maxDifficulty: number; // Max distance (0-1)
+  successThreshold: number; // Loss threshold for success
+  successRateTarget: number; // Target success rate to increase difficulty
   difficultyIncrement: number; // How much to increase difficulty
 
   // History
@@ -86,7 +86,9 @@ export interface TrainerState {
 /**
  * Create initial training state
  */
-export function createTrainerState(config: Partial<TrainingConfig> = {}): TrainerState {
+export function createTrainerState(
+  config: Partial<TrainingConfig> = {},
+): TrainerState {
   const cfg = { ...DEFAULT_CONFIG, ...config };
   return {
     config: cfg,
@@ -103,12 +105,13 @@ export function createTrainerState(config: Partial<TrainingConfig> = {}): Traine
  */
 export function sampleGoal(
   state: TrainerState,
-  currentCentroid: { x: number; y: number }
+  currentCentroid: { x: number; y: number },
 ): { x: number; y: number } {
   const { config, currentDifficulty } = state;
 
   // Maximum distance based on difficulty
-  const maxDist = currentDifficulty * Math.min(config.width, config.height) * 0.5;
+  const maxDist =
+    currentDifficulty * Math.min(config.width, config.height) * 0.5;
 
   // Random angle
   const angle = Math.random() * 2 * Math.PI;
@@ -117,8 +120,12 @@ export function sampleGoal(
   const dist = maxDist * (0.5 + 0.5 * Math.random());
 
   return {
-    x: (currentCentroid.x + dist * Math.cos(angle) + config.width) % config.width,
-    y: (currentCentroid.y + dist * Math.sin(angle) + config.height) % config.height,
+    x:
+      (currentCentroid.x + dist * Math.cos(angle) + config.width) %
+      config.width,
+    y:
+      (currentCentroid.y + dist * Math.sin(angle) + config.height) %
+      config.height,
   };
 }
 
@@ -128,20 +135,20 @@ export function sampleGoal(
  */
 export function selectPrior(
   state: TrainerState,
-  targetDistance: number
+  targetDistance: number,
 ): CAParameters | null {
   if (state.history.length === 0) {
     return null;
   }
 
   // Find successful episodes with similar difficulty
-  const candidates = state.history.filter(h =>
-    h.success && Math.abs(h.targetDistance - targetDistance) < 0.2
+  const candidates = state.history.filter(
+    (h) => h.success && Math.abs(h.targetDistance - targetDistance) < 0.2,
   );
 
   if (candidates.length === 0) {
     // Fall back to any successful episode
-    const successful = state.history.filter(h => h.success);
+    const successful = state.history.filter((h) => h.success);
     if (successful.length === 0) {
       return null;
     }
@@ -197,13 +204,15 @@ function cloneParams(params: CAParameters): CAParameters {
 export function runEpisode(
   state: TrainerState,
   initialState: Float32Array,
-  params: CAParameters
+  params: CAParameters,
 ): { finalLoss: number; success: boolean; updatedParams: CAParameters } {
   const { config } = state;
   const workingParams = cloneParams(params);
 
   // Calculate current centroid
-  let cx = 0, cy = 0, total = 0;
+  let cx = 0,
+    cy = 0,
+    total = 0;
   for (let y = 0; y < config.height; y++) {
     for (let x = 0; x < config.width; x++) {
       const val = initialState[y * config.width + x];
@@ -219,9 +228,9 @@ export function runEpisode(
 
   // Sample target goal
   const goal = sampleGoal(state, { x: cx, y: cy });
-  const targetDistance = Math.sqrt(
-    Math.pow(goal.x - cx, 2) + Math.pow(goal.y - cy, 2)
-  ) / Math.min(config.width, config.height);
+  const targetDistance =
+    Math.sqrt(Math.pow(goal.x - cx, 2) + Math.pow(goal.y - cy, 2)) /
+    Math.min(config.width, config.height);
 
   // Create target state
   const targetState = createTargetState(
@@ -229,14 +238,18 @@ export function runEpisode(
     config.width,
     config.height,
     goal.x,
-    goal.y
+    goal.y,
   );
 
   // Learning rate scheduler
   const lrScheduler = warmupLR(
     config.learningRate,
     10,
-    cosineLR(config.learningRate, config.gradientsPerEpisode, config.learningRate * 0.1)
+    cosineLR(
+      config.learningRate,
+      config.gradientsPerEpisode,
+      config.learningRate * 0.1,
+    ),
   );
 
   // Training loop
@@ -248,7 +261,7 @@ export function runEpisode(
       workingParams,
       config.width,
       config.height,
-      config.stepsPerEpisode
+      config.stepsPerEpisode,
     );
 
     // Compute loss
@@ -265,7 +278,7 @@ export function runEpisode(
       workingParams,
       targetState,
       config.width,
-      config.height
+      config.height,
     );
 
     // Clip gradients
@@ -277,17 +290,17 @@ export function runEpisode(
     // Create parameter groups for optimizer
     const paramGroups: ParameterGroup[] = [
       {
-        name: 'kernelWeights',
+        name: "kernelWeights",
         values: workingParams.kernelWeights,
         gradients: gradients.kernelWeights,
       },
       {
-        name: 'growthCenter',
+        name: "growthCenter",
         values: new Float32Array([workingParams.growthCenter]),
         gradients: new Float32Array([gradients.growthCenter]),
       },
       {
-        name: 'growthWidth',
+        name: "growthWidth",
         values: new Float32Array([workingParams.growthWidth]),
         gradients: new Float32Array([gradients.growthWidth]),
       },
@@ -321,7 +334,7 @@ export function updateTrainerState(
     targetDistance: number;
     finalLoss: number;
     success: boolean;
-  }
+  },
 ): void {
   // Add to history
   state.history.push({
@@ -345,12 +358,14 @@ export function updateTrainerState(
 
   // Update difficulty based on success rate
   if (state.recentSuccesses.length >= 10) {
-    const successRate = state.recentSuccesses.filter(s => s).length / state.recentSuccesses.length;
+    const successRate =
+      state.recentSuccesses.filter((s) => s).length /
+      state.recentSuccesses.length;
 
     if (successRate >= state.config.successRateTarget) {
       state.currentDifficulty = Math.min(
         state.config.maxDifficulty,
-        state.currentDifficulty + state.config.difficultyIncrement
+        state.currentDifficulty + state.config.difficultyIncrement,
       );
       state.recentSuccesses = []; // Reset after difficulty change
     }
@@ -369,13 +384,17 @@ export function getTrainingStats(state: TrainerState): {
   avgRecentLoss: number;
 } {
   const recentHistory = state.history.slice(-20);
-  const avgRecentLoss = recentHistory.length > 0
-    ? recentHistory.reduce((sum, h) => sum + h.finalLoss, 0) / recentHistory.length
-    : 0;
+  const avgRecentLoss =
+    recentHistory.length > 0
+      ? recentHistory.reduce((sum, h) => sum + h.finalLoss, 0) /
+        recentHistory.length
+      : 0;
 
-  const recentSuccessRate = state.recentSuccesses.length > 0
-    ? state.recentSuccesses.filter(s => s).length / state.recentSuccesses.length
-    : 0;
+  const recentSuccessRate =
+    state.recentSuccesses.length > 0
+      ? state.recentSuccesses.filter((s) => s).length /
+        state.recentSuccesses.length
+      : 0;
 
   return {
     totalEpisodes: state.totalEpisodes,

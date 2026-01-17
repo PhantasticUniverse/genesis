@@ -36,7 +36,7 @@ export function RangeSlider({
   disabled = false,
   description,
   formatValue,
-  accentColor = 'accent-cyan-500',
+  accentColor = "accent-cyan-500",
 }: RangeSliderProps) {
   const displayValue = formatValue ? formatValue(value) : value.toFixed(2);
 
@@ -56,9 +56,7 @@ export function RangeSlider({
         disabled={disabled}
         className={`w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer ${accentColor} disabled:opacity-50 disabled:cursor-not-allowed`}
       />
-      {description && (
-        <p className="text-xs text-zinc-600">{description}</p>
-      )}
+      {description && <p className="text-xs text-zinc-600">{description}</p>}
     </div>
   );
 }

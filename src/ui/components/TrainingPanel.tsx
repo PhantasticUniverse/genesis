@@ -3,7 +3,7 @@
  * UI for neural CA training with GPU-accelerated IMGEP
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   createTrainerState,
   runEpisode,
@@ -12,13 +12,13 @@ import {
   createInitialParams,
   selectPrior,
   type TrainerState,
-} from '../../training/imgep-trainer';
+} from "../../training/imgep-trainer";
 import {
   createGPUTrainer,
   type GPUTrainer,
   type GPUTrainerState,
-} from '../../training/gpu-trainer';
-import type { Engine } from '../../core/engine';
+} from "../../training/gpu-trainer";
+import type { Engine } from "../../core/engine";
 
 interface TrainingPanelProps {
   engine: Engine | null;
@@ -53,7 +53,9 @@ export function TrainingPanel({ engine }: TrainingPanelProps) {
 
       // Check if GPU device is available
       if (!device) {
-        console.error('WebGPU device not available. Please use CPU training mode.');
+        console.error(
+          "WebGPU device not available. Please use CPU training mode.",
+        );
         setUseGPU(false);
         return;
       }
@@ -81,7 +83,7 @@ export function TrainingPanel({ engine }: TrainingPanelProps) {
       // Start training
       trainer.startTraining();
     } catch (e) {
-      console.error('Failed to start GPU training:', e);
+      console.error("Failed to start GPU training:", e);
       setIsTraining(false);
     }
   }, [engine]);
@@ -146,10 +148,13 @@ export function TrainingPanel({ engine }: TrainingPanelProps) {
       setStats(newStats);
 
       // Allow UI to update
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Stop if we've reached max difficulty with high success
-      if (newStats.currentDifficulty >= 0.8 && newStats.recentSuccessRate >= 0.9) {
+      if (
+        newStats.currentDifficulty >= 0.8 &&
+        newStats.recentSuccessRate >= 0.9
+      ) {
         break;
       }
     }
@@ -177,8 +182,10 @@ export function TrainingPanel({ engine }: TrainingPanelProps) {
     <div className="mt-4 p-4 bg-zinc-900 rounded-lg border border-zinc-800">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-medium text-zinc-300">Neural CA Training</h3>
-        <span className={`text-xs px-2 py-0.5 rounded ${isTraining ? 'bg-orange-600' : 'bg-zinc-700'}`}>
-          {isTraining ? 'Training' : 'Idle'}
+        <span
+          className={`text-xs px-2 py-0.5 rounded ${isTraining ? "bg-orange-600" : "bg-zinc-700"}`}
+        >
+          {isTraining ? "Training" : "Idle"}
         </span>
       </div>
 
@@ -189,8 +196,8 @@ export function TrainingPanel({ engine }: TrainingPanelProps) {
           disabled={isTraining}
           className={`px-2 py-1 text-xs rounded transition-colors ${
             useGPU
-              ? 'bg-green-600 text-white'
-              : 'bg-zinc-700 text-zinc-400 hover:bg-zinc-600'
+              ? "bg-green-600 text-white"
+              : "bg-zinc-700 text-zinc-400 hover:bg-zinc-600"
           } disabled:opacity-50`}
         >
           GPU
@@ -200,14 +207,14 @@ export function TrainingPanel({ engine }: TrainingPanelProps) {
           disabled={isTraining}
           className={`px-2 py-1 text-xs rounded transition-colors ${
             !useGPU
-              ? 'bg-yellow-600 text-white'
-              : 'bg-zinc-700 text-zinc-400 hover:bg-zinc-600'
+              ? "bg-yellow-600 text-white"
+              : "bg-zinc-700 text-zinc-400 hover:bg-zinc-600"
           } disabled:opacity-50`}
         >
           CPU
         </button>
         <span className="text-xs text-zinc-500">
-          {useGPU ? '128×128 grid' : '64×64 grid'}
+          {useGPU ? "128×128 grid" : "64×64 grid"}
         </span>
       </div>
 
@@ -219,7 +226,7 @@ export function TrainingPanel({ engine }: TrainingPanelProps) {
             disabled={!engine}
             className="px-3 py-1.5 text-sm rounded bg-orange-600 hover:bg-orange-700 text-white transition-colors disabled:opacity-50"
           >
-            Start {useGPU ? 'GPU' : 'CPU'} Training
+            Start {useGPU ? "GPU" : "CPU"} Training
           </button>
         ) : (
           <button
@@ -239,17 +246,23 @@ export function TrainingPanel({ engine }: TrainingPanelProps) {
         </div>
         <div className="p-2 bg-zinc-800 rounded">
           <div className="text-zinc-500">Difficulty</div>
-          <div className="text-zinc-300 font-mono">{(stats.currentDifficulty * 100).toFixed(0)}%</div>
+          <div className="text-zinc-300 font-mono">
+            {(stats.currentDifficulty * 100).toFixed(0)}%
+          </div>
         </div>
         <div className="p-2 bg-zinc-800 rounded">
           <div className="text-zinc-500">Success Rate</div>
-          <div className={`font-mono ${stats.recentSuccessRate >= 0.7 ? 'text-green-400' : 'text-zinc-300'}`}>
+          <div
+            className={`font-mono ${stats.recentSuccessRate >= 0.7 ? "text-green-400" : "text-zinc-300"}`}
+          >
             {(stats.recentSuccessRate * 100).toFixed(0)}%
           </div>
         </div>
         <div className="p-2 bg-zinc-800 rounded">
           <div className="text-zinc-500">Avg Loss</div>
-          <div className="text-zinc-300 font-mono">{stats.avgRecentLoss.toFixed(4)}</div>
+          <div className="text-zinc-300 font-mono">
+            {stats.avgRecentLoss.toFixed(4)}
+          </div>
         </div>
       </div>
 
@@ -277,7 +290,8 @@ export function TrainingPanel({ engine }: TrainingPanelProps) {
       {/* GPU training status */}
       {useGPU ? (
         <div className="mt-4 p-2 bg-green-900/30 border border-green-800 rounded text-xs text-green-400">
-          GPU-accelerated training enabled. Forward and backward passes run on WebGPU compute shaders.
+          GPU-accelerated training enabled. Forward and backward passes run on
+          WebGPU compute shaders.
         </div>
       ) : (
         <div className="mt-4 p-2 bg-yellow-900/30 border border-yellow-800 rounded text-xs text-yellow-400">

@@ -3,7 +3,7 @@
  * Handles device initialization and capability detection
  */
 
-import type { WebGPUCapabilities } from '../../core/types';
+import type { WebGPUCapabilities } from "../../core/types";
 
 export interface WebGPUContext {
   adapter: GPUAdapter;
@@ -15,7 +15,7 @@ export interface WebGPUContext {
  * Check if WebGPU is available in this browser
  */
 export function isWebGPUAvailable(): boolean {
-  return typeof navigator !== 'undefined' && 'gpu' in navigator;
+  return typeof navigator !== "undefined" && "gpu" in navigator;
 }
 
 /**
@@ -24,20 +24,19 @@ export function isWebGPUAvailable(): boolean {
 export async function initWebGPU(): Promise<WebGPUContext> {
   if (!isWebGPUAvailable()) {
     throw new Error(
-      'WebGPU is not supported in this browser. ' +
-      'Please use Chrome 113+, Firefox 121+, Safari 18+, or Edge 113+.'
+      "WebGPU is not supported in this browser. " +
+        "Please use Chrome 113+, Firefox 121+, Safari 18+, or Edge 113+.",
     );
   }
 
   // Request adapter (connection to GPU)
   const adapter = await navigator.gpu.requestAdapter({
-    powerPreference: 'high-performance',
+    powerPreference: "high-performance",
   });
 
   if (!adapter) {
     throw new Error(
-      'Failed to get WebGPU adapter. ' +
-      'Your GPU may not support WebGPU.'
+      "Failed to get WebGPU adapter. " + "Your GPU may not support WebGPU.",
     );
   }
 
@@ -46,23 +45,24 @@ export async function initWebGPU(): Promise<WebGPUContext> {
     requiredFeatures: [],
     requiredLimits: {
       maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize,
-      maxComputeWorkgroupsPerDimension: adapter.limits.maxComputeWorkgroupsPerDimension,
+      maxComputeWorkgroupsPerDimension:
+        adapter.limits.maxComputeWorkgroupsPerDimension,
     },
   });
 
   // Handle device loss
   device.lost.then((info) => {
-    console.error('WebGPU device lost:', info.message);
-    if (info.reason !== 'destroyed') {
+    console.error("WebGPU device lost:", info.message);
+    if (info.reason !== "destroyed") {
       // Attempt to reinitialize
-      console.log('Attempting to reinitialize WebGPU...');
+      console.log("Attempting to reinitialize WebGPU...");
     }
   });
 
   // Get capabilities (requestAdapterInfo may not be available in all browsers)
   let adapterInfo: GPUAdapterInfo | undefined;
   try {
-    if ('requestAdapterInfo' in adapter) {
+    if ("requestAdapterInfo" in adapter) {
       adapterInfo = await (adapter as any).requestAdapterInfo();
     }
   } catch {
@@ -76,9 +76,9 @@ export async function initWebGPU(): Promise<WebGPUContext> {
     features: device.features,
   };
 
-  console.log('WebGPU initialized:', {
-    vendor: adapterInfo?.vendor ?? 'unknown',
-    architecture: adapterInfo?.architecture ?? 'unknown',
+  console.log("WebGPU initialized:", {
+    vendor: adapterInfo?.vendor ?? "unknown",
+    architecture: adapterInfo?.architecture ?? "unknown",
     maxTextureSize: capabilities.limits?.maxTextureDimension2D,
     maxWorkgroupSize: capabilities.limits?.maxComputeWorkgroupSizeX,
   });
@@ -92,10 +92,10 @@ export async function initWebGPU(): Promise<WebGPUContext> {
 export function createShaderModule(
   device: GPUDevice,
   code: string,
-  label?: string
+  label?: string,
 ): GPUShaderModule {
   return device.createShaderModule({
-    label: label || 'shader',
+    label: label || "shader",
     code,
   });
 }
@@ -108,10 +108,10 @@ export function createComputePipeline(
   shaderModule: GPUShaderModule,
   entryPoint: string,
   bindGroupLayout: GPUBindGroupLayout,
-  label?: string
+  label?: string,
 ): GPUComputePipeline {
   return device.createComputePipeline({
-    label: label || 'compute-pipeline',
+    label: label || "compute-pipeline",
     layout: device.createPipelineLayout({
       bindGroupLayouts: [bindGroupLayout],
     }),

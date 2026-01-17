@@ -3,28 +3,31 @@
  * Controls for Particle-Lenia hybrid simulation
  */
 
-import { useState, useCallback } from 'react';
-import { ExpandablePanel, ToggleButton, RangeSlider, StatGrid } from './common';
+import { useState, useCallback } from "react";
+import { ExpandablePanel, ToggleButton, RangeSlider, StatGrid } from "./common";
 import type {
   ParticleSystemState,
   ParticleSystemConfig,
   FieldCouplingConfig,
-} from '../../core/particles';
+} from "../../core/particles";
 import {
   INTERACTION_PRESETS,
   spawnRandomParticles,
   getActiveParticles,
   PARTICLE_COLORS,
-} from '../../core/particles';
+} from "../../core/particles";
 
 interface ParticlePanelProps {
   state: ParticleSystemState | null;
   onStateChange?: (state: ParticleSystemState) => void;
-  onSpawnParticles?: (count: number, options?: {
-    centerX?: number;
-    centerY?: number;
-    spread?: number;
-  }) => void;
+  onSpawnParticles?: (
+    count: number,
+    options?: {
+      centerX?: number;
+      centerY?: number;
+      spread?: number;
+    },
+  ) => void;
   onClearParticles?: () => void;
   onConfigChange?: (config: Partial<ParticleSystemConfig>) => void;
   onCouplingChange?: (coupling: Partial<FieldCouplingConfig>) => void;
@@ -41,7 +44,7 @@ export function ParticlePanel({
   onInteractionPresetChange,
 }: ParticlePanelProps) {
   const [spawnCount, setSpawnCount] = useState(50);
-  const [selectedPreset, setSelectedPreset] = useState('clustering');
+  const [selectedPreset, setSelectedPreset] = useState("clustering");
 
   const activeParticles = state ? getActiveParticles(state) : [];
   const particleCount = activeParticles.length;
@@ -50,7 +53,7 @@ export function ParticlePanel({
   const typeCounts: number[] = [];
   if (state) {
     for (let i = 0; i < state.config.numTypes; i++) {
-      typeCounts[i] = activeParticles.filter(p => p.type === i).length;
+      typeCounts[i] = activeParticles.filter((p) => p.type === i).length;
     }
   }
 
@@ -72,63 +75,82 @@ export function ParticlePanel({
     }
   }, [state, onClearParticles, onStateChange]);
 
-  const handlePresetChange = useCallback((preset: string) => {
-    setSelectedPreset(preset);
-    if (onInteractionPresetChange) {
-      onInteractionPresetChange(preset);
-    } else if (state && onStateChange) {
-      const presetFn = INTERACTION_PRESETS[preset as keyof typeof INTERACTION_PRESETS];
-      if (presetFn) {
-        state.interactionMatrix = presetFn(state.config.numTypes);
+  const handlePresetChange = useCallback(
+    (preset: string) => {
+      setSelectedPreset(preset);
+      if (onInteractionPresetChange) {
+        onInteractionPresetChange(preset);
+      } else if (state && onStateChange) {
+        const presetFn =
+          INTERACTION_PRESETS[preset as keyof typeof INTERACTION_PRESETS];
+        if (presetFn) {
+          state.interactionMatrix = presetFn(state.config.numTypes);
+          onStateChange({ ...state });
+        }
+      }
+    },
+    [state, onInteractionPresetChange, onStateChange],
+  );
+
+  const handleFrictionChange = useCallback(
+    (value: number) => {
+      if (onConfigChange) {
+        onConfigChange({ friction: value });
+      } else if (state && onStateChange) {
+        state.config.friction = value;
         onStateChange({ ...state });
       }
-    }
-  }, [state, onInteractionPresetChange, onStateChange]);
+    },
+    [state, onConfigChange, onStateChange],
+  );
 
-  const handleFrictionChange = useCallback((value: number) => {
-    if (onConfigChange) {
-      onConfigChange({ friction: value });
-    } else if (state && onStateChange) {
-      state.config.friction = value;
-      onStateChange({ ...state });
-    }
-  }, [state, onConfigChange, onStateChange]);
+  const handleDepositToggle = useCallback(
+    (enabled: boolean) => {
+      if (onCouplingChange) {
+        onCouplingChange({ depositEnabled: enabled });
+      } else if (state && onStateChange) {
+        state.fieldCoupling.depositEnabled = enabled;
+        onStateChange({ ...state });
+      }
+    },
+    [state, onCouplingChange, onStateChange],
+  );
 
-  const handleDepositToggle = useCallback((enabled: boolean) => {
-    if (onCouplingChange) {
-      onCouplingChange({ depositEnabled: enabled });
-    } else if (state && onStateChange) {
-      state.fieldCoupling.depositEnabled = enabled;
-      onStateChange({ ...state });
-    }
-  }, [state, onCouplingChange, onStateChange]);
+  const handleDepositAmountChange = useCallback(
+    (value: number) => {
+      if (onCouplingChange) {
+        onCouplingChange({ depositAmount: value });
+      } else if (state && onStateChange) {
+        state.fieldCoupling.depositAmount = value;
+        onStateChange({ ...state });
+      }
+    },
+    [state, onCouplingChange, onStateChange],
+  );
 
-  const handleDepositAmountChange = useCallback((value: number) => {
-    if (onCouplingChange) {
-      onCouplingChange({ depositAmount: value });
-    } else if (state && onStateChange) {
-      state.fieldCoupling.depositAmount = value;
-      onStateChange({ ...state });
-    }
-  }, [state, onCouplingChange, onStateChange]);
+  const handleGradientToggle = useCallback(
+    (enabled: boolean) => {
+      if (onCouplingChange) {
+        onCouplingChange({ gradientResponseEnabled: enabled });
+      } else if (state && onStateChange) {
+        state.fieldCoupling.gradientResponseEnabled = enabled;
+        onStateChange({ ...state });
+      }
+    },
+    [state, onCouplingChange, onStateChange],
+  );
 
-  const handleGradientToggle = useCallback((enabled: boolean) => {
-    if (onCouplingChange) {
-      onCouplingChange({ gradientResponseEnabled: enabled });
-    } else if (state && onStateChange) {
-      state.fieldCoupling.gradientResponseEnabled = enabled;
-      onStateChange({ ...state });
-    }
-  }, [state, onCouplingChange, onStateChange]);
-
-  const handleGradientStrengthChange = useCallback((value: number) => {
-    if (onCouplingChange) {
-      onCouplingChange({ gradientStrength: value });
-    } else if (state && onStateChange) {
-      state.fieldCoupling.gradientStrength = value;
-      onStateChange({ ...state });
-    }
-  }, [state, onCouplingChange, onStateChange]);
+  const handleGradientStrengthChange = useCallback(
+    (value: number) => {
+      if (onCouplingChange) {
+        onCouplingChange({ gradientStrength: value });
+      } else if (state && onStateChange) {
+        state.fieldCoupling.gradientStrength = value;
+        onStateChange({ ...state });
+      }
+    },
+    [state, onCouplingChange, onStateChange],
+  );
 
   if (!state) {
     return (
@@ -138,7 +160,9 @@ export function ParticlePanel({
         defaultExpanded={false}
       >
         <div className="text-center py-4">
-          <p className="text-zinc-500 text-sm">Particle system not initialized</p>
+          <p className="text-zinc-500 text-sm">
+            Particle system not initialized
+          </p>
         </div>
       </ExpandablePanel>
     );
@@ -150,16 +174,20 @@ export function ParticlePanel({
     <ExpandablePanel
       title="Particles"
       titleColor="text-orange-400"
-      statusBadge={particleCount > 0 ? { text: `${particleCount}`, color: 'bg-orange-900 text-orange-400' } : undefined}
+      statusBadge={
+        particleCount > 0
+          ? { text: `${particleCount}`, color: "bg-orange-900 text-orange-400" }
+          : undefined
+      }
       defaultExpanded={true}
     >
       <div className="space-y-4">
         {/* Stats */}
         <StatGrid
           stats={[
-            { label: 'Particles', value: particleCount },
-            { label: 'Types', value: config.numTypes },
-            { label: 'Max', value: config.maxParticles },
+            { label: "Particles", value: particleCount },
+            { label: "Types", value: config.numTypes },
+            { label: "Max", value: config.maxParticles },
           ]}
           columns={3}
         />
@@ -170,13 +198,12 @@ export function ParticlePanel({
             {typeCounts.map((count, type) => {
               const color = PARTICLE_COLORS[type % PARTICLE_COLORS.length];
               return (
-                <div
-                  key={type}
-                  className="flex items-center gap-1 text-xs"
-                >
+                <div key={type} className="flex items-center gap-1 text-xs">
                   <div
                     className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: `rgb(${color[0]}, ${color[1]}, ${color[2]})` }}
+                    style={{
+                      backgroundColor: `rgb(${color[0]}, ${color[1]}, ${color[2]})`,
+                    }}
                   />
                   <span className="text-zinc-400">{count}</span>
                 </div>
@@ -192,7 +219,9 @@ export function ParticlePanel({
             <input
               type="number"
               value={spawnCount}
-              onChange={(e) => setSpawnCount(Math.max(1, parseInt(e.target.value) || 1))}
+              onChange={(e) =>
+                setSpawnCount(Math.max(1, parseInt(e.target.value) || 1))
+              }
               className="w-20 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-sm"
               min={1}
               max={config.maxParticles - particleCount}
@@ -289,7 +318,9 @@ export function ParticlePanel({
         {/* Info */}
         <div className="mt-4 p-3 bg-zinc-800 rounded text-xs text-zinc-500">
           <strong className="text-zinc-400">Particle-Lenia Hybrid:</strong>
-          <span className="ml-2">Particles interact with each other and the Lenia field</span>
+          <span className="ml-2">
+            Particles interact with each other and the Lenia field
+          </span>
         </div>
       </div>
     </ExpandablePanel>

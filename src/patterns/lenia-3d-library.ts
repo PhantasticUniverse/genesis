@@ -7,10 +7,21 @@
  * - 3D artificial life experiments
  */
 
-import type { Organism3D, Grid3DConfig, Lenia3DParams, Kernel3DConfig } from '../core/types-3d';
-import { DEFAULT_GRID_3D_CONFIG } from '../core/types-3d';
+import type {
+  Organism3D,
+  Grid3DConfig,
+  Lenia3DParams,
+  Kernel3DConfig,
+} from "../core/types-3d";
+import { DEFAULT_GRID_3D_CONFIG } from "../core/types-3d";
 
-export type Organism3DCategory = 'sphere' | 'glider' | 'oscillator' | 'static' | 'chaotic' | 'experimental';
+export type Organism3DCategory =
+  | "sphere"
+  | "glider"
+  | "oscillator"
+  | "static"
+  | "chaotic"
+  | "experimental";
 
 export interface Organism3DPreset {
   name: string;
@@ -33,7 +44,7 @@ function generateSphericalBlob(
     centerZ?: number;
     radius?: number;
     peak?: number;
-  } = {}
+  } = {},
 ): Float32Array {
   const { width, height, depth } = config;
   const state = new Float32Array(width * height * depth);
@@ -74,7 +85,7 @@ function generateEllipsoid(
     radiusY?: number;
     radiusZ?: number;
     peak?: number;
-  } = {}
+  } = {},
 ): Float32Array {
   const { width, height, depth } = config;
   const state = new Float32Array(width * height * depth);
@@ -112,7 +123,7 @@ function generateEllipsoid(
  */
 function generateDualSpheres(
   config: Grid3DConfig,
-  separation?: number
+  separation?: number,
 ): Float32Array {
   const { width, height, depth } = config;
   const state = new Float32Array(width * height * depth);
@@ -160,7 +171,7 @@ function generateDualSpheres(
 function generateTorus(
   config: Grid3DConfig,
   majorRadius?: number,
-  minorRadius?: number
+  minorRadius?: number,
 ): Float32Array {
   const { width, height, depth } = config;
   const state = new Float32Array(width * height * depth);
@@ -168,8 +179,8 @@ function generateTorus(
   const cx = width / 2;
   const cy = height / 2;
   const cz = depth / 2;
-  const R = majorRadius ?? Math.min(width, height, depth) / 5;  // Major radius
-  const r = minorRadius ?? R / 3;  // Minor radius
+  const R = majorRadius ?? Math.min(width, height, depth) / 5; // Major radius
+  const r = minorRadius ?? R / 3; // Minor radius
   const sigma = r / 2;
 
   for (let z = 0; z < depth; z++) {
@@ -185,7 +196,9 @@ function generateTorus(
         const distToTube = Math.sqrt(distToRing * distToRing + dz * dz);
 
         // Gaussian falloff from tube center
-        const value = Math.exp(-(distToTube * distToTube) / (2 * sigma * sigma));
+        const value = Math.exp(
+          -(distToTube * distToTube) / (2 * sigma * sigma),
+        );
         const index = z * width * height + y * width + x;
         state[index] = Math.min(1, Math.max(0, value));
       }
@@ -200,7 +213,7 @@ function generateTorus(
  */
 function generateRandomNoise(
   config: Grid3DConfig,
-  density: number = 0.05
+  density: number = 0.05,
 ): Float32Array {
   const { width, height, depth } = config;
   const state = new Float32Array(width * height * depth);
@@ -216,10 +229,10 @@ function generateRandomNoise(
  * 3D Lenia Organism Presets
  */
 export const ORGANISM_3D_PRESETS: Record<string, Organism3DPreset> = {
-  'orbium-3d': {
-    name: '3D Orbium',
-    description: 'Classic Orbium extended to 3D - a smooth spherical glider',
-    category: 'sphere',
+  "orbium-3d": {
+    name: "3D Orbium",
+    description: "Classic Orbium extended to 3D - a smooth spherical glider",
+    category: "sphere",
     params: {
       kernelRadius: 13,
       growthCenter: 0.15,
@@ -235,10 +248,10 @@ export const ORGANISM_3D_PRESETS: Record<string, Organism3DPreset> = {
     generateState: (config) => generateSphericalBlob(config, { radius: 10 }),
   },
 
-  'stable-sphere': {
-    name: 'Stable Sphere',
-    description: 'A stable, pulsating 3D sphere with wider growth parameters',
-    category: 'oscillator',
+  "stable-sphere": {
+    name: "Stable Sphere",
+    description: "A stable, pulsating 3D sphere with wider growth parameters",
+    category: "oscillator",
     params: {
       kernelRadius: 10,
       growthCenter: 0.12,
@@ -254,10 +267,10 @@ export const ORGANISM_3D_PRESETS: Record<string, Organism3DPreset> = {
     generateState: (config) => generateSphericalBlob(config, { radius: 12 }),
   },
 
-  'ellipsoid-glider': {
-    name: 'Ellipsoid Glider',
-    description: 'An elongated 3D organism that may exhibit directional motion',
-    category: 'glider',
+  "ellipsoid-glider": {
+    name: "Ellipsoid Glider",
+    description: "An elongated 3D organism that may exhibit directional motion",
+    category: "glider",
     params: {
       kernelRadius: 12,
       growthCenter: 0.14,
@@ -270,17 +283,18 @@ export const ORGANISM_3D_PRESETS: Record<string, Organism3DPreset> = {
       peakWidths: [0.22],
       peakWeights: [1],
     },
-    generateState: (config) => generateEllipsoid(config, {
-      radiusX: 8,
-      radiusY: 12,
-      radiusZ: 8,
-    }),
+    generateState: (config) =>
+      generateEllipsoid(config, {
+        radiusX: 8,
+        radiusY: 12,
+        radiusZ: 8,
+      }),
   },
 
-  'dual-orbium': {
-    name: 'Dual Orbium',
-    description: 'Two interacting 3D organisms - may merge, orbit, or repel',
-    category: 'experimental',
+  "dual-orbium": {
+    name: "Dual Orbium",
+    description: "Two interacting 3D organisms - may merge, orbit, or repel",
+    category: "experimental",
     params: {
       kernelRadius: 10,
       growthCenter: 0.13,
@@ -296,10 +310,10 @@ export const ORGANISM_3D_PRESETS: Record<string, Organism3DPreset> = {
     generateState: (config) => generateDualSpheres(config, config.width / 3),
   },
 
-  'torus-3d': {
-    name: '3D Torus',
-    description: 'A donut-shaped organism - may rotate or pulse',
-    category: 'experimental',
+  "torus-3d": {
+    name: "3D Torus",
+    description: "A donut-shaped organism - may rotate or pulse",
+    category: "experimental",
     params: {
       kernelRadius: 8,
       growthCenter: 0.16,
@@ -315,10 +329,10 @@ export const ORGANISM_3D_PRESETS: Record<string, Organism3DPreset> = {
     generateState: (config) => generateTorus(config),
   },
 
-  'dual-ring-blob': {
-    name: 'Dual-Ring Blob',
-    description: 'A blob with dual-ring kernel for complex internal dynamics',
-    category: 'experimental',
+  "dual-ring-blob": {
+    name: "Dual-Ring Blob",
+    description: "A blob with dual-ring kernel for complex internal dynamics",
+    category: "experimental",
     params: {
       kernelRadius: 15,
       growthCenter: 0.13,
@@ -334,10 +348,10 @@ export const ORGANISM_3D_PRESETS: Record<string, Organism3DPreset> = {
     generateState: (config) => generateSphericalBlob(config, { radius: 15 }),
   },
 
-  'primordial-soup-3d': {
-    name: '3D Primordial Soup',
-    description: 'Random noise - see what emerges in 3D Lenia',
-    category: 'chaotic',
+  "primordial-soup-3d": {
+    name: "3D Primordial Soup",
+    description: "Random noise - see what emerges in 3D Lenia",
+    category: "chaotic",
     params: {
       kernelRadius: 8,
       growthCenter: 0.18,
@@ -353,10 +367,10 @@ export const ORGANISM_3D_PRESETS: Record<string, Organism3DPreset> = {
     generateState: (config) => generateRandomNoise(config, 0.05),
   },
 
-  'small-orbium': {
-    name: 'Small Orbium',
-    description: 'Compact 3D organism for smaller grids',
-    category: 'sphere',
+  "small-orbium": {
+    name: "Small Orbium",
+    description: "Compact 3D organism for smaller grids",
+    category: "sphere",
     params: {
       kernelRadius: 6,
       growthCenter: 0.15,
@@ -390,8 +404,12 @@ export function getPreset(name: string): Organism3DPreset | undefined {
 /**
  * Get presets by category
  */
-export function getPresetsByCategory(category: Organism3DCategory): Organism3DPreset[] {
-  return Object.values(ORGANISM_3D_PRESETS).filter(p => p.category === category);
+export function getPresetsByCategory(
+  category: Organism3DCategory,
+): Organism3DPreset[] {
+  return Object.values(ORGANISM_3D_PRESETS).filter(
+    (p) => p.category === category,
+  );
 }
 
 /**
@@ -399,7 +417,7 @@ export function getPresetsByCategory(category: Organism3DCategory): Organism3DPr
  */
 export function createOrganism3D(
   presetName: string,
-  gridConfig: Grid3DConfig = DEFAULT_GRID_3D_CONFIG
+  gridConfig: Grid3DConfig = DEFAULT_GRID_3D_CONFIG,
 ): Organism3D | undefined {
   const preset = ORGANISM_3D_PRESETS[presetName];
   if (!preset) return undefined;
@@ -423,3 +441,110 @@ export const StateGenerators = {
   torus: generateTorus,
   randomNoise: generateRandomNoise,
 };
+
+// === Reference Organism Integration ===
+import {
+  importReferenceOrganism3D,
+  type Imported3DPattern,
+} from "./organism-importer-3d";
+import {
+  REFERENCE_3D_ORGANISMS,
+  getAllReference3DOrganisms,
+  getReference3DOrganismByCode,
+  getReference3DOrganismsByFamily,
+  FAMILY_3D_DESCRIPTIONS,
+} from "./reference-organisms-3d";
+
+/**
+ * Re-export reference organism utilities
+ */
+export {
+  REFERENCE_3D_ORGANISMS,
+  getAllReference3DOrganisms,
+  getReference3DOrganismByCode,
+  getReference3DOrganismsByFamily,
+  FAMILY_3D_DESCRIPTIONS,
+};
+
+/**
+ * Get all reference organism codes
+ */
+export function getReferenceOrganismCodes(): string[] {
+  return REFERENCE_3D_ORGANISMS.map((o) => o.code);
+}
+
+/**
+ * Get all reference organism names
+ */
+export function getReferenceOrganismNames(): string[] {
+  return REFERENCE_3D_ORGANISMS.map((o) => o.name);
+}
+
+/**
+ * Create an Organism3D from a reference organism by code
+ */
+export function createFromReferenceOrganism(
+  code: string,
+  gridConfig: Grid3DConfig = DEFAULT_GRID_3D_CONFIG,
+): Organism3D | undefined {
+  const refOrganism = getReference3DOrganismByCode(code);
+  if (!refOrganism) return undefined;
+
+  const gridSize = gridConfig.width;
+  const imported = importReferenceOrganism3D(refOrganism, gridSize);
+
+  return {
+    name: imported.name,
+    params: imported.params,
+    kernel: {
+      radius: imported.params.kernelRadius,
+      peakPositions: [0.5],
+      peakWidths: [0.25],
+      peakWeights: [1],
+    },
+    initialState: imported.cells,
+    gridSize: gridConfig,
+  };
+}
+
+/**
+ * Get combined list of all available 3D organisms (presets + reference)
+ */
+export function getAllAvailable3DOrganisms(): Array<{
+  id: string;
+  name: string;
+  source: "preset" | "reference";
+  category?: string;
+}> {
+  const presets = Object.entries(ORGANISM_3D_PRESETS).map(([id, preset]) => ({
+    id,
+    name: preset.name,
+    source: "preset" as const,
+    category: preset.category,
+  }));
+
+  const reference = REFERENCE_3D_ORGANISMS.map((org) => ({
+    id: `ref:${org.code}`,
+    name: org.name,
+    source: "reference" as const,
+    category: org.code.match(/[A-Z][a-z]/)?.[0],
+  }));
+
+  return [...presets, ...reference];
+}
+
+/**
+ * Create organism by ID (supports both preset and reference organisms)
+ * - Preset IDs: "stable-sphere", "orbium-3d", etc.
+ * - Reference IDs: "ref:1Sp1l", "ref:4Gu2s", etc.
+ */
+export function createOrganism3DById(
+  id: string,
+  gridConfig: Grid3DConfig = DEFAULT_GRID_3D_CONFIG,
+): Organism3D | undefined {
+  if (id.startsWith("ref:")) {
+    const code = id.slice(4);
+    return createFromReferenceOrganism(code, gridConfig);
+  }
+  return createOrganism3D(id, gridConfig);
+}

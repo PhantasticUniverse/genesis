@@ -3,30 +3,39 @@
  * Control panel for discrete and continuous CA
  */
 
-import { useState } from 'react';
-import { useSimulationStore, PRESET_RULES, CONTINUOUS_PRESET_NAMES } from '../stores/simulation-store';
-import type { Engine, ColormapName } from '../../core/engine';
-import { COLORMAP_IDS } from '../../core/engine';
-import { useEngineControls } from '../hooks/useEngine';
-import type { CAParadigm } from '../../core/types';
-import { CONTINUOUS_PRESETS } from '../../compute/webgpu/continuous-pipeline';
+import { useState } from "react";
+import {
+  useSimulationStore,
+  PRESET_RULES,
+  CONTINUOUS_PRESET_NAMES,
+} from "../stores/simulation-store";
+import type { Engine, ColormapName } from "../../core/engine";
+import { COLORMAP_IDS } from "../../core/engine";
+import { useEngineControls } from "../hooks/useEngine";
+import type { CAParadigm } from "../../core/types";
+import { CONTINUOUS_PRESETS } from "../../compute/webgpu/continuous-pipeline";
 
-type PatternType = 'random' | 'glider' | 'blinker' | 'center-blob' | 'lenia-seed';
+type PatternType =
+  | "random"
+  | "glider"
+  | "blinker"
+  | "center-blob"
+  | "lenia-seed";
 
 // Human-readable colormap names
 const COLORMAP_NAMES: Record<ColormapName, string> = {
-  grayscale: 'Grayscale',
-  classic: 'Classic Green',
-  viridis: 'Viridis',
-  plasma: 'Plasma',
-  inferno: 'Inferno',
-  fire: 'Fire',
-  ocean: 'Ocean',
-  rainbow: 'Rainbow',
-  neon: 'Neon',
-  turbo: 'Turbo',
-  earth: 'Earth',
-  magma: 'Magma',
+  grayscale: "Grayscale",
+  classic: "Classic Green",
+  viridis: "Viridis",
+  plasma: "Plasma",
+  inferno: "Inferno",
+  fire: "Fire",
+  ocean: "Ocean",
+  rainbow: "Rainbow",
+  neon: "Neon",
+  turbo: "Turbo",
+  earth: "Earth",
+  magma: "Magma",
 };
 
 interface ControlsProps {
@@ -34,9 +43,10 @@ interface ControlsProps {
 }
 
 export function Controls({ engine }: ControlsProps) {
-  const { running, step, fps, paradigm, discreteRule, showStats, setParadigm } = useSimulationStore();
+  const { running, step, fps, paradigm, discreteRule, showStats, setParadigm } =
+    useSimulationStore();
   const { toggle, stepOnce, reset, setRule } = useEngineControls(engine);
-  const [currentPattern, setCurrentPattern] = useState<PatternType>('random');
+  const [currentPattern, setCurrentPattern] = useState<PatternType>("random");
 
   const handleParadigmChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newParadigm = e.target.value as CAParadigm;
@@ -44,14 +54,14 @@ export function Controls({ engine }: ControlsProps) {
     engine?.setParadigm(newParadigm);
 
     // Reset with appropriate pattern
-    if (newParadigm === 'continuous') {
+    if (newParadigm === "continuous") {
       // Apply default Lenia preset parameters
-      engine?.setContinuousPreset('lenia-orbium');
-      setCurrentPattern('lenia-seed');
-      reset('lenia-seed');
+      engine?.setContinuousPreset("lenia-orbium");
+      setCurrentPattern("lenia-seed");
+      reset("lenia-seed");
     } else {
-      setCurrentPattern('random');
-      reset('random');
+      setCurrentPattern("random");
+      reset("random");
     }
   };
 
@@ -62,11 +72,13 @@ export function Controls({ engine }: ControlsProps) {
     }
   };
 
-  const handleContinuousPresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleContinuousPresetChange = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
     const presetName = e.target.value as keyof typeof CONTINUOUS_PRESETS;
     engine?.setContinuousPreset(presetName);
-    setCurrentPattern('lenia-seed');
-    reset('lenia-seed');
+    setCurrentPattern("lenia-seed");
+    reset("lenia-seed");
   };
 
   const handlePatternChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -84,8 +96,15 @@ export function Controls({ engine }: ControlsProps) {
       {/* Stats */}
       {showStats && (
         <div className="flex gap-4 text-sm text-zinc-400">
-          <span>Step: <span className="text-green-400 font-mono">{step.toLocaleString()}</span></span>
-          <span>FPS: <span className="text-green-400 font-mono">{fps}</span></span>
+          <span>
+            Step:{" "}
+            <span className="text-green-400 font-mono">
+              {step.toLocaleString()}
+            </span>
+          </span>
+          <span>
+            FPS: <span className="text-green-400 font-mono">{fps}</span>
+          </span>
         </div>
       )}
 
@@ -95,11 +114,11 @@ export function Controls({ engine }: ControlsProps) {
           onClick={toggle}
           className={`px-4 py-2 rounded font-medium transition-colors ${
             running
-              ? 'bg-red-600 hover:bg-red-700 text-white'
-              : 'bg-green-600 hover:bg-green-700 text-white'
+              ? "bg-red-600 hover:bg-red-700 text-white"
+              : "bg-green-600 hover:bg-green-700 text-white"
           }`}
         >
-          {running ? 'Stop' : 'Start'}
+          {running ? "Stop" : "Start"}
         </button>
 
         <button
@@ -120,7 +139,9 @@ export function Controls({ engine }: ControlsProps) {
 
       {/* Paradigm Selector */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-zinc-500 uppercase tracking-wide">Mode</label>
+        <label className="text-xs text-zinc-500 uppercase tracking-wide">
+          Mode
+        </label>
         <select
           onChange={handleParadigmChange}
           value={paradigm}
@@ -133,9 +154,11 @@ export function Controls({ engine }: ControlsProps) {
 
       {/* Presets - Different based on paradigm */}
       <div className="flex gap-4">
-        {paradigm === 'discrete' ? (
+        {paradigm === "discrete" ? (
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-zinc-500 uppercase tracking-wide">Rule</label>
+            <label className="text-xs text-zinc-500 uppercase tracking-wide">
+              Rule
+            </label>
             <select
               onChange={handlePresetChange}
               defaultValue="game-of-life"
@@ -174,27 +197,33 @@ export function Controls({ engine }: ControlsProps) {
           </div>
         ) : (
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-zinc-500 uppercase tracking-wide">Preset</label>
+            <label className="text-xs text-zinc-500 uppercase tracking-wide">
+              Preset
+            </label>
             <select
               onChange={handleContinuousPresetChange}
               defaultValue="lenia-orbium"
               className="px-3 py-2 rounded bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               {Object.entries(CONTINUOUS_PRESET_NAMES).map(([key, name]) => (
-                <option key={key} value={key}>{name}</option>
+                <option key={key} value={key}>
+                  {name}
+                </option>
               ))}
             </select>
           </div>
         )}
 
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-zinc-500 uppercase tracking-wide">Pattern</label>
+          <label className="text-xs text-zinc-500 uppercase tracking-wide">
+            Pattern
+          </label>
           <select
             onChange={handlePatternChange}
-            defaultValue={paradigm === 'discrete' ? 'random' : 'lenia-seed'}
+            defaultValue={paradigm === "discrete" ? "random" : "lenia-seed"}
             className="px-3 py-2 rounded bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
           >
-            {paradigm === 'discrete' ? (
+            {paradigm === "discrete" ? (
               <>
                 <option value="random">Random</option>
                 <option value="glider">Glider</option>
@@ -214,24 +243,27 @@ export function Controls({ engine }: ControlsProps) {
 
       {/* Colormap Selector */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-zinc-500 uppercase tracking-wide">Colormap</label>
+        <label className="text-xs text-zinc-500 uppercase tracking-wide">
+          Colormap
+        </label>
         <select
           onChange={handleColormapChange}
           defaultValue="viridis"
           className="px-3 py-2 rounded bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           {(Object.keys(COLORMAP_IDS) as ColormapName[]).map((key) => (
-            <option key={key} value={key}>{COLORMAP_NAMES[key]}</option>
+            <option key={key} value={key}>
+              {COLORMAP_NAMES[key]}
+            </option>
           ))}
         </select>
       </div>
 
       {/* Current Rule Display */}
       <div className="text-xs text-zinc-500 font-mono">
-        {paradigm === 'discrete'
-          ? `B${discreteRule.birth.join('')}/S${discreteRule.survival.join('')}`
-          : 'Continuous CA (Lenia/SmoothLife)'
-        }
+        {paradigm === "discrete"
+          ? `B${discreteRule.birth.join("")}/S${discreteRule.survival.join("")}`
+          : "Continuous CA (Lenia/SmoothLife)"}
       </div>
     </div>
   );

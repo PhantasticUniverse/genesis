@@ -11,7 +11,7 @@ struct VertexOutput {
 struct RenderUniforms {
     texture_size: vec2<u32>,
     colormap_id: u32,
-    padding: u32,
+    show_obstacles: u32,  // 1 = show obstacles overlay, 0 = hide
 }
 
 // Full-screen triangle vertices
@@ -31,6 +31,7 @@ fn vs_main(@builtin(vertex_index) vertex_index: u32) -> VertexOutput {
 
 @group(0) @binding(0) var state_texture: texture_2d<f32>;
 @group(0) @binding(1) var<uniform> uniforms: RenderUniforms;
+@group(0) @binding(2) var obstacle_texture: texture_2d<f32>;  // RGBA: G channel = obstacles
 
 // Helper: linear interpolation between colors
 fn lerp_color(a: vec3<f32>, b: vec3<f32>, t: f32) -> vec3<f32> {
@@ -309,12 +310,29 @@ fn apply_colormap(value: f32, colormap_id: u32) -> vec3<f32> {
     }
 }
 
+// Obstacle overlay color (orange-red)
+const OBSTACLE_COLOR: vec3<f32> = vec3<f32>(1.0, 0.3, 0.1);
+
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // Convert UV to texel coordinates and use textureLoad (for unfilterable r32float)
     let texel = vec2<u32>(in.uv * vec2<f32>(uniforms.texture_size));
     let value = textureLoad(state_texture, texel, 0).r;
 
-    let color = apply_colormap(value, uniforms.colormap_id);
+    var color = apply_colormap(value, uniforms.colormap_id);
+
+    // Blend obstacle overlay if enabled
+    if (uniforms.show_obstacles == 1u) {
+        let obstacle_data = textureLoad(obstacle_texture, texel, 0);
+        let obstacle_value = obstacle_data.g;  // Obstacles stored in G channel
+
+        if (obstacle_value > 0.01) {
+            // Blend obstacle color with existing color
+            // Use additive blend for visibility on dark backgrounds
+            let obstacle_alpha = min(obstacle_value * 0.8, 0.9);
+            color = lerp_color(color, OBSTACLE_COLOR, obstacle_alpha);
+        }
+    }
+
     return vec4<f32>(color, 1.0);
 }

@@ -3,10 +3,10 @@
  * React hook for managing the GENESIS engine lifecycle
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { createEngine, type Engine } from '../../core/engine';
-import { useSimulationStore } from '../stores/simulation-store';
-import type { GridConfig, DiscreteRule } from '../../core/types';
+import { useEffect, useRef, useState, useCallback } from "react";
+import { createEngine, type Engine } from "../../core/engine";
+import { useSimulationStore } from "../stores/simulation-store";
+import type { GridConfig, DiscreteRule } from "../../core/types";
 
 interface UseEngineOptions {
   gridConfig?: GridConfig;
@@ -44,7 +44,7 @@ export function useEngine(options: UseEngineOptions = {}): UseEngineResult {
         const engine = await createEngine({
           canvas,
           gridConfig: options.gridConfig,
-          paradigm: 'discrete',
+          paradigm: "discrete",
         });
 
         if (!mounted) {
@@ -112,12 +112,13 @@ export function useEngineControls(engine: Engine | null) {
   const toggle = useCallback(() => engine?.toggle(), [engine]);
   const stepOnce = useCallback(() => engine?.stepOnce(), [engine]);
   const reset = useCallback(
-    (pattern?: 'glider' | 'blinker' | 'random' | 'center-blob') => engine?.reset(pattern),
-    [engine]
+    (pattern?: "glider" | "blinker" | "random" | "center-blob") =>
+      engine?.reset(pattern),
+    [engine],
   );
   const setRule = useCallback(
     (rule: DiscreteRule) => engine?.setRule(rule),
-    [engine]
+    [engine],
   );
 
   return { start, stop, toggle, stepOnce, reset, setRule };

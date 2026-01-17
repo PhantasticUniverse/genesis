@@ -3,36 +3,36 @@
  * Tracks evolutionary lineage of organisms
  */
 
-import type { LeniaGenome } from './genome';
-import type { FitnessMetrics, BehaviorVector } from './fitness';
+import type { LeniaGenome } from "./genome";
+import type { FitnessMetrics, BehaviorVector } from "./fitness";
 
 export interface PhyloNode {
   id: string;
   genome: LeniaGenome;
   generation: number;
   parentId: string | null;
-  parentIds: string[];  // For crossover, both parents
+  parentIds: string[]; // For crossover, both parents
   childIds: string[];
   fitness: number;
   behavior: BehaviorVector | null;
   novelty: number;
-  birthTime: number;    // When this node was created
-  isAlive: boolean;     // Still in current population
-  isArchived: boolean;  // In novelty archive
-  x?: number;           // Layout position
-  y?: number;           // Layout position
+  birthTime: number; // When this node was created
+  isAlive: boolean; // Still in current population
+  isArchived: boolean; // In novelty archive
+  x?: number; // Layout position
+  y?: number; // Layout position
 }
 
 export interface PhyloEdge {
   sourceId: string;
   targetId: string;
-  type: 'mutation' | 'crossover' | 'elite';
+  type: "mutation" | "crossover" | "elite";
 }
 
 export interface PhyloTree {
   nodes: Map<string, PhyloNode>;
   edges: PhyloEdge[];
-  rootIds: string[];       // Generation 0 nodes
+  rootIds: string[]; // Generation 0 nodes
   generations: number;
   maxFitness: number;
   totalNodes: number;
@@ -61,7 +61,7 @@ export function addPhyloNode(
   genome: LeniaGenome,
   generation: number,
   parentIds: string[],
-  edgeType: 'mutation' | 'crossover' | 'elite'
+  edgeType: "mutation" | "crossover" | "elite",
 ): PhyloNode {
   const node: PhyloNode = {
     id,
@@ -117,7 +117,7 @@ export function updatePhyloNode(
   id: string,
   fitness: number,
   behavior: BehaviorVector | null,
-  novelty: number
+  novelty: number,
 ): void {
   const node = tree.nodes.get(id);
   if (node) {
@@ -313,7 +313,8 @@ export function getTreeStats(tree: PhyloTree): {
     maxFitness: tree.maxFitness,
     aliveCount,
     archivedCount,
-    avgBranchingFactor: nodesWithChildren > 0 ? totalChildren / nodesWithChildren : 0,
+    avgBranchingFactor:
+      nodesWithChildren > 0 ? totalChildren / nodesWithChildren : 0,
   };
 }
 

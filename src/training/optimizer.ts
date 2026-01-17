@@ -5,9 +5,9 @@
 
 export interface AdamConfig {
   learningRate: number;
-  beta1: number;      // Momentum decay
-  beta2: number;      // RMSprop decay
-  epsilon: number;    // Numerical stability
+  beta1: number; // Momentum decay
+  beta2: number; // RMSprop decay
+  epsilon: number; // Numerical stability
   weightDecay: number; // L2 regularization
 }
 
@@ -20,9 +20,9 @@ const DEFAULT_CONFIG: AdamConfig = {
 };
 
 export interface AdamState {
-  m: Map<string, Float32Array>;  // First moment (momentum)
-  v: Map<string, Float32Array>;  // Second moment (velocity)
-  t: number;                      // Time step
+  m: Map<string, Float32Array>; // First moment (momentum)
+  v: Map<string, Float32Array>; // Second moment (velocity)
+  t: number; // Time step
 }
 
 export interface ParameterGroup {
@@ -59,7 +59,7 @@ function ensureState(state: AdamState, name: string, size: number): void {
 export function adamStep(
   params: ParameterGroup[],
   state: AdamState,
-  config: Partial<AdamConfig> = {}
+  config: Partial<AdamConfig> = {},
 ): void {
   const cfg = { ...DEFAULT_CONFIG, ...config };
   state.t++;
@@ -87,7 +87,8 @@ export function adamStep(
       const vHat = v[i] / biasCorrection2;
 
       // Update parameters
-      const update = cfg.learningRate * mHat / (Math.sqrt(vHat) + cfg.epsilon);
+      const update =
+        (cfg.learningRate * mHat) / (Math.sqrt(vHat) + cfg.epsilon);
       param.values[i] -= update;
 
       // Weight decay (L2 regularization)
@@ -105,7 +106,7 @@ export function sgdStep(
   params: ParameterGroup[],
   velocity: Map<string, Float32Array>,
   learningRate: number,
-  momentum: number = 0.9
+  momentum: number = 0.9,
 ): void {
   for (const param of params) {
     if (!velocity.has(param.name)) {
@@ -128,7 +129,10 @@ export function sgdStep(
  * Gradient clipping by norm
  * Prevents exploding gradients
  */
-export function clipGradientNorm(gradients: Float32Array, maxNorm: number): void {
+export function clipGradientNorm(
+  gradients: Float32Array,
+  maxNorm: number,
+): void {
   let norm = 0;
   for (let i = 0; i < gradients.length; i++) {
     norm += gradients[i] * gradients[i];
@@ -152,25 +156,41 @@ export function constantLR(baseLR: number): LRScheduler {
   return () => baseLR;
 }
 
-export function stepLR(baseLR: number, stepSize: number, gamma: number = 0.1): LRScheduler {
-  return (step: number) => baseLR * Math.pow(gamma, Math.floor(step / stepSize));
+export function stepLR(
+  baseLR: number,
+  stepSize: number,
+  gamma: number = 0.1,
+): LRScheduler {
+  return (step: number) =>
+    baseLR * Math.pow(gamma, Math.floor(step / stepSize));
 }
 
-export function exponentialLR(baseLR: number, gamma: number = 0.99): LRScheduler {
+export function exponentialLR(
+  baseLR: number,
+  gamma: number = 0.99,
+): LRScheduler {
   return (step: number) => baseLR * Math.pow(gamma, step);
 }
 
-export function cosineLR(baseLR: number, totalSteps: number, minLR: number = 0): LRScheduler {
+export function cosineLR(
+  baseLR: number,
+  totalSteps: number,
+  minLR: number = 0,
+): LRScheduler {
   return (step: number) => {
     const progress = Math.min(step / totalSteps, 1);
     return minLR + 0.5 * (baseLR - minLR) * (1 + Math.cos(Math.PI * progress));
   };
 }
 
-export function warmupLR(baseLR: number, warmupSteps: number, scheduler: LRScheduler): LRScheduler {
+export function warmupLR(
+  baseLR: number,
+  warmupSteps: number,
+  scheduler: LRScheduler,
+): LRScheduler {
   return (step: number) => {
     if (step < warmupSteps) {
-      return baseLR * (step + 1) / warmupSteps;
+      return (baseLR * (step + 1)) / warmupSteps;
     }
     return scheduler(step - warmupSteps);
   };

@@ -2,7 +2,7 @@
  * Tests for Advanced Symmetry Analysis
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 import {
   calculateCenterOfMass,
   createPolarRepresentation,
@@ -13,11 +13,11 @@ import {
   quickSymmetryScore,
   detectSymmetryType,
   DEFAULT_SYMMETRY_CONFIG,
-} from '../../analysis/symmetry';
+} from "../../analysis/symmetry";
 
-describe('Symmetry Analysis', () => {
-  describe('calculateCenterOfMass', () => {
-    it('returns center for empty grid', () => {
+describe("Symmetry Analysis", () => {
+  describe("calculateCenterOfMass", () => {
+    it("returns center for empty grid", () => {
       const state = new Float32Array(100);
       const { x, y, mass } = calculateCenterOfMass(state, 10, 10);
       expect(x).toBe(5);
@@ -25,7 +25,7 @@ describe('Symmetry Analysis', () => {
       expect(mass).toBe(0);
     });
 
-    it('finds center for single pixel', () => {
+    it("finds center for single pixel", () => {
       const state = new Float32Array(100);
       state[35] = 1; // (5, 3)
       const { x, y } = calculateCenterOfMass(state, 10, 10);
@@ -33,7 +33,7 @@ describe('Symmetry Analysis', () => {
       expect(y).toBe(3);
     });
 
-    it('finds weighted center', () => {
+    it("finds weighted center", () => {
       const state = new Float32Array(100);
       state[0] = 1; // (0, 0) weight 1
       state[99] = 1; // (9, 9) weight 1
@@ -42,7 +42,7 @@ describe('Symmetry Analysis', () => {
       expect(y).toBeCloseTo(4.5, 1);
     });
 
-    it('weights by value', () => {
+    it("weights by value", () => {
       const state = new Float32Array(100);
       state[0] = 1; // (0, 0) weight 1
       state[99] = 3; // (9, 9) weight 3
@@ -53,21 +53,23 @@ describe('Symmetry Analysis', () => {
     });
   });
 
-  describe('createPolarRepresentation', () => {
-    it('creates array of correct dimensions', () => {
+  describe("createPolarRepresentation", () => {
+    it("creates array of correct dimensions", () => {
       const state = new Float32Array(100);
       state[55] = 1;
       const polar = createPolarRepresentation(
-        state, 10, 10,
+        state,
+        10,
+        10,
         { x: 5, y: 5 },
-        DEFAULT_SYMMETRY_CONFIG
+        DEFAULT_SYMMETRY_CONFIG,
       );
 
       expect(polar).toHaveLength(DEFAULT_SYMMETRY_CONFIG.radialBins);
       expect(polar[0]).toHaveLength(DEFAULT_SYMMETRY_CONFIG.angularBins);
     });
 
-    it('captures symmetric pattern', () => {
+    it("captures symmetric pattern", () => {
       const width = 20;
       const height = 20;
       const state = new Float32Array(width * height);
@@ -75,20 +77,26 @@ describe('Symmetry Analysis', () => {
 
       // Create 4-fold symmetric cross
       for (let i = -3; i <= 3; i++) {
-        state[(center.y) * width + (center.x + i)] = 1;
+        state[center.y * width + (center.x + i)] = 1;
         state[(center.y + i) * width + center.x] = 1;
       }
 
-      const polar = createPolarRepresentation(state, width, height, center, DEFAULT_SYMMETRY_CONFIG);
+      const polar = createPolarRepresentation(
+        state,
+        width,
+        height,
+        center,
+        DEFAULT_SYMMETRY_CONFIG,
+      );
 
       // Should have non-zero values in polar representation
-      const hasValues = polar.some(ring => ring.some(v => v > 0));
+      const hasValues = polar.some((ring) => ring.some((v) => v > 0));
       expect(hasValues).toBe(true);
     });
   });
 
-  describe('calculateKFoldSymmetry', () => {
-    it('detects no symmetry for random pattern', () => {
+  describe("calculateKFoldSymmetry", () => {
+    it("detects no symmetry for random pattern", () => {
       const angularBins = 360;
       const radialBins = 10;
       const polar: Float32Array[] = [];
@@ -107,7 +115,7 @@ describe('Symmetry Analysis', () => {
       expect(sym1).toBeLessThan(0.5);
     });
 
-    it('detects 4-fold symmetry', () => {
+    it("detects 4-fold symmetry", () => {
       const angularBins = 360;
       const radialBins = 10;
       const polar: Float32Array[] = [];
@@ -127,7 +135,7 @@ describe('Symmetry Analysis', () => {
       expect(sym4).toBeGreaterThan(0.5);
     });
 
-    it('distinguishes different symmetry orders', () => {
+    it("distinguishes different symmetry orders", () => {
       const angularBins = 360;
       const radialBins = 10;
       const polar: Float32Array[] = [];
@@ -149,8 +157,8 @@ describe('Symmetry Analysis', () => {
     });
   });
 
-  describe('calculateReflectionSymmetry', () => {
-    it('detects horizontal symmetry', () => {
+  describe("calculateReflectionSymmetry", () => {
+    it("detects horizontal symmetry", () => {
       const width = 10;
       const height = 10;
       const state = new Float32Array(width * height);
@@ -161,11 +169,17 @@ describe('Symmetry Analysis', () => {
         state[y * width + 5] = 1;
       }
 
-      const horizontalSym = calculateReflectionSymmetry(state, width, height, center, Math.PI / 2);
+      const horizontalSym = calculateReflectionSymmetry(
+        state,
+        width,
+        height,
+        center,
+        Math.PI / 2,
+      );
       expect(horizontalSym).toBeGreaterThan(0.8);
     });
 
-    it('detects vertical symmetry', () => {
+    it("detects vertical symmetry", () => {
       const width = 10;
       const height = 10;
       const state = new Float32Array(width * height);
@@ -176,11 +190,17 @@ describe('Symmetry Analysis', () => {
         state[5 * width + x] = 1;
       }
 
-      const verticalSym = calculateReflectionSymmetry(state, width, height, center, 0);
+      const verticalSym = calculateReflectionSymmetry(
+        state,
+        width,
+        height,
+        center,
+        0,
+      );
       expect(verticalSym).toBeGreaterThan(0.8);
     });
 
-    it('rejects asymmetric pattern', () => {
+    it("rejects asymmetric pattern", () => {
       const width = 10;
       const height = 10;
       const state = new Float32Array(width * height);
@@ -191,13 +211,19 @@ describe('Symmetry Analysis', () => {
       state[1 * width + 2] = 1;
       state[2 * width + 1] = 1;
 
-      const horizontalSym = calculateReflectionSymmetry(state, width, height, center, Math.PI / 2);
+      const horizontalSym = calculateReflectionSymmetry(
+        state,
+        width,
+        height,
+        center,
+        Math.PI / 2,
+      );
       expect(horizontalSym).toBeLessThan(0.5);
     });
   });
 
-  describe('calculateRotationalSymmetry', () => {
-    it('detects 180° rotational symmetry', () => {
+  describe("calculateRotationalSymmetry", () => {
+    it("detects 180° rotational symmetry", () => {
       const width = 10;
       const height = 10;
       const state = new Float32Array(width * height);
@@ -214,7 +240,7 @@ describe('Symmetry Analysis', () => {
       expect(rotSym).toBeGreaterThan(0.7);
     });
 
-    it('rejects non-rotationally symmetric pattern', () => {
+    it("rejects non-rotationally symmetric pattern", () => {
       const width = 10;
       const height = 10;
       const state = new Float32Array(width * height);
@@ -231,15 +257,15 @@ describe('Symmetry Analysis', () => {
     });
   });
 
-  describe('analyzeSymmetry', () => {
-    it('returns complete analysis for symmetric pattern', () => {
+  describe("analyzeSymmetry", () => {
+    it("returns complete analysis for symmetric pattern", () => {
       const width = 20;
       const height = 20;
       const state = new Float32Array(width * height);
 
       // Create symmetric cross
       for (let i = -3; i <= 3; i++) {
-        state[(10) * width + (10 + i)] = 1;
+        state[10 * width + (10 + i)] = 1;
         state[(10 + i) * width + 10] = 1;
       }
 
@@ -253,7 +279,7 @@ describe('Symmetry Analysis', () => {
       expect(result.rotational180).toBeGreaterThan(0);
     });
 
-    it('handles empty pattern', () => {
+    it("handles empty pattern", () => {
       const state = new Float32Array(100);
       const result = analyzeSymmetry(state, 10, 10);
 
@@ -261,7 +287,7 @@ describe('Symmetry Analysis', () => {
       expect(result.strength).toBe(0);
     });
 
-    it('uses custom config', () => {
+    it("uses custom config", () => {
       const state = new Float32Array(100);
       state[55] = 1;
 
@@ -270,21 +296,21 @@ describe('Symmetry Analysis', () => {
     });
   });
 
-  describe('quickSymmetryScore', () => {
-    it('returns 0 for empty pattern', () => {
+  describe("quickSymmetryScore", () => {
+    it("returns 0 for empty pattern", () => {
       const state = new Float32Array(100);
       const score = quickSymmetryScore(state, 10, 10);
       expect(score).toBe(0);
     });
 
-    it('returns high score for symmetric pattern', () => {
+    it("returns high score for symmetric pattern", () => {
       const width = 20;
       const height = 20;
       const state = new Float32Array(width * height);
 
       // Cross pattern (highly symmetric)
       for (let i = -4; i <= 4; i++) {
-        state[(10) * width + (10 + i)] = 1;
+        state[10 * width + (10 + i)] = 1;
         state[(10 + i) * width + 10] = 1;
       }
 
@@ -292,7 +318,7 @@ describe('Symmetry Analysis', () => {
       expect(score).toBeGreaterThan(0.7);
     });
 
-    it('returns low score for asymmetric pattern', () => {
+    it("returns low score for asymmetric pattern", () => {
       const width = 20;
       const height = 20;
       const state = new Float32Array(width * height);
@@ -309,8 +335,8 @@ describe('Symmetry Analysis', () => {
     });
   });
 
-  describe('detectSymmetryType', () => {
-    it('detects bilateral-horizontal', () => {
+  describe("detectSymmetryType", () => {
+    it("detects bilateral-horizontal", () => {
       const result = {
         order: 2,
         strength: 0.5,
@@ -322,10 +348,10 @@ describe('Symmetry Analysis', () => {
       };
 
       const types = detectSymmetryType(result);
-      expect(types).toContain('bilateral-horizontal');
+      expect(types).toContain("bilateral-horizontal");
     });
 
-    it('detects k-fold rotational', () => {
+    it("detects k-fold rotational", () => {
       const result = {
         order: 6,
         strength: 0.8,
@@ -337,10 +363,10 @@ describe('Symmetry Analysis', () => {
       };
 
       const types = detectSymmetryType(result);
-      expect(types).toContain('6-fold-rotational');
+      expect(types).toContain("6-fold-rotational");
     });
 
-    it('detects radial symmetry', () => {
+    it("detects radial symmetry", () => {
       const result = {
         order: 8,
         strength: 0.9,
@@ -352,10 +378,10 @@ describe('Symmetry Analysis', () => {
       };
 
       const types = detectSymmetryType(result);
-      expect(types).toContain('radial');
+      expect(types).toContain("radial");
     });
 
-    it('labels asymmetric patterns', () => {
+    it("labels asymmetric patterns", () => {
       const result = {
         order: 1,
         strength: 0.1,
@@ -367,19 +393,19 @@ describe('Symmetry Analysis', () => {
       };
 
       const types = detectSymmetryType(result);
-      expect(types).toContain('asymmetric');
+      expect(types).toContain("asymmetric");
     });
   });
 
-  describe('DEFAULT_SYMMETRY_CONFIG', () => {
-    it('has valid defaults', () => {
+  describe("DEFAULT_SYMMETRY_CONFIG", () => {
+    it("has valid defaults", () => {
       expect(DEFAULT_SYMMETRY_CONFIG.maxOrder).toBeGreaterThan(0);
       expect(DEFAULT_SYMMETRY_CONFIG.angularBins).toBeGreaterThan(0);
       expect(DEFAULT_SYMMETRY_CONFIG.radialBins).toBeGreaterThan(0);
       expect(DEFAULT_SYMMETRY_CONFIG.massThreshold).toBeGreaterThanOrEqual(0);
     });
 
-    it('angular bins divide evenly into circle', () => {
+    it("angular bins divide evenly into circle", () => {
       // 360 bins = 1 degree resolution
       expect(360 % DEFAULT_SYMMETRY_CONFIG.angularBins).toBe(0);
     });

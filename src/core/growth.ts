@@ -3,12 +3,12 @@
  * Defines how cell state changes based on neighborhood sum
  */
 
-export type GrowthFunction = 'polynomial' | 'gaussian' | 'step' | 'smooth-step';
+export type GrowthFunction = "polynomial" | "gaussian" | "step" | "smooth-step";
 
 export interface GrowthConfig {
   function: GrowthFunction;
-  center: number;      // μ - center of growth function (typically 0.1-0.3)
-  width: number;       // σ - width of growth function (typically 0.01-0.1)
+  center: number; // μ - center of growth function (typically 0.1-0.3)
+  width: number; // σ - width of growth function (typically 0.01-0.1)
   // For step function
   birthLow?: number;
   birthHigh?: number;
@@ -48,7 +48,7 @@ export function stepGrowth(
   birthLow: number,
   birthHigh: number,
   deathLow: number,
-  deathHigh: number
+  deathHigh: number,
 ): number {
   // If alive, use survival range
   if (currentState > 0.5) {
@@ -73,14 +73,17 @@ export function smoothStepGrowth(
   birthLow: number,
   birthHigh: number,
   deathLow: number,
-  deathHigh: number
+  deathHigh: number,
 ): number {
-  const sigmoid = (x: number, c: number, w: number) => 1 / (1 + Math.exp(-(x - c) / w));
+  const sigmoid = (x: number, c: number, w: number) =>
+    1 / (1 + Math.exp(-(x - c) / w));
   const width = 0.02; // Transition width
 
   // Smooth step functions for birth and survival
-  const birthP = sigmoid(n, birthLow, width) * (1 - sigmoid(n, birthHigh, width));
-  const surviveP = sigmoid(n, deathLow, width) * (1 - sigmoid(n, deathHigh, width));
+  const birthP =
+    sigmoid(n, birthLow, width) * (1 - sigmoid(n, birthHigh, width));
+  const surviveP =
+    sigmoid(n, deathLow, width) * (1 - sigmoid(n, deathHigh, width));
 
   // Interpolate based on current state
   const p = currentState * surviveP + (1 - currentState) * birthP;
@@ -104,33 +107,33 @@ export function applyGrowth(state: number, growth: number, dt: number): number {
 export function calculateGrowth(
   n: number,
   currentState: number,
-  config: GrowthConfig
+  config: GrowthConfig,
 ): number {
   switch (config.function) {
-    case 'polynomial':
+    case "polynomial":
       return polynomialGrowth(n, config.center, config.width);
 
-    case 'gaussian':
+    case "gaussian":
       return gaussianGrowth(n, config.center, config.width);
 
-    case 'step':
+    case "step":
       return stepGrowth(
         n,
         currentState,
         config.birthLow ?? 0.15,
         config.birthHigh ?? 0.25,
         config.deathLow ?? 0.12,
-        config.deathHigh ?? 0.42
+        config.deathHigh ?? 0.42,
       );
 
-    case 'smooth-step':
+    case "smooth-step":
       return smoothStepGrowth(
         n,
         currentState,
         config.birthLow ?? 0.15,
         config.birthHigh ?? 0.25,
         config.deathLow ?? 0.12,
-        config.deathHigh ?? 0.42
+        config.deathHigh ?? 0.42,
       );
 
     default:
@@ -141,22 +144,22 @@ export function calculateGrowth(
 // Preset growth configurations
 export const GROWTH_PRESETS = {
   // Lenia default (Orbium organism)
-  'lenia-default': {
-    function: 'polynomial' as GrowthFunction,
+  "lenia-default": {
+    function: "polynomial" as GrowthFunction,
     center: 0.15,
     width: 0.015,
   },
 
   // Lenia alternative
-  'lenia-wide': {
-    function: 'polynomial' as GrowthFunction,
+  "lenia-wide": {
+    function: "polynomial" as GrowthFunction,
     center: 0.2,
     width: 0.03,
   },
 
   // SmoothLife
-  'smoothlife': {
-    function: 'smooth-step' as GrowthFunction,
+  smoothlife: {
+    function: "smooth-step" as GrowthFunction,
     center: 0.15,
     width: 0.015,
     birthLow: 0.257,
@@ -166,8 +169,8 @@ export const GROWTH_PRESETS = {
   },
 
   // Gaussian (smooth, stable)
-  'gaussian-stable': {
-    function: 'gaussian' as GrowthFunction,
+  "gaussian-stable": {
+    function: "gaussian" as GrowthFunction,
     center: 0.15,
     width: 0.017,
   },

@@ -3,10 +3,10 @@
  * Controls for Flow-Lenia mass conservation settings
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import type { Engine } from '../../core/engine';
-import type { ConservationConfig } from '../../core/conservation';
-import { ToggleButton, RangeSlider } from './common';
+import { useState, useEffect, useCallback } from "react";
+import type { Engine } from "../../core/engine";
+import type { ConservationConfig } from "../../core/conservation";
+import { ToggleButton, RangeSlider } from "./common";
 
 interface ConservationPanelProps {
   engine: Engine | null;
@@ -33,7 +33,10 @@ export function ConservationPanel({ engine }: ConservationPanelProps) {
     }
 
     // Initial fetch
-    engine.getMass().then(setMass).catch(() => {});
+    engine
+      .getMass()
+      .then(setMass)
+      .catch(() => {});
 
     const interval = setInterval(async () => {
       try {
@@ -47,13 +50,16 @@ export function ConservationPanel({ engine }: ConservationPanelProps) {
     return () => clearInterval(interval);
   }, [engine, config?.enabled, isExpanded]);
 
-  const updateConfig = useCallback((updates: Partial<ConservationConfig>) => {
-    if (engine && config) {
-      const newConfig = { ...config, ...updates };
-      engine.setConservationConfig(updates);
-      setConfig(newConfig);
-    }
-  }, [engine, config]);
+  const updateConfig = useCallback(
+    (updates: Partial<ConservationConfig>) => {
+      if (engine && config) {
+        const newConfig = { ...config, ...updates };
+        engine.setConservationConfig(updates);
+        setConfig(newConfig);
+      }
+    },
+    [engine, config],
+  );
 
   if (!engine) return null;
 
@@ -64,15 +70,15 @@ export function ConservationPanel({ engine }: ConservationPanelProps) {
         className="w-full flex items-center justify-between text-left"
       >
         <h3 className="font-medium text-cyan-400">Mass Conservation</h3>
-        <span className="text-zinc-500">{isExpanded ? '−' : '+'}</span>
+        <span className="text-zinc-500">{isExpanded ? "−" : "+"}</span>
       </button>
 
       {isExpanded && config && (
         <div className="mt-4 space-y-4">
           {/* Description */}
           <p className="text-xs text-zinc-500">
-            Flow-Lenia style mass conservation. Enables advection dynamics
-            where mass flows toward regions of higher growth potential.
+            Flow-Lenia style mass conservation. Enables advection dynamics where
+            mass flows toward regions of higher growth potential.
           </p>
 
           {/* Enable Toggle */}
@@ -130,9 +136,10 @@ export function ConservationPanel({ engine }: ConservationPanelProps) {
 
           {/* Info */}
           <div className="mt-4 p-3 bg-zinc-800 rounded text-xs text-zinc-500">
-            <strong className="text-zinc-400">Note:</strong> Conservation is most effective
-            with continuous CA (Lenia). The flow field redistributes mass toward regions
-            of higher growth potential, creating more realistic dynamics.
+            <strong className="text-zinc-400">Note:</strong> Conservation is
+            most effective with continuous CA (Lenia). The flow field
+            redistributes mass toward regions of higher growth potential,
+            creating more realistic dynamics.
           </div>
         </div>
       )}

@@ -3,24 +3,38 @@
  * UI for genetic algorithm organism search
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { type GAController, type Individual } from '../../discovery/genetic-algorithm';
-import { genomeToParams, type LeniaGenome } from '../../discovery/genome';
-import { evaluateGenome } from '../../discovery/evaluator';
-import type { Engine } from '../../core/engine';
+import { useState, useCallback, useEffect, useRef } from "react";
+import {
+  type GAController,
+  type Individual,
+} from "../../discovery/genetic-algorithm";
+import { genomeToParams, type LeniaGenome } from "../../discovery/genome";
+import { evaluateGenome } from "../../discovery/evaluator";
+import type { Engine } from "../../core/engine";
 
 interface DiscoveryPanelProps {
   engine: Engine | null;
   gaController: GAController;
-  onSelectOrganism?: (params: ReturnType<typeof genomeToParams>, genome?: LeniaGenome) => void;
+  onSelectOrganism?: (
+    params: ReturnType<typeof genomeToParams>,
+    genome?: LeniaGenome,
+  ) => void;
 }
 
-export function DiscoveryPanel({ engine, gaController: controller, onSelectOrganism }: DiscoveryPanelProps) {
-
+export function DiscoveryPanel({
+  engine,
+  gaController: controller,
+  onSelectOrganism,
+}: DiscoveryPanelProps) {
   const [isSearching, setIsSearching] = useState(false);
-  const [currentIndividual, setCurrentIndividual] = useState<Individual | null>(null);
+  const [currentIndividual, setCurrentIndividual] = useState<Individual | null>(
+    null,
+  );
   const [discovered, setDiscovered] = useState<Individual[]>([]);
-  const [evaluationProgress, setEvaluationProgress] = useState({ current: 0, total: 0 });
+  const [evaluationProgress, setEvaluationProgress] = useState({
+    current: 0,
+    total: 0,
+  });
   const searchAbortRef = useRef(false);
   const isMountedRef = useRef(true);
 
@@ -54,7 +68,9 @@ export function DiscoveryPanel({ engine, gaController: controller, onSelectOrgan
         const currentState = getState();
         setCurrentIndividual(individual);
         setEvaluationProgress({
-          current: currentState.population.filter(i => i.fitness !== null).length + 1,
+          current:
+            currentState.population.filter((i) => i.fitness !== null).length +
+            1,
           total: currentState.population.length,
         });
 
@@ -68,25 +84,28 @@ export function DiscoveryPanel({ engine, gaController: controller, onSelectOrgan
 
           // Report fitness back to GA
           controller.setFitness(individual.id, result.fitness, result.behavior);
-
         } catch (e) {
-          console.error('Evaluation error:', e);
+          console.error("Evaluation error:", e);
           // Skip this individual
-          controller.setFitness(individual.id, {
-            survival: 0,
-            stability: 0,
-            complexity: 0,
-            symmetry: 0,
-            movement: 0,
-            overall: 0,
-          }, {
-            avgMass: 0,
-            massVariance: 0,
-            avgSpeed: 0,
-            avgEntropy: 0,
-            boundingSize: 0,
-            lifespan: 0,
-          });
+          controller.setFitness(
+            individual.id,
+            {
+              survival: 0,
+              stability: 0,
+              complexity: 0,
+              symmetry: 0,
+              movement: 0,
+              overall: 0,
+            },
+            {
+              avgMass: 0,
+              massVariance: 0,
+              avgSpeed: 0,
+              avgEntropy: 0,
+              boundingSize: 0,
+              lifespan: 0,
+            },
+          );
         }
       } else if (controller.isGenerationComplete()) {
         // Evolve to next generation
@@ -97,7 +116,7 @@ export function DiscoveryPanel({ engine, gaController: controller, onSelectOrgan
       }
 
       // Small delay to allow UI updates
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
     }
   }, [engine, controller, getState]);
 
@@ -113,10 +132,13 @@ export function DiscoveryPanel({ engine, gaController: controller, onSelectOrgan
     setCurrentIndividual(null);
   }, []);
 
-  const handleSelectOrganism = useCallback((individual: Individual) => {
-    const params = genomeToParams(individual.genome);
-    onSelectOrganism?.(params, individual.genome);
-  }, [onSelectOrganism]);
+  const handleSelectOrganism = useCallback(
+    (individual: Individual) => {
+      const params = genomeToParams(individual.genome);
+      onSelectOrganism?.(params, individual.genome);
+    },
+    [onSelectOrganism],
+  );
 
   // Update discovered list when generation changes
   useEffect(() => {
@@ -157,16 +179,24 @@ export function DiscoveryPanel({ engine, gaController: controller, onSelectOrgan
       {isSearching && currentIndividual && (
         <div className="p-2 bg-zinc-800 rounded text-xs">
           <div className="flex items-center justify-between">
-            <span className="text-zinc-400">Evaluating: {currentIndividual.id}</span>
-            <span className="text-purple-400">{evaluationProgress.current}/{evaluationProgress.total}</span>
+            <span className="text-zinc-400">
+              Evaluating: {currentIndividual.id}
+            </span>
+            <span className="text-purple-400">
+              {evaluationProgress.current}/{evaluationProgress.total}
+            </span>
           </div>
           <div className="text-zinc-500 font-mono mt-1">
-            R={currentIndividual.genome.R} μ={currentIndividual.genome.m.toFixed(3)} σ={currentIndividual.genome.s.toFixed(3)}
+            R={currentIndividual.genome.R} μ=
+            {currentIndividual.genome.m.toFixed(3)} σ=
+            {currentIndividual.genome.s.toFixed(3)}
           </div>
           <div className="mt-2 h-1 bg-zinc-700 rounded overflow-hidden">
             <div
               className="h-full bg-purple-500 transition-all duration-300"
-              style={{ width: `${(evaluationProgress.current / evaluationProgress.total) * 100}%` }}
+              style={{
+                width: `${(evaluationProgress.current / evaluationProgress.total) * 100}%`,
+              }}
             />
           </div>
         </div>
@@ -176,7 +206,9 @@ export function DiscoveryPanel({ engine, gaController: controller, onSelectOrgan
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="p-2 bg-zinc-800 rounded">
           <div className="text-zinc-500">Population</div>
-          <div className="text-zinc-300 font-mono">{state.population.length}</div>
+          <div className="text-zinc-300 font-mono">
+            {state.population.length}
+          </div>
         </div>
         <div className="p-2 bg-zinc-800 rounded">
           <div className="text-zinc-500">Archive</div>
@@ -188,7 +220,9 @@ export function DiscoveryPanel({ engine, gaController: controller, onSelectOrgan
       {state.bestIndividual && (
         <div className="p-2 bg-green-900/30 border border-green-800 rounded">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-green-400 font-medium">Best Found</span>
+            <span className="text-xs text-green-400 font-medium">
+              Best Found
+            </span>
             <button
               onClick={() => handleSelectOrganism(state.bestIndividual!)}
               className="text-xs px-2 py-0.5 bg-green-600 hover:bg-green-700 rounded text-white"
@@ -226,7 +260,8 @@ export function DiscoveryPanel({ engine, gaController: controller, onSelectOrgan
 
       {/* Help text */}
       <div className="text-xs text-zinc-600">
-        Uses genetic algorithm with novelty search to discover stable Lenia organisms.
+        Uses genetic algorithm with novelty search to discover stable Lenia
+        organisms.
       </div>
     </div>
   );

@@ -8,16 +8,16 @@
  * - Flow-based advection for mass redistribution
  */
 
-import { createShaderModule } from '../compute/webgpu/context';
-import massReductionShader from '../compute/webgpu/shaders/mass-reduction.wgsl?raw';
-import flowLeniaShader from '../compute/webgpu/shaders/flow-lenia.wgsl?raw';
+import { createShaderModule } from "../compute/webgpu/context";
+import massReductionShader from "../compute/webgpu/shaders/mass-reduction.wgsl?raw";
+import flowLeniaShader from "../compute/webgpu/shaders/flow-lenia.wgsl?raw";
 
 export interface ConservationConfig {
   enabled: boolean;
-  targetMass?: number;        // If set, normalize to this mass
-  flowStrength: number;       // How much growth affects flow (0-1)
-  diffusion: number;          // Diffusion coefficient (0-0.1)
-  useReintegration: boolean;  // Use reintegration tracking (more stable)
+  targetMass?: number; // If set, normalize to this mass
+  flowStrength: number; // How much growth affects flow (0-1)
+  diffusion: number; // Diffusion coefficient (0-0.1)
+  useReintegration: boolean; // Use reintegration tracking (more stable)
 }
 
 export const DEFAULT_CONSERVATION_CONFIG: ConservationConfig = {
@@ -31,7 +31,7 @@ export interface ConservationPipeline {
   // Compute total mass in the grid
   computeMass(
     commandEncoder: GPUCommandEncoder,
-    stateTexture: GPUTexture
+    stateTexture: GPUTexture,
   ): void;
 
   // Get the last computed mass (must call computeMass first)
@@ -49,7 +49,7 @@ export interface ConservationPipeline {
     device: GPUDevice,
     stateTexture: GPUTexture,
     outputTexture: GPUTexture,
-    driftThreshold?: number  // Default 1% (0.01)
+    driftThreshold?: number, // Default 1% (0.01)
   ): Promise<{ mass: number; normalized: boolean }>;
 
   // Set target mass (captured from first computation if not set)
@@ -64,7 +64,7 @@ export interface ConservationPipeline {
     inputTexture: GPUTexture,
     outputTexture: GPUTexture,
     targetMass: number,
-    currentMass: number
+    currentMass: number,
   ): void;
 
   // Run flow-based update (alternative to standard growth)
@@ -73,7 +73,7 @@ export interface ConservationPipeline {
     stateTexture: GPUTexture,
     neighborSumTexture: GPUTexture,
     outputTexture: GPUTexture,
-    params: FlowUpdateParams
+    params: FlowUpdateParams,
   ): void;
 
   // Update configuration
@@ -102,13 +102,21 @@ export function createConservationPipeline(
   device: GPUDevice,
   width: number,
   height: number,
-  initialConfig: ConservationConfig = DEFAULT_CONSERVATION_CONFIG
+  initialConfig: ConservationConfig = DEFAULT_CONSERVATION_CONFIG,
 ): ConservationPipeline {
   let config = { ...initialConfig };
 
   // Create shader modules
-  const massReductionModule = createShaderModule(device, massReductionShader, 'mass-reduction');
-  const flowLeniaModule = createShaderModule(device, flowLeniaShader, 'flow-lenia');
+  const massReductionModule = createShaderModule(
+    device,
+    massReductionShader,
+    "mass-reduction",
+  );
+  const flowLeniaModule = createShaderModule(
+    device,
+    flowLeniaShader,
+    "flow-lenia",
+  );
 
   // Calculate workgroup dimensions
   const workgroupsX = Math.ceil(width / 16);
@@ -117,13 +125,13 @@ export function createConservationPipeline(
 
   // Create buffers for mass reduction
   const partialSumsBuffer = device.createBuffer({
-    label: 'partial-sums',
+    label: "partial-sums",
     size: numWorkgroups * 4, // f32 per workgroup
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
   });
 
   const totalMassBuffer = device.createBuffer({
-    label: 'total-mass',
+    label: "total-mass",
     size: 4, // Single f32
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
   });
@@ -131,12 +139,12 @@ export function createConservationPipeline(
   // Double-buffered readback for non-blocking mass retrieval
   const massReadbackBuffers = [
     device.createBuffer({
-      label: 'mass-readback-0',
+      label: "mass-readback-0",
       size: 4,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     }),
     device.createBuffer({
-      label: 'mass-readback-1',
+      label: "mass-readback-1",
       size: 4,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     }),
@@ -146,19 +154,19 @@ export function createConservationPipeline(
 
   // Uniform buffers
   const reductionUniformBuffer = device.createBuffer({
-    label: 'reduction-uniform',
+    label: "reduction-uniform",
     size: 16, // width, height, num_workgroups, padding
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
   const normalizeUniformBuffer = device.createBuffer({
-    label: 'normalize-uniform',
+    label: "normalize-uniform",
     size: 16, // width, height, target_mass, current_mass
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
   const flowUniformBuffer = device.createBuffer({
-    label: 'flow-uniform',
+    label: "flow-uniform",
     size: 32, // 8 x f32
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
@@ -169,66 +177,131 @@ export function createConservationPipeline(
 
   // Create bind group layouts
   const reduceFirstPassLayout = device.createBindGroupLayout({
-    label: 'reduce-first-pass-layout',
+    label: "reduce-first-pass-layout",
     entries: [
-      { binding: 0, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
-      { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "storage" },
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "uniform" },
+      },
     ],
   });
 
   const reduceSecondPassLayout = device.createBindGroupLayout({
-    label: 'reduce-second-pass-layout',
+    label: "reduce-second-pass-layout",
     entries: [
-      { binding: 0, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
-      { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
-      { binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "storage" },
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "uniform" },
+      },
+      {
+        binding: 3,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "storage" },
+      },
     ],
   });
 
   const normalizeLayout = device.createBindGroupLayout({
-    label: 'normalize-layout',
+    label: "normalize-layout",
     entries: [
-      { binding: 0, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 1, visibility: GPUShaderStage.COMPUTE, storageTexture: { access: 'write-only', format: 'r32float' } },
-      { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        storageTexture: { access: "write-only", format: "r32float" },
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "uniform" },
+      },
     ],
   });
 
   const flowLayout = device.createBindGroupLayout({
-    label: 'flow-layout',
+    label: "flow-layout",
     entries: [
-      { binding: 0, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 1, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 2, visibility: GPUShaderStage.COMPUTE, storageTexture: { access: 'write-only', format: 'r32float' } },
-      { binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        storageTexture: { access: "write-only", format: "r32float" },
+      },
+      {
+        binding: 3,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "uniform" },
+      },
     ],
   });
 
   // Create pipelines
   const reduceFirstPassPipeline = device.createComputePipeline({
-    label: 'reduce-first-pass-pipeline',
-    layout: device.createPipelineLayout({ bindGroupLayouts: [reduceFirstPassLayout] }),
-    compute: { module: massReductionModule, entryPoint: 'reduce_first_pass' },
+    label: "reduce-first-pass-pipeline",
+    layout: device.createPipelineLayout({
+      bindGroupLayouts: [reduceFirstPassLayout],
+    }),
+    compute: { module: massReductionModule, entryPoint: "reduce_first_pass" },
   });
 
   const reduceSecondPassPipeline = device.createComputePipeline({
-    label: 'reduce-second-pass-pipeline',
-    layout: device.createPipelineLayout({ bindGroupLayouts: [reduceSecondPassLayout] }),
-    compute: { module: massReductionModule, entryPoint: 'reduce_second_pass' },
+    label: "reduce-second-pass-pipeline",
+    layout: device.createPipelineLayout({
+      bindGroupLayouts: [reduceSecondPassLayout],
+    }),
+    compute: { module: massReductionModule, entryPoint: "reduce_second_pass" },
   });
 
   const normalizePipeline = device.createComputePipeline({
-    label: 'normalize-pipeline',
-    layout: device.createPipelineLayout({ bindGroupLayouts: [normalizeLayout] }),
-    compute: { module: massReductionModule, entryPoint: 'normalize_mass' },
+    label: "normalize-pipeline",
+    layout: device.createPipelineLayout({
+      bindGroupLayouts: [normalizeLayout],
+    }),
+    compute: { module: massReductionModule, entryPoint: "normalize_mass" },
   });
 
   const flowPipeline = device.createComputePipeline({
-    label: 'flow-pipeline',
+    label: "flow-pipeline",
     layout: device.createPipelineLayout({ bindGroupLayouts: [flowLayout] }),
-    compute: { module: flowLeniaModule, entryPoint: config.useReintegration ? 'flow_reintegration' : 'main' },
+    compute: {
+      module: flowLeniaModule,
+      entryPoint: config.useReintegration ? "flow_reintegration" : "main",
+    },
   });
 
   // Track last computed mass
@@ -237,10 +310,7 @@ export function createConservationPipeline(
   let targetMass: number | null = initialConfig.targetMass ?? null;
 
   return {
-    computeMass(
-      commandEncoder: GPUCommandEncoder,
-      stateTexture: GPUTexture
-    ) {
+    computeMass(commandEncoder: GPUCommandEncoder, stateTexture: GPUTexture) {
       // First pass: reduce grid to partial sums
       const firstPassBindGroup = device.createBindGroup({
         layout: reduceFirstPassLayout,
@@ -278,7 +348,13 @@ export function createConservationPipeline(
 
       // Copy result to readback buffer (using double buffering)
       const readbackBuffer = massReadbackBuffers[currentReadbackIndex];
-      commandEncoder.copyBufferToBuffer(totalMassBuffer, 0, readbackBuffer, 0, 4);
+      commandEncoder.copyBufferToBuffer(
+        totalMassBuffer,
+        0,
+        readbackBuffer,
+        0,
+        4,
+      );
       pendingReadbackIndex = currentReadbackIndex;
       currentReadbackIndex = (currentReadbackIndex + 1) % 2;
       massComputationPending = true;
@@ -340,7 +416,7 @@ export function createConservationPipeline(
       device: GPUDevice,
       stateTexture: GPUTexture,
       outputTexture: GPUTexture,
-      driftThreshold: number = 0.01
+      driftThreshold: number = 0.01,
     ): Promise<{ mass: number; normalized: boolean }> {
       // Create command encoder and compute mass
       const encoder1 = device.createCommandEncoder();
@@ -361,7 +437,13 @@ export function createConservationPipeline(
       if (drift > driftThreshold && config.enabled) {
         // Normalize mass
         const encoder2 = device.createCommandEncoder();
-        this.normalizeMass(encoder2, stateTexture, outputTexture, targetMass, mass);
+        this.normalizeMass(
+          encoder2,
+          stateTexture,
+          outputTexture,
+          targetMass,
+          mass,
+        );
         device.queue.submit([encoder2.finish()]);
         await device.queue.onSubmittedWorkDone();
         return { mass, normalized: true };
@@ -383,7 +465,7 @@ export function createConservationPipeline(
       inputTexture: GPUTexture,
       outputTexture: GPUTexture,
       targetMass: number,
-      currentMass: number
+      currentMass: number,
     ) {
       // Update uniform buffer
       const uniformData = new ArrayBuffer(16);
@@ -416,7 +498,7 @@ export function createConservationPipeline(
       stateTexture: GPUTexture,
       neighborSumTexture: GPUTexture,
       outputTexture: GPUTexture,
-      params: FlowUpdateParams
+      params: FlowUpdateParams,
     ) {
       // Update uniform buffer
       const uniformData = new ArrayBuffer(32);

@@ -4,21 +4,21 @@
  */
 
 export interface FitnessMetrics {
-  survival: number;      // How long the organism lives (0-1)
-  stability: number;     // Mass variance over time (0-1, higher = more stable)
-  complexity: number;    // Spatial entropy (0-1)
-  symmetry: number;      // Rotational/reflective symmetry (0-1)
-  movement: number;      // Speed and consistency (0-1)
-  replication: number;   // Self-replication success (0-1)
-  overall: number;       // Weighted combination
+  survival: number; // How long the organism lives (0-1)
+  stability: number; // Mass variance over time (0-1, higher = more stable)
+  complexity: number; // Spatial entropy (0-1)
+  symmetry: number; // Rotational/reflective symmetry (0-1)
+  movement: number; // Speed and consistency (0-1)
+  replication: number; // Self-replication success (0-1)
+  overall: number; // Weighted combination
 }
 
 export interface OrganismSnapshot {
-  mass: number;         // Total mass (sum of all cell values)
-  centroidX: number;    // Center of mass X
-  centroidY: number;    // Center of mass Y
+  mass: number; // Total mass (sum of all cell values)
+  centroidX: number; // Center of mass X
+  centroidY: number; // Center of mass Y
   boundingSize: number; // Size of bounding box
-  entropy: number;      // Spatial entropy
+  entropy: number; // Spatial entropy
 }
 
 /**
@@ -38,9 +38,11 @@ export function calculateMass(state: Float32Array): number {
 export function calculateCentroid(
   state: Float32Array,
   width: number,
-  height: number
+  height: number,
 ): { x: number; y: number } {
-  let sumX = 0, sumY = 0, total = 0;
+  let sumX = 0,
+    sumY = 0,
+    total = 0;
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -58,7 +60,10 @@ export function calculateCentroid(
 /**
  * Calculate spatial entropy (measure of complexity)
  */
-export function calculateEntropy(state: Float32Array, bins: number = 10): number {
+export function calculateEntropy(
+  state: Float32Array,
+  bins: number = 10,
+): number {
   // Histogram of cell values
   const histogram = new Array(bins).fill(0);
   const total = state.length;
@@ -93,7 +98,7 @@ export function calculateEntropy(state: Float32Array, bins: number = 10): number
 export function calculateSymmetry(
   state: Float32Array,
   width: number,
-  height: number
+  height: number,
 ): number {
   // First, find the bounding box of the organism
   const bbox = calculateBoundingBox(state, width, height);
@@ -113,7 +118,9 @@ export function calculateSymmetry(
   const orgHeight = bbox.maxY - bbox.minY + 1;
 
   // Calculate center of mass within the organism region
-  let sumX = 0, sumY = 0, totalMass = 0;
+  let sumX = 0,
+    sumY = 0,
+    totalMass = 0;
   for (let y = bbox.minY; y <= bbox.maxY; y++) {
     for (let x = bbox.minX; x <= bbox.maxX; x++) {
       const val = state[y * width + x];
@@ -145,7 +152,8 @@ export function calculateSymmetry(
       }
     }
   }
-  const horizontalSymmetry = horizontalCount > 0 ? 1 - (horizontalError / (horizontalCount * 2)) : 0;
+  const horizontalSymmetry =
+    horizontalCount > 0 ? 1 - horizontalError / (horizontalCount * 2) : 0;
 
   // Calculate vertical symmetry (top-bottom reflection)
   let verticalError = 0;
@@ -164,7 +172,8 @@ export function calculateSymmetry(
       }
     }
   }
-  const verticalSymmetry = verticalCount > 0 ? 1 - (verticalError / (verticalCount * 2)) : 0;
+  const verticalSymmetry =
+    verticalCount > 0 ? 1 - verticalError / (verticalCount * 2) : 0;
 
   // Calculate 180° rotational symmetry (point symmetry)
   let rotationalError = 0;
@@ -176,7 +185,12 @@ export function calculateSymmetry(
       const mirrorX = Math.round(2 * centerX - localX);
       const mirrorY = Math.round(2 * centerY - localY);
 
-      if (mirrorX >= 0 && mirrorX < orgWidth && mirrorY >= 0 && mirrorY < orgHeight) {
+      if (
+        mirrorX >= 0 &&
+        mirrorX < orgWidth &&
+        mirrorY >= 0 &&
+        mirrorY < orgHeight
+      ) {
         const val1 = state[y * width + x];
         const mirrorGlobalX = bbox.minX + mirrorX;
         const mirrorGlobalY = bbox.minY + mirrorY;
@@ -186,7 +200,8 @@ export function calculateSymmetry(
       }
     }
   }
-  const rotationalSymmetry = rotationalCount > 0 ? 1 - (rotationalError / (rotationalCount * 2)) : 0;
+  const rotationalSymmetry =
+    rotationalCount > 0 ? 1 - rotationalError / (rotationalCount * 2) : 0;
 
   // Weighted combination: 30% horizontal + 30% vertical + 40% rotational
   const combinedSymmetry =
@@ -203,9 +218,12 @@ export function calculateSymmetry(
 export function calculateBoundingBox(
   state: Float32Array,
   width: number,
-  height: number
+  height: number,
 ): { minX: number; maxX: number; minY: number; maxY: number; size: number } {
-  let minX = width, maxX = 0, minY = height, maxY = 0;
+  let minX = width,
+    maxX = 0,
+    minY = height,
+    maxY = 0;
   const threshold = 0.01;
 
   for (let y = 0; y < height; y++) {
@@ -229,7 +247,7 @@ export function calculateBoundingBox(
 export function calculateSurvivalFitness(
   massHistory: number[],
   initialMass: number,
-  minSteps: number = 100
+  minSteps: number = 100,
 ): number {
   if (massHistory.length < minSteps) return 0;
 
@@ -257,7 +275,9 @@ export function calculateStabilityFitness(massHistory: number[]): number {
   if (mean === 0) return 0;
 
   // Calculate coefficient of variation (CV)
-  const variance = massHistory.reduce((sum, m) => sum + (m - mean) ** 2, 0) / massHistory.length;
+  const variance =
+    massHistory.reduce((sum, m) => sum + (m - mean) ** 2, 0) /
+    massHistory.length;
   const cv = Math.sqrt(variance) / mean;
 
   // Convert to fitness (lower variance = higher fitness)
@@ -270,7 +290,7 @@ export function calculateStabilityFitness(massHistory: number[]): number {
 export function calculateMovementFitness(
   centroidHistory: Array<{ x: number; y: number }>,
   width: number,
-  height: number
+  height: number,
 ): number {
   if (centroidHistory.length < 20) return 0;
 
@@ -280,18 +300,22 @@ export function calculateMovementFitness(
     const dx = centroidHistory[i].x - centroidHistory[i - 1].x;
     const dy = centroidHistory[i].y - centroidHistory[i - 1].y;
     // Handle toroidal wrapping
-    const wrappedDx = Math.abs(dx) > width / 2 ? (dx > 0 ? dx - width : dx + width) : dx;
-    const wrappedDy = Math.abs(dy) > height / 2 ? (dy > 0 ? dy - height : dy + height) : dy;
+    const wrappedDx =
+      Math.abs(dx) > width / 2 ? (dx > 0 ? dx - width : dx + width) : dx;
+    const wrappedDy =
+      Math.abs(dy) > height / 2 ? (dy > 0 ? dy - height : dy + height) : dy;
     velocities.push(Math.sqrt(wrappedDx ** 2 + wrappedDy ** 2));
   }
 
   // Mean and variance of velocity
   const meanVel = velocities.reduce((a, b) => a + b, 0) / velocities.length;
-  const varVel = velocities.reduce((sum, v) => sum + (v - meanVel) ** 2, 0) / velocities.length;
+  const varVel =
+    velocities.reduce((sum, v) => sum + (v - meanVel) ** 2, 0) /
+    velocities.length;
 
   // Want consistent, moderate movement
   const speedScore = Math.min(1, meanVel / 2); // Reward up to 2 pixels/step
-  const consistencyScore = meanVel > 0.1 ? Math.exp(-varVel / (meanVel ** 2)) : 0;
+  const consistencyScore = meanVel > 0.1 ? Math.exp(-varVel / meanVel ** 2) : 0;
 
   return (speedScore + consistencyScore) / 2;
 }
@@ -299,15 +323,17 @@ export function calculateMovementFitness(
 /**
  * Calculate overall fitness from all metrics
  */
-export function calculateOverallFitness(metrics: Omit<FitnessMetrics, 'overall'>): FitnessMetrics {
+export function calculateOverallFitness(
+  metrics: Omit<FitnessMetrics, "overall">,
+): FitnessMetrics {
   // Weighted combination (weights sum to 1.0)
   const weights = {
     survival: 0.25,
-    stability: 0.20,
+    stability: 0.2,
     complexity: 0.15,
-    symmetry: 0.10,
-    movement: 0.10,
-    replication: 0.20,  // Replication is a significant achievement
+    symmetry: 0.1,
+    movement: 0.1,
+    replication: 0.2, // Replication is a significant achievement
   };
 
   const overall =
@@ -340,13 +366,15 @@ export function calculateBehaviorVector(
   centroidHistory: Array<{ x: number; y: number }>,
   boundingHistory: number[],
   _width: number,
-  _height: number
+  _height: number,
 ): BehaviorVector {
   // Average mass
   const avgMass = massHistory.reduce((a, b) => a + b, 0) / massHistory.length;
 
   // Mass variance
-  const massVariance = massHistory.reduce((sum, m) => sum + (m - avgMass) ** 2, 0) / massHistory.length;
+  const massVariance =
+    massHistory.reduce((sum, m) => sum + (m - avgMass) ** 2, 0) /
+    massHistory.length;
 
   // Average speed
   let totalSpeed = 0;
@@ -358,21 +386,34 @@ export function calculateBehaviorVector(
   const avgSpeed = totalSpeed / (centroidHistory.length - 1);
 
   // Average entropy
-  const avgEntropy = entropyHistory.reduce((a, b) => a + b, 0) / entropyHistory.length;
+  const avgEntropy =
+    entropyHistory.reduce((a, b) => a + b, 0) / entropyHistory.length;
 
   // Average bounding size
-  const boundingSize = boundingHistory.reduce((a, b) => a + b, 0) / boundingHistory.length;
+  const boundingSize =
+    boundingHistory.reduce((a, b) => a + b, 0) / boundingHistory.length;
 
   // Lifespan (normalized)
-  const lifespan = massHistory.filter(m => m > avgMass * 0.1).length / massHistory.length;
+  const lifespan =
+    massHistory.filter((m) => m > avgMass * 0.1).length / massHistory.length;
 
-  return { avgMass, massVariance, avgSpeed, avgEntropy, boundingSize, lifespan };
+  return {
+    avgMass,
+    massVariance,
+    avgSpeed,
+    avgEntropy,
+    boundingSize,
+    lifespan,
+  };
 }
 
 /**
  * Calculate distance between behavior vectors
  */
-export function behaviorDistance(v1: BehaviorVector, v2: BehaviorVector): number {
+export function behaviorDistance(
+  v1: BehaviorVector,
+  v2: BehaviorVector,
+): number {
   const weights = {
     avgMass: 1,
     massVariance: 0.5,
@@ -400,17 +441,17 @@ export function behaviorDistance(v1: BehaviorVector, v2: BehaviorVector): number
 import type {
   BehaviorVector as TrajectoryBehavior,
   GoalFitness,
-} from '../agency/behavior';
+} from "../agency/behavior";
 
 /**
  * Extended fitness metrics including sensorimotor components
  */
 export interface ExtendedFitnessMetrics extends FitnessMetrics {
   // Sensorimotor metrics
-  goalDirected: number;    // How well the creature moves toward goals
+  goalDirected: number; // How well the creature moves toward goals
   obstacleAvoidance: number; // How well it avoids obstacles
-  pathEfficiency: number;  // Direct vs actual path
-  responsiveness: number;  // How quickly it responds to stimuli
+  pathEfficiency: number; // Direct vs actual path
+  responsiveness: number; // How quickly it responds to stimuli
 }
 
 /**
@@ -418,7 +459,7 @@ export interface ExtendedFitnessMetrics extends FitnessMetrics {
  */
 export function trajectoryToFitness(
   trajectoryBehavior: TrajectoryBehavior | null,
-  goalFitness?: GoalFitness
+  goalFitness?: GoalFitness,
 ): Partial<ExtendedFitnessMetrics> {
   if (!trajectoryBehavior) {
     return {};
@@ -431,7 +472,9 @@ export function trajectoryToFitness(
   };
 
   if (goalFitness) {
-    metrics.goalDirected = goalFitness.goalReached ? 1 : Math.exp(-goalFitness.distanceToGoal / 100);
+    metrics.goalDirected = goalFitness.goalReached
+      ? 1
+      : Math.exp(-goalFitness.distanceToGoal / 100);
     metrics.obstacleAvoidance = Math.exp(-goalFitness.obstacleCollisions * 0.1);
     metrics.pathEfficiency = goalFitness.pathEfficiency;
   }
@@ -445,9 +488,12 @@ export function trajectoryToFitness(
 export function calculateSensorimotorFitness(
   baseMetrics: FitnessMetrics,
   trajectoryBehavior: TrajectoryBehavior | null,
-  goalFitness?: GoalFitness
+  goalFitness?: GoalFitness,
 ): ExtendedFitnessMetrics {
-  const trajectoryMetrics = trajectoryToFitness(trajectoryBehavior, goalFitness);
+  const trajectoryMetrics = trajectoryToFitness(
+    trajectoryBehavior,
+    goalFitness,
+  );
 
   // Merge with trajectory metrics taking priority for overlapping fields
   const extended: ExtendedFitnessMetrics = {
@@ -490,7 +536,7 @@ export function calculateSensorimotorFitness(
  * Bridges the agency and discovery systems
  */
 export function trajectoryToBehaviorVector(
-  trajectoryBehavior: TrajectoryBehavior
+  trajectoryBehavior: TrajectoryBehavior,
 ): BehaviorVector {
   return {
     avgMass: trajectoryBehavior.avgMass * 1000, // Scale to match existing system

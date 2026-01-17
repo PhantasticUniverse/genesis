@@ -50,9 +50,11 @@ export const DEFAULT_SYMMETRY_CONFIG: SymmetryConfig = {
 export function calculateCenterOfMass(
   state: Float32Array,
   width: number,
-  height: number
+  height: number,
 ): { x: number; y: number; mass: number } {
-  let sumX = 0, sumY = 0, totalMass = 0;
+  let sumX = 0,
+    sumY = 0,
+    totalMass = 0;
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -83,7 +85,7 @@ function toPolar(
   x: number,
   y: number,
   centerX: number,
-  centerY: number
+  centerY: number,
 ): { r: number; theta: number } {
   const dx = x - centerX;
   const dy = y - centerY;
@@ -102,7 +104,7 @@ export function createPolarRepresentation(
   width: number,
   height: number,
   center: { x: number; y: number },
-  config: SymmetryConfig
+  config: SymmetryConfig,
 ): Float32Array[] {
   const { angularBins, radialBins } = config;
   const maxRadius = Math.min(width, height) / 2;
@@ -125,8 +127,12 @@ export function createPolarRepresentation(
 
       if (r >= maxRadius) continue;
 
-      const rBin = Math.min(radialBins - 1, Math.floor((r / maxRadius) * radialBins));
-      const thetaBin = Math.floor((theta / (2 * Math.PI)) * angularBins) % angularBins;
+      const rBin = Math.min(
+        radialBins - 1,
+        Math.floor((r / maxRadius) * radialBins),
+      );
+      const thetaBin =
+        Math.floor((theta / (2 * Math.PI)) * angularBins) % angularBins;
 
       polar[rBin][thetaBin] += value;
       counts[rBin][thetaBin]++;
@@ -151,7 +157,7 @@ export function createPolarRepresentation(
  */
 export function calculateKFoldSymmetry(
   polar: Float32Array[],
-  k: number
+  k: number,
 ): number {
   let totalPower = 0;
   let kPower = 0;
@@ -161,7 +167,8 @@ export function calculateKFoldSymmetry(
     const n = ring.length;
 
     // Calculate k-th Fourier coefficient
-    let realK = 0, imagK = 0;
+    let realK = 0,
+      imagK = 0;
     let dc = 0; // DC component (average)
 
     for (let t = 0; t < n; t++) {
@@ -198,7 +205,7 @@ export function calculateReflectionSymmetry(
   width: number,
   height: number,
   center: { x: number; y: number },
-  angle: number = 0 // 0 = horizontal, PI/2 = vertical
+  angle: number = 0, // 0 = horizontal, PI/2 = vertical
 ): number {
   let matchSum = 0;
   let totalSum = 0;
@@ -225,7 +232,12 @@ export function calculateReflectionSymmetry(
       const reflectedX = Math.round(rx + center.x);
       const reflectedY = Math.round(ry + center.y);
 
-      if (reflectedX >= 0 && reflectedX < width && reflectedY >= 0 && reflectedY < height) {
+      if (
+        reflectedX >= 0 &&
+        reflectedX < width &&
+        reflectedY >= 0 &&
+        reflectedY < height
+      ) {
         const reflectedValue = state[reflectedY * width + reflectedX];
         matchSum += Math.min(value, reflectedValue);
         totalSum += value;
@@ -246,7 +258,7 @@ export function calculateRotationalSymmetry(
   state: Float32Array,
   width: number,
   height: number,
-  center: { x: number; y: number }
+  center: { x: number; y: number },
 ): number {
   let matchSum = 0;
   let totalSum = 0;
@@ -281,12 +293,16 @@ export function analyzeSymmetry(
   state: Float32Array,
   width: number,
   height: number,
-  config: Partial<SymmetryConfig> = {}
+  config: Partial<SymmetryConfig> = {},
 ): SymmetryResult {
   const fullConfig = { ...DEFAULT_SYMMETRY_CONFIG, ...config };
 
   // Find center of mass
-  const { x: centerX, y: centerY, mass } = calculateCenterOfMass(state, width, height);
+  const {
+    x: centerX,
+    y: centerY,
+    mass,
+  } = calculateCenterOfMass(state, width, height);
   const center = { x: centerX, y: centerY };
 
   // If no significant mass, return default
@@ -303,7 +319,13 @@ export function analyzeSymmetry(
   }
 
   // Create polar representation
-  const polar = createPolarRepresentation(state, width, height, center, fullConfig);
+  const polar = createPolarRepresentation(
+    state,
+    width,
+    height,
+    center,
+    fullConfig,
+  );
 
   // Calculate k-fold symmetry for each order
   const orderStrengths = new Map<number, number>();
@@ -321,9 +343,20 @@ export function analyzeSymmetry(
   }
 
   // Calculate reflection symmetries
-  const horizontal = calculateReflectionSymmetry(state, width, height, center, Math.PI / 2);
+  const horizontal = calculateReflectionSymmetry(
+    state,
+    width,
+    height,
+    center,
+    Math.PI / 2,
+  );
   const vertical = calculateReflectionSymmetry(state, width, height, center, 0);
-  const rotational180 = calculateRotationalSymmetry(state, width, height, center);
+  const rotational180 = calculateRotationalSymmetry(
+    state,
+    width,
+    height,
+    center,
+  );
 
   return {
     order: maxOrder,
@@ -343,16 +376,26 @@ export function analyzeSymmetry(
 export function quickSymmetryScore(
   state: Float32Array,
   width: number,
-  height: number
+  height: number,
 ): number {
-  const { x: centerX, y: centerY, mass } = calculateCenterOfMass(state, width, height);
+  const {
+    x: centerX,
+    y: centerY,
+    mass,
+  } = calculateCenterOfMass(state, width, height);
 
   if (mass < 0.01 * width * height) return 0;
 
   const center = { x: centerX, y: centerY };
 
   // Quick check of 2-fold, 4-fold symmetry and reflections
-  const horizontal = calculateReflectionSymmetry(state, width, height, center, Math.PI / 2);
+  const horizontal = calculateReflectionSymmetry(
+    state,
+    width,
+    height,
+    center,
+    Math.PI / 2,
+  );
   const vertical = calculateReflectionSymmetry(state, width, height, center, 0);
   const rotational = calculateRotationalSymmetry(state, width, height, center);
 
@@ -366,20 +409,20 @@ export function quickSymmetryScore(
 export function detectSymmetryType(result: SymmetryResult): string[] {
   const types: string[] = [];
 
-  if (result.horizontal > 0.8) types.push('bilateral-horizontal');
-  if (result.vertical > 0.8) types.push('bilateral-vertical');
-  if (result.rotational180 > 0.8) types.push('point-symmetric');
+  if (result.horizontal > 0.8) types.push("bilateral-horizontal");
+  if (result.vertical > 0.8) types.push("bilateral-vertical");
+  if (result.rotational180 > 0.8) types.push("point-symmetric");
 
   if (result.order >= 2 && result.strength > 0.6) {
     types.push(`${result.order}-fold-rotational`);
   }
 
   if (result.order >= 4 && result.strength > 0.7) {
-    types.push('radial');
+    types.push("radial");
   }
 
   if (types.length === 0) {
-    types.push('asymmetric');
+    types.push("asymmetric");
   }
 
   return types;

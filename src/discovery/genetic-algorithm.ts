@@ -10,16 +10,13 @@ import {
   crossoverGenomes,
   cloneGenome,
   encodeGenome,
-} from './genome';
+} from "./genome";
 import {
   type FitnessMetrics,
   type BehaviorVector,
   behaviorDistance,
-} from './fitness';
-import {
-  BehaviorKDTree,
-  createBehaviorIndex,
-} from './spatial-index';
+} from "./fitness";
+import { BehaviorKDTree, createBehaviorIndex } from "./spatial-index";
 import {
   type PhyloTree,
   createPhyloTree,
@@ -29,7 +26,7 @@ import {
   markNodeArchived,
   layoutTree,
   getTreeStats,
-} from './phylogeny';
+} from "./phylogeny";
 
 export interface Individual {
   genome: LeniaGenome;
@@ -38,8 +35,8 @@ export interface Individual {
   novelty: number;
   id: string;
   generation: number;
-  parentIds: string[];           // Parent IDs for lineage tracking
-  birthType: 'random' | 'elite' | 'mutation' | 'crossover';
+  parentIds: string[]; // Parent IDs for lineage tracking
+  birthType: "random" | "elite" | "mutation" | "crossover";
 }
 
 /**
@@ -55,7 +52,9 @@ export function isEvaluated(ind: Individual): ind is Individual & {
 /**
  * Type guard for individuals with behavior (for novelty calculation)
  */
-export function hasBehavior(ind: Individual): ind is Individual & { behavior: BehaviorVector } {
+export function hasBehavior(
+  ind: Individual,
+): ind is Individual & { behavior: BehaviorVector } {
   return ind.behavior !== null;
 }
 
@@ -65,17 +64,17 @@ export interface GAConfig {
   mutationRate: number;
   crossoverRate: number;
   tournamentSize: number;
-  noveltyWeight: number;  // Balance between fitness and novelty (0-1)
-  noveltyK: number;       // K nearest neighbors for novelty
+  noveltyWeight: number; // Balance between fitness and novelty (0-1)
+  noveltyK: number; // K nearest neighbors for novelty
 }
 
 export interface GAState {
   population: Individual[];
-  archive: Individual[];  // Novelty archive
+  archive: Individual[]; // Novelty archive
   generation: number;
   bestFitness: number;
   bestIndividual: Individual | null;
-  phyloTree: PhyloTree;   // Evolutionary lineage
+  phyloTree: PhyloTree; // Evolutionary lineage
 }
 
 const DEFAULT_CONFIG: GAConfig = {
@@ -103,7 +102,7 @@ export function createPopulation(size: number): Individual[] {
       id: `gen0-ind${i}`,
       generation: 0,
       parentIds: [],
-      birthType: 'random',
+      birthType: "random",
     });
   }
 
@@ -118,21 +117,21 @@ export function calculateNovelty(
   individual: Individual,
   population: Individual[],
   archive: Individual[],
-  k: number
+  k: number,
 ): number {
   if (!hasBehavior(individual)) return 0;
 
   // Combine population and archive for comparison, filtering to those with behavior
-  const others = [...population, ...archive]
-    .filter((ind): ind is Individual & { behavior: BehaviorVector } =>
-      hasBehavior(ind) && ind.id !== individual.id
-    );
+  const others = [...population, ...archive].filter(
+    (ind): ind is Individual & { behavior: BehaviorVector } =>
+      hasBehavior(ind) && ind.id !== individual.id,
+  );
 
   if (others.length === 0) return 1;
 
   // Calculate distances to all others (types are now narrowed, no assertions needed)
-  const distances = others.map(other =>
-    behaviorDistance(individual.behavior, other.behavior)
+  const distances = others.map((other) =>
+    behaviorDistance(individual.behavior, other.behavior),
   );
 
   // Sort and take k nearest
@@ -150,15 +149,15 @@ export function calculateNovelty(
 export function calculateNoveltyBatch(
   population: Individual[],
   archive: Individual[],
-  k: number
+  k: number,
 ): void {
   // Build KD-tree from all individuals with behavior
   const allIndividuals = [...population, ...archive];
   const kdTree = createBehaviorIndex(
-    allIndividuals.map(ind => ({
+    allIndividuals.map((ind) => ({
       behavior: ind.behavior,
       data: ind,
-    }))
+    })),
   );
 
   // If tree is empty or too small, fall back to simple calculation
@@ -180,7 +179,7 @@ export function calculateNoveltyBatch(
     individual.novelty = kdTree.noveltyScore(
       individual.behavior,
       k,
-      (data) => data.id === individual.id
+      (data) => data.id === individual.id,
     );
   }
 }
@@ -191,7 +190,7 @@ export function calculateNoveltyBatch(
 export function tournamentSelect(
   population: Individual[],
   tournamentSize: number,
-  noveltyWeight: number
+  noveltyWeight: number,
 ): Individual {
   const tournament: Individual[] = [];
 
@@ -219,7 +218,7 @@ function getScore(individual: Individual, noveltyWeight: number): number {
  */
 export function evolvePopulation(
   state: GAState,
-  config: GAConfig = DEFAULT_CONFIG
+  config: GAConfig = DEFAULT_CONFIG,
 ): Individual[] {
   const { population, archive } = state;
   const newPopulation: Individual[] = [];
@@ -229,7 +228,9 @@ export function evolvePopulation(
 
   // Sort by combined score
   const sorted = [...population].sort((a, b) => {
-    return getScore(b, config.noveltyWeight) - getScore(a, config.noveltyWeight);
+    return (
+      getScore(b, config.noveltyWeight) - getScore(a, config.noveltyWeight)
+    );
   });
 
   // Elitism - keep best individuals
@@ -243,28 +244,36 @@ export function evolvePopulation(
       id: `gen${state.generation + 1}-elite${i}`,
       generation: state.generation + 1,
       parentIds: [sorted[i].id],
-      birthType: 'elite',
+      birthType: "elite",
     });
   }
 
   // Fill rest with offspring
   while (newPopulation.length < config.populationSize) {
-    const parent1 = tournamentSelect(population, config.tournamentSize, config.noveltyWeight);
-    const parent2 = tournamentSelect(population, config.tournamentSize, config.noveltyWeight);
+    const parent1 = tournamentSelect(
+      population,
+      config.tournamentSize,
+      config.noveltyWeight,
+    );
+    const parent2 = tournamentSelect(
+      population,
+      config.tournamentSize,
+      config.noveltyWeight,
+    );
 
     let childGenome: LeniaGenome;
     let parentIds: string[];
-    let birthType: 'mutation' | 'crossover';
+    let birthType: "mutation" | "crossover";
 
     // Crossover
     if (Math.random() < config.crossoverRate) {
       childGenome = crossoverGenomes(parent1.genome, parent2.genome);
       parentIds = [parent1.id, parent2.id];
-      birthType = 'crossover';
+      birthType = "crossover";
     } else {
       childGenome = cloneGenome(parent1.genome);
       parentIds = [parent1.id];
-      birthType = 'mutation';
+      birthType = "mutation";
     }
 
     // Mutation
@@ -292,7 +301,7 @@ export function updateArchive(
   archive: Individual[],
   population: Individual[],
   maxArchiveSize: number = 100,
-  noveltyThreshold: number = 0.3
+  noveltyThreshold: number = 0.3,
 ): Individual[] {
   const newArchive = [...archive];
 
@@ -328,7 +337,7 @@ export function createGAController(config: Partial<GAConfig> = {}) {
   // Create initial population and add to tree
   const initialPopulation = createPopulation(fullConfig.populationSize);
   for (const ind of initialPopulation) {
-    addPhyloNode(phyloTree, ind.id, ind.genome, ind.generation, [], 'mutation');
+    addPhyloNode(phyloTree, ind.id, ind.genome, ind.generation, [], "mutation");
   }
 
   let state: GAState = {
@@ -354,15 +363,17 @@ export function createGAController(config: Partial<GAConfig> = {}) {
     },
 
     getNextToEvaluate(): Individual | null {
-      return state.population.find(ind => ind.fitness === null) ?? null;
+      return state.population.find((ind) => ind.fitness === null) ?? null;
     },
 
     setFitness(
       individualId: string,
       fitness: FitnessMetrics,
-      behavior: BehaviorVector
+      behavior: BehaviorVector,
     ): void {
-      const individual = state.population.find(ind => ind.id === individualId);
+      const individual = state.population.find(
+        (ind) => ind.id === individualId,
+      );
       if (individual) {
         individual.fitness = fitness;
         individual.behavior = behavior;
@@ -373,7 +384,7 @@ export function createGAController(config: Partial<GAConfig> = {}) {
           individualId,
           fitness.overall,
           behavior,
-          individual.novelty
+          individual.novelty,
         );
 
         // Update best
@@ -385,14 +396,14 @@ export function createGAController(config: Partial<GAConfig> = {}) {
     },
 
     isGenerationComplete(): boolean {
-      return state.population.every(ind => ind.fitness !== null);
+      return state.population.every((ind) => ind.fitness !== null);
     },
 
     evolve(): void {
       if (!this.isGenerationComplete()) return;
 
       // Update archive and mark archived nodes in tree
-      const oldArchiveIds = new Set(state.archive.map(a => a.id));
+      const oldArchiveIds = new Set(state.archive.map((a) => a.id));
       state.archive = updateArchive(state.archive, state.population);
 
       // Mark newly archived nodes
@@ -419,8 +430,11 @@ export function createGAController(config: Partial<GAConfig> = {}) {
             ind.genome,
             ind.generation,
             ind.parentIds,
-            ind.birthType === 'elite' ? 'elite' :
-            ind.birthType === 'crossover' ? 'crossover' : 'mutation'
+            ind.birthType === "elite"
+              ? "elite"
+              : ind.birthType === "crossover"
+                ? "crossover"
+                : "mutation",
           );
         }
       }
@@ -439,7 +453,14 @@ export function createGAController(config: Partial<GAConfig> = {}) {
       // Create initial population and add to tree
       const newPopulation = createPopulation(fullConfig.populationSize);
       for (const ind of newPopulation) {
-        addPhyloNode(newPhyloTree, ind.id, ind.genome, ind.generation, [], 'mutation');
+        addPhyloNode(
+          newPhyloTree,
+          ind.id,
+          ind.genome,
+          ind.generation,
+          [],
+          "mutation",
+        );
       }
 
       state = {

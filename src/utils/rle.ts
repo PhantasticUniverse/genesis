@@ -7,7 +7,7 @@
  * - code_rle: Parameter encoding (R,T,m,s,b)
  */
 
-import type { LeniaGenome } from '../discovery/genome';
+import type { LeniaGenome } from "../discovery/genome";
 
 export interface LeniaPattern {
   // Pattern data
@@ -27,7 +27,8 @@ export interface LeniaPattern {
 /**
  * Standard Golly RLE format characters
  */
-const RLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+const RLE_CHARS =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /**
  * Encode a floating-point value (0-1) to base64-like character
@@ -51,7 +52,11 @@ function decodeValue(char: string): number {
  * Encode cells using RLE
  * Groups consecutive cells with same value
  */
-export function encodeCellsRLE(cells: Float32Array, width: number, height: number): string {
+export function encodeCellsRLE(
+  cells: Float32Array,
+  width: number,
+  height: number,
+): string {
   const result: string[] = [];
   let runLength = 0;
   let lastValue = -1;
@@ -69,7 +74,7 @@ export function encodeCellsRLE(cells: Float32Array, width: number, height: numbe
             result.push(runLength.toString());
           }
           if (lastValue === 0) {
-            result.push('b'); // dead/background
+            result.push("b"); // dead/background
           } else {
             result.push(RLE_CHARS[lastValue]);
           }
@@ -89,22 +94,26 @@ export function encodeCellsRLE(cells: Float32Array, width: number, height: numbe
 
     // Row terminator (except last row)
     if (y < height - 1) {
-      result.push('$');
+      result.push("$");
     }
     runLength = 0;
     lastValue = -1;
   }
 
   // Pattern terminator
-  result.push('!');
+  result.push("!");
 
-  return result.join('');
+  return result.join("");
 }
 
 /**
  * Decode RLE to cells
  */
-export function decodeCellsRLE(rle: string, width: number, height: number): Float32Array {
+export function decodeCellsRLE(
+  rle: string,
+  width: number,
+  height: number,
+): Float32Array {
   const cells = new Float32Array(width * height);
   let x = 0;
   let y = 0;
@@ -113,11 +122,11 @@ export function decodeCellsRLE(rle: string, width: number, height: number): Floa
   for (let i = 0; i < rle.length; i++) {
     const char = rle[i];
 
-    if (char === '!') {
+    if (char === "!") {
       break; // End of pattern
     }
 
-    if (char === '$') {
+    if (char === "$") {
       // End of row
       y++;
       x = 0;
@@ -125,7 +134,7 @@ export function decodeCellsRLE(rle: string, width: number, height: number): Floa
       continue;
     }
 
-    if (char >= '0' && char <= '9') {
+    if (char >= "0" && char <= "9") {
       // Run length
       runLength = runLength * 10 + parseInt(char, 10);
       continue;
@@ -136,9 +145,9 @@ export function decodeCellsRLE(rle: string, width: number, height: number): Floa
     runLength = 0;
 
     let value = 0;
-    if (char === 'b' || char === '.') {
+    if (char === "b" || char === ".") {
       value = 0; // dead
-    } else if (char === 'o') {
+    } else if (char === "o") {
       value = 1; // alive (binary)
     } else {
       value = decodeValue(char);
@@ -164,22 +173,22 @@ export function encodeParams(genome: LeniaGenome): string {
     genome.T.toString(),
     genome.m.toFixed(3),
     genome.s.toFixed(3),
-    genome.b.map(v => v.toFixed(2)).join(','),
+    genome.b.map((v) => v.toFixed(2)).join(","),
   ];
-  return parts.join(';');
+  return parts.join(";");
 }
 
 /**
  * Decode Lenia parameters from string
  */
 export function decodeParams(paramStr: string): LeniaGenome {
-  const parts = paramStr.split(';');
+  const parts = paramStr.split(";");
   return {
     R: parseInt(parts[0], 10) || 13,
     T: parseInt(parts[1], 10) || 10,
     m: parseFloat(parts[2]) || 0.15,
     s: parseFloat(parts[3]) || 0.015,
-    b: parts[4]?.split(',').map(v => parseFloat(v) || 1) || [1],
+    b: parts[4]?.split(",").map((v) => parseFloat(v) || 1) || [1],
     kn: 1,
     gn: 1,
   };
@@ -201,14 +210,14 @@ export function encodeLeniaPattern(pattern: LeniaPattern): string {
  * Decode full Lenia pattern
  */
 export function decodeLeniaPattern(encoded: string): LeniaPattern {
-  const parts = encoded.split('#');
+  const parts = encoded.split("#");
 
   if (parts.length < 3) {
-    throw new Error('Invalid Lenia pattern format');
+    throw new Error("Invalid Lenia pattern format");
   }
 
   const [sizeStr, cellsRLE, paramsStr] = parts;
-  const [width, height] = sizeStr.split(',').map(v => parseInt(v, 10));
+  const [width, height] = sizeStr.split(",").map((v) => parseInt(v, 10));
 
   const cells = decodeCellsRLE(cellsRLE, width, height);
   const genome = decodeParams(paramsStr);
@@ -241,25 +250,29 @@ export function urlParamToPattern(param: string): LeniaPattern {
  * Export pattern as JSON (Lenia-compatible format)
  */
 export function exportToJSON(pattern: LeniaPattern): string {
-  return JSON.stringify({
-    name: pattern.name || 'Unnamed',
-    description: pattern.description || '',
-    author: pattern.author || 'GENESIS',
-    params: {
-      R: pattern.genome.R,
-      T: pattern.genome.T,
-      m: pattern.genome.m,
-      s: pattern.genome.s,
-      b: pattern.genome.b,
-      kn: pattern.genome.kn,
-      gn: pattern.genome.gn,
+  return JSON.stringify(
+    {
+      name: pattern.name || "Unnamed",
+      description: pattern.description || "",
+      author: pattern.author || "GENESIS",
+      params: {
+        R: pattern.genome.R,
+        T: pattern.genome.T,
+        m: pattern.genome.m,
+        s: pattern.genome.s,
+        b: pattern.genome.b,
+        kn: pattern.genome.kn,
+        gn: pattern.genome.gn,
+      },
+      cells: {
+        width: pattern.width,
+        height: pattern.height,
+        rle: encodeCellsRLE(pattern.cells, pattern.width, pattern.height),
+      },
     },
-    cells: {
-      width: pattern.width,
-      height: pattern.height,
-      rle: encodeCellsRLE(pattern.cells, pattern.width, pattern.height),
-    },
-  }, null, 2);
+    null,
+    2,
+  );
 }
 
 /**
@@ -321,9 +334,14 @@ export function compressPattern(cells: Float32Array): string {
 /**
  * Decompress pattern
  */
-export function decompressPattern(compressed: string, size: number): Float32Array {
+export function decompressPattern(
+  compressed: string,
+  size: number,
+): Float32Array {
   const deltaBytes = new Uint8Array(
-    atob(compressed).split('').map(c => c.charCodeAt(0))
+    atob(compressed)
+      .split("")
+      .map((c) => c.charCodeAt(0)),
   );
   const deltas = new Int16Array(deltaBytes.buffer);
 

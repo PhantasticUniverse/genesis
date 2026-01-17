@@ -125,9 +125,15 @@ export class SpatialHash<T extends Positioned> {
 
     // Calculate cell range to check
     const minCellX = Math.max(0, Math.floor((x - radius) / this.cellSize));
-    const maxCellX = Math.min(this.numCellsX - 1, Math.floor((x + radius) / this.cellSize));
+    const maxCellX = Math.min(
+      this.numCellsX - 1,
+      Math.floor((x + radius) / this.cellSize),
+    );
     const minCellY = Math.max(0, Math.floor((y - radius) / this.cellSize));
-    const maxCellY = Math.min(this.numCellsY - 1, Math.floor((y + radius) / this.cellSize));
+    const maxCellY = Math.min(
+      this.numCellsY - 1,
+      Math.floor((y + radius) / this.cellSize),
+    );
 
     // Check all cells in range
     for (let cellY = minCellY; cellY <= maxCellY; cellY++) {
@@ -160,9 +166,15 @@ export class SpatialHash<T extends Positioned> {
 
     // Calculate cell range to check
     const minCellX = Math.max(0, Math.floor(minX / this.cellSize));
-    const maxCellX = Math.min(this.numCellsX - 1, Math.floor(maxX / this.cellSize));
+    const maxCellX = Math.min(
+      this.numCellsX - 1,
+      Math.floor(maxX / this.cellSize),
+    );
     const minCellY = Math.max(0, Math.floor(minY / this.cellSize));
-    const maxCellY = Math.min(this.numCellsY - 1, Math.floor(maxY / this.cellSize));
+    const maxCellY = Math.min(
+      this.numCellsY - 1,
+      Math.floor(maxY / this.cellSize),
+    );
 
     // Check all cells in range
     for (let cellY = minCellY; cellY <= maxCellY; cellY++) {
@@ -192,7 +204,8 @@ export class SpatialHash<T extends Positioned> {
    * Find the nearest entity to a point
    */
   findNearest(x: number, y: number, maxDistance?: number): T | null {
-    const searchRadius = maxDistance ?? Math.max(this.worldWidth, this.worldHeight);
+    const searchRadius =
+      maxDistance ?? Math.max(this.worldWidth, this.worldHeight);
     let nearest: T | null = null;
     let minDistSq = searchRadius * searchRadius;
 
@@ -229,19 +242,20 @@ export class SpatialHash<T extends Positioned> {
    * Find k nearest entities to a point
    */
   findKNearest(x: number, y: number, k: number, maxDistance?: number): T[] {
-    const searchRadius = maxDistance ?? Math.max(this.worldWidth, this.worldHeight);
+    const searchRadius =
+      maxDistance ?? Math.max(this.worldWidth, this.worldHeight);
     const candidates = this.queryRadius(x, y, searchRadius);
 
     // Sort by distance
     const sorted = candidates
-      .map(entity => {
+      .map((entity) => {
         const dx = entity.centroidX - x;
         const dy = entity.centroidY - y;
         return { entity, distSq: dx * dx + dy * dy };
       })
       .sort((a, b) => a.distSq - b.distSq);
 
-    return sorted.slice(0, k).map(item => item.entity);
+    return sorted.slice(0, k).map((item) => item.entity);
   }
 
   /**
@@ -264,7 +278,7 @@ export class SpatialHash<T extends Positioned> {
 export function createSpatialHash<T extends Positioned>(
   worldWidth: number,
   worldHeight: number,
-  cellSize: number = 50
+  cellSize: number = 50,
 ): SpatialHash<T> {
   return new SpatialHash({ worldWidth, worldHeight, cellSize });
 }

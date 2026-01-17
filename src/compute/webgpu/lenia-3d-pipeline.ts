@@ -8,11 +8,18 @@ import {
   normalize3DKernel,
   createKernel3DTexture,
   KERNEL_3D_PRESETS,
-} from '../../core/kernels-3d';
-import type { Grid3DConfig, Lenia3DParams, Kernel3DConfig } from '../../core/types-3d';
-import { DEFAULT_LENIA_3D_PARAMS, DEFAULT_KERNEL_3D_CONFIG } from '../../core/types-3d';
-import { createShaderModule } from './context';
-import continuousCA3DShader from './shaders/continuous-ca-3d.wgsl?raw';
+} from "../../core/kernels-3d";
+import type {
+  Grid3DConfig,
+  Lenia3DParams,
+  Kernel3DConfig,
+} from "../../core/types-3d";
+import {
+  DEFAULT_LENIA_3D_PARAMS,
+  DEFAULT_KERNEL_3D_CONFIG,
+} from "../../core/types-3d";
+import { createShaderModule } from "./context";
+import continuousCA3DShader from "./shaders/continuous-ca-3d.wgsl?raw";
 
 export interface Lenia3DPipeline {
   /** Update simulation parameters */
@@ -53,7 +60,7 @@ export function createLenia3DPipeline(
   device: GPUDevice,
   config: Grid3DConfig,
   initialParams: Lenia3DParams = DEFAULT_LENIA_3D_PARAMS,
-  initialKernel: Kernel3DConfig = DEFAULT_KERNEL_3D_CONFIG
+  initialKernel: Kernel3DConfig = DEFAULT_KERNEL_3D_CONFIG,
 ): Lenia3DPipeline {
   const { width, height, depth } = config;
 
@@ -62,15 +69,19 @@ export function createLenia3DPipeline(
   let kernelTexture = createKernel3DTexture(device, kernelData);
 
   // Create shader module
-  const shaderModule = createShaderModule(device, continuousCA3DShader, 'continuous-ca-3d');
+  const shaderModule = createShaderModule(
+    device,
+    continuousCA3DShader,
+    "continuous-ca-3d",
+  );
 
   // Create state textures (ping-pong buffers)
   const createStateTexture = (label: string): GPUTexture => {
     return device.createTexture({
       label,
       size: [width, height, depth],
-      format: 'r32float',
-      dimension: '3d',
+      format: "r32float",
+      dimension: "3d",
       usage:
         GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.STORAGE_BINDING |
@@ -80,62 +91,66 @@ export function createLenia3DPipeline(
   };
 
   const stateTextures: [GPUTexture, GPUTexture] = [
-    createStateTexture('lenia-3d-state-0'),
-    createStateTexture('lenia-3d-state-1'),
+    createStateTexture("lenia-3d-state-0"),
+    createStateTexture("lenia-3d-state-1"),
   ];
 
   let currentBuffer: 0 | 1 = 0;
 
   // Create bind group layout
   const bindGroupLayout = device.createBindGroupLayout({
-    label: 'lenia-3d-bind-group-layout',
+    label: "lenia-3d-bind-group-layout",
     entries: [
       {
         binding: 0,
         visibility: GPUShaderStage.COMPUTE,
-        texture: { sampleType: 'unfilterable-float', viewDimension: '3d' },
+        texture: { sampleType: "unfilterable-float", viewDimension: "3d" },
       },
       {
         binding: 1,
         visibility: GPUShaderStage.COMPUTE,
-        storageTexture: { access: 'write-only', format: 'r32float', viewDimension: '3d' },
+        storageTexture: {
+          access: "write-only",
+          format: "r32float",
+          viewDimension: "3d",
+        },
       },
       {
         binding: 2,
         visibility: GPUShaderStage.COMPUTE,
-        buffer: { type: 'uniform' },
+        buffer: { type: "uniform" },
       },
       {
         binding: 3,
         visibility: GPUShaderStage.COMPUTE,
-        texture: { sampleType: 'unfilterable-float', viewDimension: '3d' },
+        texture: { sampleType: "unfilterable-float", viewDimension: "3d" },
       },
     ],
   });
 
   // Create compute pipeline
   const computePipeline = device.createComputePipeline({
-    label: 'lenia-3d-pipeline',
+    label: "lenia-3d-pipeline",
     layout: device.createPipelineLayout({
       bindGroupLayouts: [bindGroupLayout],
     }),
     compute: {
       module: shaderModule,
-      entryPoint: 'main',
+      entryPoint: "main",
     },
   });
 
   // Create uniform buffer
   // Layout: width, height, depth, kernel_radius, growth_center, growth_width, dt, padding
   const uniformBuffer = device.createBuffer({
-    label: 'lenia-3d-uniform-buffer',
+    label: "lenia-3d-uniform-buffer",
     size: 32, // 8 x 4 bytes
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
   // Create staging buffer for GPU readback
   const stagingBuffer = device.createBuffer({
-    label: 'lenia-3d-staging-buffer',
+    label: "lenia-3d-staging-buffer",
     size: width * height * depth * 4, // Float32
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
   });
@@ -171,10 +186,16 @@ export function createLenia3DPipeline(
       label: `lenia-3d-bind-group-${readIndex}`,
       layout: bindGroupLayout,
       entries: [
-        { binding: 0, resource: stateTextures[readIndex].createView({ dimension: '3d' }) },
-        { binding: 1, resource: stateTextures[writeIndex].createView({ dimension: '3d' }) },
+        {
+          binding: 0,
+          resource: stateTextures[readIndex].createView({ dimension: "3d" }),
+        },
+        {
+          binding: 1,
+          resource: stateTextures[writeIndex].createView({ dimension: "3d" }),
+        },
         { binding: 2, resource: { buffer: uniformBuffer } },
-        { binding: 3, resource: kernelTexture.createView({ dimension: '3d' }) },
+        { binding: 3, resource: kernelTexture.createView({ dimension: "3d" }) },
       ],
     });
   }
@@ -207,7 +228,7 @@ export function createLenia3DPipeline(
     setState(state: Float32Array) {
       if (state.length !== width * height * depth) {
         throw new Error(
-          `State size mismatch: expected ${width * height * depth}, got ${state.length}`
+          `State size mismatch: expected ${width * height * depth}, got ${state.length}`,
         );
       }
 
@@ -219,7 +240,7 @@ export function createLenia3DPipeline(
           bytesPerRow: width * 4,
           rowsPerImage: height,
         },
-        { width, height, depthOrArrayLayers: depth }
+        { width, height, depthOrArrayLayers: depth },
       );
     },
 
@@ -233,7 +254,7 @@ export function createLenia3DPipeline(
           bytesPerRow: width * 4,
           rowsPerImage: height,
         },
-        { width, height, depthOrArrayLayers: depth }
+        { width, height, depthOrArrayLayers: depth },
       );
       device.queue.submit([commandEncoder.finish()]);
 
@@ -294,7 +315,7 @@ export function generateSphericalBlob(
   centerY?: number,
   centerZ?: number,
   radius?: number,
-  peak?: number
+  peak?: number,
 ): Float32Array {
   const { width, height, depth } = config;
   const state = new Float32Array(width * height * depth);
@@ -331,7 +352,7 @@ export function generateSphericalBlob(
  */
 export function generateRandom3DState(
   config: Grid3DConfig,
-  density: number = 0.1
+  density: number = 0.1,
 ): Float32Array {
   const { width, height, depth } = config;
   const state = new Float32Array(width * height * depth);
@@ -349,49 +370,58 @@ export function generateRandom3DState(
 export function extract3DSlice(
   state: Float32Array,
   config: Grid3DConfig,
-  plane: 'xy' | 'xz' | 'yz',
-  position: number
+  plane: "xy" | "xz" | "yz",
+  position: number,
 ): Float32Array {
   const { width, height, depth } = config;
   let sliceWidth: number, sliceHeight: number;
   const slice = (() => {
     switch (plane) {
-      case 'xy':
+      case "xy":
         sliceWidth = width;
         sliceHeight = height;
         return new Float32Array(sliceWidth * sliceHeight);
-      case 'xz':
+      case "xz":
         sliceWidth = width;
         sliceHeight = depth;
         return new Float32Array(sliceWidth * sliceHeight);
-      case 'yz':
+      case "yz":
         sliceWidth = height;
         sliceHeight = depth;
         return new Float32Array(sliceWidth * sliceHeight);
     }
   })();
 
-  const clampedPos = Math.max(0, Math.min(position, (() => {
-    switch (plane) {
-      case 'xy': return depth - 1;
-      case 'xz': return height - 1;
-      case 'yz': return width - 1;
-    }
-  })()));
+  const clampedPos = Math.max(
+    0,
+    Math.min(
+      position,
+      (() => {
+        switch (plane) {
+          case "xy":
+            return depth - 1;
+          case "xz":
+            return height - 1;
+          case "yz":
+            return width - 1;
+        }
+      })(),
+    ),
+  );
 
   for (let a = 0; a < sliceHeight; a++) {
     for (let b = 0; b < sliceWidth; b++) {
       let index: number;
       switch (plane) {
-        case 'xy':
+        case "xy":
           // Z = position, iterate X (b) and Y (a)
           index = clampedPos * width * height + a * width + b;
           break;
-        case 'xz':
+        case "xz":
           // Y = position, iterate X (b) and Z (a)
           index = a * width * height + clampedPos * width + b;
           break;
-        case 'yz':
+        case "yz":
           // X = position, iterate Y (b) and Z (a)
           index = a * width * height + b * width + clampedPos;
           break;
@@ -405,8 +435,8 @@ export function extract3DSlice(
 
 // Preset configurations for 3D Lenia
 export const LENIA_3D_PRESETS = {
-  'orbium-3d': {
-    kernel: KERNEL_3D_PRESETS['lenia-standard'],
+  "orbium-3d": {
+    kernel: KERNEL_3D_PRESETS["lenia-standard"],
     params: {
       kernelRadius: 13,
       growthCenter: 0.15,
@@ -415,8 +445,8 @@ export const LENIA_3D_PRESETS = {
     } as Lenia3DParams,
   },
 
-  'stable-blob': {
-    kernel: KERNEL_3D_PRESETS['lenia-narrow'],
+  "stable-blob": {
+    kernel: KERNEL_3D_PRESETS["lenia-narrow"],
     params: {
       kernelRadius: 10,
       growthCenter: 0.12,
@@ -425,8 +455,8 @@ export const LENIA_3D_PRESETS = {
     } as Lenia3DParams,
   },
 
-  'dual-ring-3d': {
-    kernel: KERNEL_3D_PRESETS['lenia-dual-ring'],
+  "dual-ring-3d": {
+    kernel: KERNEL_3D_PRESETS["lenia-dual-ring"],
     params: {
       kernelRadius: 15,
       growthCenter: 0.13,

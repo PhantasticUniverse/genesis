@@ -3,12 +3,12 @@
  * Tests for spatial indexing used in creature tracking
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   SpatialHash,
   createSpatialHash,
   type Positioned,
-} from '../../agency/spatial-hash';
+} from "../../agency/spatial-hash";
 
 interface TestEntity extends Positioned {
   id: number;
@@ -20,23 +20,23 @@ function createEntity(id: number, x: number, y: number): TestEntity {
   return { id, centroidX: x, centroidY: y };
 }
 
-describe('spatial-hash', () => {
-  describe('SpatialHash', () => {
+describe("spatial-hash", () => {
+  describe("SpatialHash", () => {
     let hash: SpatialHash<TestEntity>;
 
     beforeEach(() => {
       hash = createSpatialHash(1000, 1000, 100);
     });
 
-    describe('insert', () => {
-      it('inserts entity', () => {
+    describe("insert", () => {
+      it("inserts entity", () => {
         const entity = createEntity(1, 50, 50);
         hash.insert(entity);
 
         expect(hash.getSize()).toBe(1);
       });
 
-      it('does not duplicate same entity', () => {
+      it("does not duplicate same entity", () => {
         const entity = createEntity(1, 50, 50);
         hash.insert(entity);
         hash.insert(entity);
@@ -44,7 +44,7 @@ describe('spatial-hash', () => {
         expect(hash.getSize()).toBe(1);
       });
 
-      it('handles multiple entities', () => {
+      it("handles multiple entities", () => {
         hash.insert(createEntity(1, 50, 50));
         hash.insert(createEntity(2, 150, 150));
         hash.insert(createEntity(3, 250, 250));
@@ -52,7 +52,7 @@ describe('spatial-hash', () => {
         expect(hash.getSize()).toBe(3);
       });
 
-      it('handles entities at world boundaries', () => {
+      it("handles entities at world boundaries", () => {
         hash.insert(createEntity(1, 0, 0));
         hash.insert(createEntity(2, 999, 999));
         hash.insert(createEntity(3, 0, 999));
@@ -60,7 +60,7 @@ describe('spatial-hash', () => {
         expect(hash.getSize()).toBe(3);
       });
 
-      it('clamps out-of-bounds positions', () => {
+      it("clamps out-of-bounds positions", () => {
         const entity = createEntity(1, -50, 1500);
         hash.insert(entity);
 
@@ -71,8 +71,8 @@ describe('spatial-hash', () => {
       });
     });
 
-    describe('remove', () => {
-      it('removes entity', () => {
+    describe("remove", () => {
+      it("removes entity", () => {
         const entity = createEntity(1, 50, 50);
         hash.insert(entity);
         hash.remove(entity);
@@ -80,20 +80,20 @@ describe('spatial-hash', () => {
         expect(hash.getSize()).toBe(0);
       });
 
-      it('returns true when entity removed', () => {
+      it("returns true when entity removed", () => {
         const entity = createEntity(1, 50, 50);
         hash.insert(entity);
 
         expect(hash.remove(entity)).toBe(true);
       });
 
-      it('returns false when entity not found', () => {
+      it("returns false when entity not found", () => {
         const entity = createEntity(1, 50, 50);
 
         expect(hash.remove(entity)).toBe(false);
       });
 
-      it('only removes specified entity', () => {
+      it("only removes specified entity", () => {
         const entity1 = createEntity(1, 50, 50);
         const entity2 = createEntity(2, 50, 50);
         hash.insert(entity1);
@@ -105,8 +105,8 @@ describe('spatial-hash', () => {
       });
     });
 
-    describe('clear', () => {
-      it('removes all entities', () => {
+    describe("clear", () => {
+      it("removes all entities", () => {
         hash.insert(createEntity(1, 50, 50));
         hash.insert(createEntity(2, 150, 150));
         hash.clear();
@@ -116,8 +116,8 @@ describe('spatial-hash', () => {
       });
     });
 
-    describe('rebuild', () => {
-      it('replaces all entities', () => {
+    describe("rebuild", () => {
+      it("replaces all entities", () => {
         hash.insert(createEntity(1, 50, 50));
         hash.insert(createEntity(2, 150, 150));
 
@@ -130,12 +130,17 @@ describe('spatial-hash', () => {
         hash.rebuild(newEntities);
 
         expect(hash.getSize()).toBe(3);
-        expect(hash.getAll().map(e => e.id).sort()).toEqual([3, 4, 5]);
+        expect(
+          hash
+            .getAll()
+            .map((e) => e.id)
+            .sort(),
+        ).toEqual([3, 4, 5]);
       });
     });
 
-    describe('queryRadius', () => {
-      it('finds entities within radius', () => {
+    describe("queryRadius", () => {
+      it("finds entities within radius", () => {
         hash.insert(createEntity(1, 100, 100));
         hash.insert(createEntity(2, 110, 110));
         hash.insert(createEntity(3, 500, 500));
@@ -143,10 +148,10 @@ describe('spatial-hash', () => {
         const results = hash.queryRadius(100, 100, 50);
 
         expect(results).toHaveLength(2);
-        expect(results.map(e => e.id).sort()).toEqual([1, 2]);
+        expect(results.map((e) => e.id).sort()).toEqual([1, 2]);
       });
 
-      it('returns empty array when no entities in range', () => {
+      it("returns empty array when no entities in range", () => {
         hash.insert(createEntity(1, 100, 100));
 
         const results = hash.queryRadius(500, 500, 50);
@@ -154,7 +159,7 @@ describe('spatial-hash', () => {
         expect(results).toHaveLength(0);
       });
 
-      it('handles entities at exact radius', () => {
+      it("handles entities at exact radius", () => {
         hash.insert(createEntity(1, 100, 100));
         hash.insert(createEntity(2, 150, 100)); // Exactly 50 units away
 
@@ -163,7 +168,7 @@ describe('spatial-hash', () => {
         expect(results).toHaveLength(2);
       });
 
-      it('handles large radius spanning multiple cells', () => {
+      it("handles large radius spanning multiple cells", () => {
         hash.insert(createEntity(1, 100, 100));
         hash.insert(createEntity(2, 300, 300));
         hash.insert(createEntity(3, 500, 500));
@@ -174,8 +179,8 @@ describe('spatial-hash', () => {
       });
     });
 
-    describe('queryRect', () => {
-      it('finds entities in rectangle', () => {
+    describe("queryRect", () => {
+      it("finds entities in rectangle", () => {
         hash.insert(createEntity(1, 100, 100));
         hash.insert(createEntity(2, 150, 150));
         hash.insert(createEntity(3, 500, 500));
@@ -183,10 +188,10 @@ describe('spatial-hash', () => {
         const results = hash.queryRect(50, 50, 200, 200);
 
         expect(results).toHaveLength(2);
-        expect(results.map(e => e.id).sort()).toEqual([1, 2]);
+        expect(results.map((e) => e.id).sort()).toEqual([1, 2]);
       });
 
-      it('handles entities on boundary', () => {
+      it("handles entities on boundary", () => {
         hash.insert(createEntity(1, 100, 100));
 
         const results = hash.queryRect(100, 100, 200, 200);
@@ -195,8 +200,8 @@ describe('spatial-hash', () => {
       });
     });
 
-    describe('findNearest', () => {
-      it('finds nearest entity', () => {
+    describe("findNearest", () => {
+      it("finds nearest entity", () => {
         hash.insert(createEntity(1, 100, 100));
         hash.insert(createEntity(2, 200, 200));
         hash.insert(createEntity(3, 150, 150));
@@ -206,13 +211,13 @@ describe('spatial-hash', () => {
         expect(nearest?.id).toBe(3);
       });
 
-      it('returns null when no entities', () => {
+      it("returns null when no entities", () => {
         const nearest = hash.findNearest(100, 100);
 
         expect(nearest).toBeNull();
       });
 
-      it('respects maxDistance', () => {
+      it("respects maxDistance", () => {
         hash.insert(createEntity(1, 100, 100));
         hash.insert(createEntity(2, 500, 500));
 
@@ -221,7 +226,7 @@ describe('spatial-hash', () => {
         expect(nearest?.id).toBe(2);
       });
 
-      it('returns null when all entities outside maxDistance', () => {
+      it("returns null when all entities outside maxDistance", () => {
         hash.insert(createEntity(1, 100, 100));
 
         const nearest = hash.findNearest(500, 500, 50);
@@ -230,8 +235,8 @@ describe('spatial-hash', () => {
       });
     });
 
-    describe('findKNearest', () => {
-      it('finds k nearest entities', () => {
+    describe("findKNearest", () => {
+      it("finds k nearest entities", () => {
         hash.insert(createEntity(1, 100, 100));
         hash.insert(createEntity(2, 110, 110));
         hash.insert(createEntity(3, 200, 200));
@@ -244,7 +249,7 @@ describe('spatial-hash', () => {
         expect(nearest[1].id).toBe(2); // Second closest
       });
 
-      it('returns all when k > size', () => {
+      it("returns all when k > size", () => {
         hash.insert(createEntity(1, 100, 100));
         hash.insert(createEntity(2, 200, 200));
 
@@ -253,15 +258,15 @@ describe('spatial-hash', () => {
         expect(nearest).toHaveLength(2);
       });
 
-      it('returns empty array when no entities', () => {
+      it("returns empty array when no entities", () => {
         const nearest = hash.findKNearest(100, 100, 5);
 
         expect(nearest).toHaveLength(0);
       });
     });
 
-    describe('getAll', () => {
-      it('returns all entities', () => {
+    describe("getAll", () => {
+      it("returns all entities", () => {
         hash.insert(createEntity(1, 100, 100));
         hash.insert(createEntity(2, 200, 200));
         hash.insert(createEntity(3, 300, 300));
@@ -269,34 +274,36 @@ describe('spatial-hash', () => {
         const all = hash.getAll();
 
         expect(all).toHaveLength(3);
-        expect(all.map(e => e.id).sort()).toEqual([1, 2, 3]);
+        expect(all.map((e) => e.id).sort()).toEqual([1, 2, 3]);
       });
 
-      it('returns empty array when no entities', () => {
+      it("returns empty array when no entities", () => {
         expect(hash.getAll()).toHaveLength(0);
       });
     });
   });
 
-  describe('createSpatialHash', () => {
-    it('creates hash with default cell size', () => {
+  describe("createSpatialHash", () => {
+    it("creates hash with default cell size", () => {
       const hash = createSpatialHash<TestEntity>(1000, 1000);
       expect(hash).toBeInstanceOf(SpatialHash);
     });
 
-    it('creates hash with custom cell size', () => {
+    it("creates hash with custom cell size", () => {
       const hash = createSpatialHash<TestEntity>(1000, 1000, 25);
       expect(hash).toBeInstanceOf(SpatialHash);
     });
   });
 
-  describe('performance characteristics', () => {
-    it('handles large number of entities', () => {
+  describe("performance characteristics", () => {
+    it("handles large number of entities", () => {
       const hash = createSpatialHash<TestEntity>(10000, 10000, 100);
 
       // Insert 10000 entities
       for (let i = 0; i < 10000; i++) {
-        hash.insert(createEntity(i, Math.random() * 10000, Math.random() * 10000));
+        hash.insert(
+          createEntity(i, Math.random() * 10000, Math.random() * 10000),
+        );
       }
 
       expect(hash.getSize()).toBe(10000);
@@ -306,12 +313,14 @@ describe('spatial-hash', () => {
       expect(results.length).toBeGreaterThan(0);
     });
 
-    it('provides better than O(n) for localized queries', () => {
+    it("provides better than O(n) for localized queries", () => {
       const hash = createSpatialHash<TestEntity>(1000, 1000, 50);
 
       // Create 1000 entities spread across the world
       for (let i = 0; i < 1000; i++) {
-        hash.insert(createEntity(i, Math.random() * 1000, Math.random() * 1000));
+        hash.insert(
+          createEntity(i, Math.random() * 1000, Math.random() * 1000),
+        );
       }
 
       // Small radius query should not return all entities

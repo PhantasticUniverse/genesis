@@ -3,28 +3,28 @@
  * Enables gradient-based training of CA parameters using WebGPU compute shaders
  */
 
-import { createShaderModule } from './context';
-import trainingForwardShader from './shaders/training-forward.wgsl?raw';
-import trainingBackwardShader from './shaders/training-backward.wgsl?raw';
+import { createShaderModule } from "./context";
+import trainingForwardShader from "./shaders/training-forward.wgsl?raw";
+import trainingBackwardShader from "./shaders/training-backward.wgsl?raw";
 
 export interface TrainingParams {
   kernelRadius: number;
-  growthCenter: number;   // μ
-  growthWidth: number;    // σ
+  growthCenter: number; // μ
+  growthWidth: number; // σ
   dt: number;
 }
 
 export interface TrainingGradients {
-  growthCenter: number;   // dL/dμ
-  growthWidth: number;    // dL/dσ
-  dt: number;             // dL/d(dt)
+  growthCenter: number; // dL/dμ
+  growthWidth: number; // dL/dσ
+  dt: number; // dL/d(dt)
 }
 
 export interface GPUTrainingPipeline {
   // Run forward pass for multiple steps, storing cache
   forward(
     inputTexture: GPUTexture,
-    steps: number
+    steps: number,
   ): Promise<{
     finalState: GPUTexture;
     cache: TrainingCache;
@@ -33,13 +33,13 @@ export interface GPUTrainingPipeline {
   // Run backward pass through cached states
   backward(
     targetTexture: GPUTexture,
-    cache: TrainingCache
+    cache: TrainingCache,
   ): Promise<TrainingGradients>;
 
   // Compute MSE loss between textures
   computeLoss(
     predictionTexture: GPUTexture,
-    targetTexture: GPUTexture
+    targetTexture: GPUTexture,
   ): Promise<number>;
 
   // Update training parameters
@@ -56,9 +56,9 @@ export interface GPUTrainingPipeline {
 }
 
 interface TrainingCache {
-  states: GPUTexture[];         // State at each time step
-  neighborSums: GPUTexture[];   // Convolution results
-  growthValues: GPUTexture[];   // Growth function outputs
+  states: GPUTexture[]; // State at each time step
+  neighborSums: GPUTexture[]; // Convolution results
+  growthValues: GPUTexture[]; // Growth function outputs
 }
 
 /**
@@ -68,7 +68,7 @@ export function createGPUTrainingPipeline(
   device: GPUDevice,
   width: number,
   height: number,
-  initialParams: Partial<TrainingParams> = {}
+  initialParams: Partial<TrainingParams> = {},
 ): GPUTrainingPipeline {
   // Default parameters
   let params: TrainingParams = {
@@ -80,12 +80,20 @@ export function createGPUTrainingPipeline(
   };
 
   // Create shader modules
-  const forwardModule = createShaderModule(device, trainingForwardShader, 'training-forward');
-  const backwardModule = createShaderModule(device, trainingBackwardShader, 'training-backward');
+  const forwardModule = createShaderModule(
+    device,
+    trainingForwardShader,
+    "training-forward",
+  );
+  const backwardModule = createShaderModule(
+    device,
+    trainingBackwardShader,
+    "training-backward",
+  );
 
   // Create uniform buffer for parameters
   const uniformBuffer = device.createBuffer({
-    label: 'training-uniform-buffer',
+    label: "training-uniform-buffer",
     size: 32, // 8 x f32
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
@@ -96,9 +104,9 @@ export function createGPUTrainingPipeline(
 
   function createKernelTexture(device: GPUDevice, size: number): GPUTexture {
     const texture = device.createTexture({
-      label: 'training-kernel-texture',
+      label: "training-kernel-texture",
       size: [size, size],
-      format: 'r32float',
+      format: "r32float",
       usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
     });
 
@@ -126,7 +134,7 @@ export function createGPUTrainingPipeline(
       { texture },
       data,
       { bytesPerRow: size * 4 },
-      { width: size, height: size }
+      { width: size, height: size },
     );
 
     return texture;
@@ -137,76 +145,146 @@ export function createGPUTrainingPipeline(
     return device.createTexture({
       label,
       size: [width, height],
-      format: 'r32float',
-      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+      format: "r32float",
+      usage:
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.STORAGE_BINDING |
+        GPUTextureUsage.COPY_SRC |
+        GPUTextureUsage.COPY_DST,
     });
   }
 
   // Create gradient accumulation buffer
   const gradientBuffer = device.createBuffer({
-    label: 'gradient-accumulation-buffer',
+    label: "gradient-accumulation-buffer",
     size: 16, // 4 x u32 (fixed-point: μ, σ, dt, count)
-    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    usage:
+      GPUBufferUsage.STORAGE |
+      GPUBufferUsage.COPY_SRC |
+      GPUBufferUsage.COPY_DST,
   });
 
   // Staging buffer for reading gradients back
   const gradientStagingBuffer = device.createBuffer({
-    label: 'gradient-staging-buffer',
+    label: "gradient-staging-buffer",
     size: 16,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
   });
 
   // Loss computation buffer
   const lossBuffer = device.createBuffer({
-    label: 'loss-buffer',
+    label: "loss-buffer",
     size: 4, // f32
-    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    usage:
+      GPUBufferUsage.STORAGE |
+      GPUBufferUsage.COPY_SRC |
+      GPUBufferUsage.COPY_DST,
   });
 
   const lossStagingBuffer = device.createBuffer({
-    label: 'loss-staging-buffer',
+    label: "loss-staging-buffer",
     size: 4,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
   });
 
   // Create bind group layouts
   const forwardBindGroupLayout = device.createBindGroupLayout({
-    label: 'training-forward-bind-group-layout',
+    label: "training-forward-bind-group-layout",
     entries: [
-      { binding: 0, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 1, visibility: GPUShaderStage.COMPUTE, storageTexture: { access: 'write-only', format: 'r32float' } },
-      { binding: 2, visibility: GPUShaderStage.COMPUTE, storageTexture: { access: 'write-only', format: 'r32float' } },
-      { binding: 3, visibility: GPUShaderStage.COMPUTE, storageTexture: { access: 'write-only', format: 'r32float' } },
-      { binding: 4, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        storageTexture: { access: "write-only", format: "r32float" },
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        storageTexture: { access: "write-only", format: "r32float" },
+      },
+      {
+        binding: 3,
+        visibility: GPUShaderStage.COMPUTE,
+        storageTexture: { access: "write-only", format: "r32float" },
+      },
+      {
+        binding: 4,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 5,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "uniform" },
+      },
     ],
   });
 
   const backwardBindGroupLayout = device.createBindGroupLayout({
-    label: 'training-backward-bind-group-layout',
+    label: "training-backward-bind-group-layout",
     entries: [
-      { binding: 0, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 1, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 2, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 3, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 4, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 5, visibility: GPUShaderStage.COMPUTE, storageTexture: { access: 'write-only', format: 'r32float' } },
-      { binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
-      { binding: 7, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 3,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 4,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 5,
+        visibility: GPUShaderStage.COMPUTE,
+        storageTexture: { access: "write-only", format: "r32float" },
+      },
+      {
+        binding: 6,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "storage" },
+      },
+      {
+        binding: 7,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "uniform" },
+      },
     ],
   });
 
   // Create compute pipelines
   const forwardPipeline = device.createComputePipeline({
-    label: 'training-forward-pipeline',
-    layout: device.createPipelineLayout({ bindGroupLayouts: [forwardBindGroupLayout] }),
-    compute: { module: forwardModule, entryPoint: 'main' },
+    label: "training-forward-pipeline",
+    layout: device.createPipelineLayout({
+      bindGroupLayouts: [forwardBindGroupLayout],
+    }),
+    compute: { module: forwardModule, entryPoint: "main" },
   });
 
   const backwardPipeline = device.createComputePipeline({
-    label: 'training-backward-pipeline',
-    layout: device.createPipelineLayout({ bindGroupLayouts: [backwardBindGroupLayout] }),
-    compute: { module: backwardModule, entryPoint: 'main' },
+    label: "training-backward-pipeline",
+    layout: device.createPipelineLayout({
+      bindGroupLayouts: [backwardBindGroupLayout],
+    }),
+    compute: { module: backwardModule, entryPoint: "main" },
   });
 
   const workgroupsX = Math.ceil(width / 16);
@@ -238,7 +316,7 @@ export function createGPUTrainingPipeline(
     if (texturePool.length > 0) {
       return texturePool.pop()!;
     }
-    return createStateTexture('pooled-state');
+    return createStateTexture("pooled-state");
   }
 
   function returnToPool(texture: GPUTexture) {
@@ -259,7 +337,7 @@ export function createGPUTrainingPipeline(
       commandEncoder.copyTextureToTexture(
         { texture: inputTexture },
         { texture: currentState },
-        { width, height }
+        { width, height },
       );
       device.queue.submit([commandEncoder.finish()]);
 
@@ -308,10 +386,12 @@ export function createGPUTrainingPipeline(
     async backward(targetTexture: GPUTexture, cache: TrainingCache) {
       // Validate cache integrity
       if (!cache || !cache.states || cache.states.length === 0) {
-        throw new Error('Invalid cache: states array is empty or undefined');
+        throw new Error("Invalid cache: states array is empty or undefined");
       }
       if (!cache.neighborSums || !cache.growthValues) {
-        throw new Error('Invalid cache: neighborSums or growthValues is undefined');
+        throw new Error(
+          "Invalid cache: neighborSums or growthValues is undefined",
+        );
       }
 
       const steps = cache.states.length - 1;
@@ -322,12 +402,21 @@ export function createGPUTrainingPipeline(
       }
 
       // Validate array lengths match
-      if (cache.neighborSums.length !== steps || cache.growthValues.length !== steps) {
-        throw new Error(`Cache array length mismatch: states=${cache.states.length}, neighborSums=${cache.neighborSums.length}, growthValues=${cache.growthValues.length}`);
+      if (
+        cache.neighborSums.length !== steps ||
+        cache.growthValues.length !== steps
+      ) {
+        throw new Error(
+          `Cache array length mismatch: states=${cache.states.length}, neighborSums=${cache.neighborSums.length}, growthValues=${cache.growthValues.length}`,
+        );
       }
 
       // Clear gradient buffer
-      device.queue.writeBuffer(gradientBuffer, 0, new Uint32Array([0, 0, 0, 0]));
+      device.queue.writeBuffer(
+        gradientBuffer,
+        0,
+        new Uint32Array([0, 0, 0, 0]),
+      );
 
       // Compute initial loss gradient: dL/dState_final = 2 * (state - target)
       // For simplicity, we'll compute this as part of the first backward step
@@ -338,7 +427,7 @@ export function createGPUTrainingPipeline(
 
       // Compute loss gradient (2 * (pred - target)) on CPU for now
       // In a full implementation, this would be another shader
-      const bytesPerRow = Math.ceil(width * 4 / 256) * 256;
+      const bytesPerRow = Math.ceil((width * 4) / 256) * 256;
       const stagingBuffer = device.createBuffer({
         size: bytesPerRow * height,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
@@ -349,12 +438,14 @@ export function createGPUTrainingPipeline(
       encoder1.copyTextureToBuffer(
         { texture: cache.states[steps] },
         { buffer: stagingBuffer, bytesPerRow },
-        { width, height }
+        { width, height },
       );
       device.queue.submit([encoder1.finish()]);
 
       await stagingBuffer.mapAsync(GPUMapMode.READ);
-      const finalRawData = new Float32Array(stagingBuffer.getMappedRange().slice(0));
+      const finalRawData = new Float32Array(
+        stagingBuffer.getMappedRange().slice(0),
+      );
       // Extract only valid data (bytesPerRow includes padding)
       const floatsPerRow = bytesPerRow / 4;
       const finalData = new Float32Array(width * height);
@@ -370,12 +461,14 @@ export function createGPUTrainingPipeline(
       encoder2.copyTextureToBuffer(
         { texture: targetTexture },
         { buffer: stagingBuffer, bytesPerRow },
-        { width, height }
+        { width, height },
       );
       device.queue.submit([encoder2.finish()]);
 
       await stagingBuffer.mapAsync(GPUMapMode.READ);
-      const targetRawData = new Float32Array(stagingBuffer.getMappedRange().slice(0));
+      const targetRawData = new Float32Array(
+        stagingBuffer.getMappedRange().slice(0),
+      );
       const targetData = new Float32Array(width * height);
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
@@ -396,7 +489,7 @@ export function createGPUTrainingPipeline(
         { texture: lossGradTexture },
         lossGradData,
         { bytesPerRow: width * 4 },
-        { width, height }
+        { width, height },
       );
 
       let currentGradient = lossGradTexture;
@@ -443,26 +536,37 @@ export function createGPUTrainingPipeline(
 
       // Read gradients from buffer
       const copyEncoder = device.createCommandEncoder();
-      copyEncoder.copyBufferToBuffer(gradientBuffer, 0, gradientStagingBuffer, 0, 16);
+      copyEncoder.copyBufferToBuffer(
+        gradientBuffer,
+        0,
+        gradientStagingBuffer,
+        0,
+        16,
+      );
       device.queue.submit([copyEncoder.finish()]);
 
       await gradientStagingBuffer.mapAsync(GPUMapMode.READ);
-      const gradData = new Int32Array(gradientStagingBuffer.getMappedRange().slice(0));
+      const gradData = new Int32Array(
+        gradientStagingBuffer.getMappedRange().slice(0),
+      );
       gradientStagingBuffer.unmap();
 
       // Convert from fixed-point
       const count = gradData[3] || 1;
       return {
-        growthCenter: (gradData[0] / 65536) / count,
-        growthWidth: (gradData[1] / 65536) / count,
-        dt: (gradData[2] / 65536) / count,
+        growthCenter: gradData[0] / 65536 / count,
+        growthWidth: gradData[1] / 65536 / count,
+        dt: gradData[2] / 65536 / count,
       };
     },
 
-    async computeLoss(predictionTexture: GPUTexture, targetTexture: GPUTexture) {
+    async computeLoss(
+      predictionTexture: GPUTexture,
+      targetTexture: GPUTexture,
+    ) {
       // Read both textures and compute MSE on CPU
       // In a full implementation, this would be a reduction shader
-      const bytesPerRow = Math.ceil(width * 4 / 256) * 256;
+      const bytesPerRow = Math.ceil((width * 4) / 256) * 256;
       const floatsPerRow = bytesPerRow / 4;
       const stagingBuffer = device.createBuffer({
         size: bytesPerRow * height,
@@ -474,12 +578,14 @@ export function createGPUTrainingPipeline(
       encoder1.copyTextureToBuffer(
         { texture: predictionTexture },
         { buffer: stagingBuffer, bytesPerRow },
-        { width, height }
+        { width, height },
       );
       device.queue.submit([encoder1.finish()]);
 
       await stagingBuffer.mapAsync(GPUMapMode.READ);
-      const predRawData = new Float32Array(stagingBuffer.getMappedRange().slice(0));
+      const predRawData = new Float32Array(
+        stagingBuffer.getMappedRange().slice(0),
+      );
       // Extract only valid data (bytesPerRow includes padding)
       const predData = new Float32Array(width * height);
       for (let y = 0; y < height; y++) {
@@ -494,12 +600,14 @@ export function createGPUTrainingPipeline(
       encoder2.copyTextureToBuffer(
         { texture: targetTexture },
         { buffer: stagingBuffer, bytesPerRow },
-        { width, height }
+        { width, height },
       );
       device.queue.submit([encoder2.finish()]);
 
       await stagingBuffer.mapAsync(GPUMapMode.READ);
-      const targetRawData = new Float32Array(stagingBuffer.getMappedRange().slice(0));
+      const targetRawData = new Float32Array(
+        stagingBuffer.getMappedRange().slice(0),
+      );
       const targetData = new Float32Array(width * height);
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
@@ -533,9 +641,9 @@ export function createGPUTrainingPipeline(
         kernelTexture.destroy();
         kernelSize = newKernelSize;
         kernelTexture = device.createTexture({
-          label: 'training-kernel-texture',
+          label: "training-kernel-texture",
           size: [kernelSize, kernelSize],
-          format: 'r32float',
+          format: "r32float",
           usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
         });
       }
@@ -544,7 +652,7 @@ export function createGPUTrainingPipeline(
         { texture: kernelTexture },
         kernelData,
         { bytesPerRow: kernelSize * 4 },
-        { width: kernelSize, height: kernelSize }
+        { width: kernelSize, height: kernelSize },
       );
     },
 

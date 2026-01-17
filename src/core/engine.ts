@@ -3,20 +3,33 @@
  * Main cellular automata simulation engine
  */
 
-import type { GridConfig, DiscreteRule, CAParadigm } from './types';
-import { DEFAULT_GRID_CONFIG, GAME_OF_LIFE_RULE } from './types';
-import { initWebGPU, createShaderModule } from '../compute/webgpu/context';
-import { createBufferManager, initializePattern, type BufferManager } from './buffer-manager';
-import { createContinuousPipeline, type ContinuousPipeline, type ContinuousCAParams, CONTINUOUS_PRESETS } from '../compute/webgpu/continuous-pipeline';
-import { createConservationPipeline, type ConservationConfig, DEFAULT_CONSERVATION_CONFIG } from './conservation';
-import type { KernelConfig } from './kernels';
+import type { GridConfig, DiscreteRule, CAParadigm } from "./types";
+import { DEFAULT_GRID_CONFIG, GAME_OF_LIFE_RULE } from "./types";
+import { initWebGPU, createShaderModule } from "../compute/webgpu/context";
+import {
+  createBufferManager,
+  initializePattern,
+  type BufferManager,
+} from "./buffer-manager";
+import {
+  createContinuousPipeline,
+  type ContinuousPipeline,
+  type ContinuousCAParams,
+  CONTINUOUS_PRESETS,
+} from "../compute/webgpu/continuous-pipeline";
+import {
+  createConservationPipeline,
+  type ConservationConfig,
+  DEFAULT_CONSERVATION_CONFIG,
+} from "./conservation";
+import type { KernelConfig } from "./kernels";
 import {
   createTrackerState,
   updateTracker,
   getLargestCreature,
   type TrackerState,
   type Creature,
-} from '../agency/creature-tracker';
+} from "../agency/creature-tracker";
 import {
   createTrajectoryCollector,
   updateTrajectories,
@@ -24,23 +37,36 @@ import {
   type TrajectoryCollector,
   type BehaviorVector,
   type TrajectoryPoint,
-} from '../agency/behavior';
+} from "../agency/behavior";
 import {
   createSensorimotorPipeline,
   type SensorimotorPipeline,
   type SensorimotorParams,
-} from '../compute/webgpu/sensorimotor-pipeline';
+} from "../compute/webgpu/sensorimotor-pipeline";
 import {
   createMultiChannelPipeline,
   type EcologyParams,
-} from '../compute/webgpu/multi-channel-pipeline';
-import type { MultiChannelConfig } from './channels';
-import { MULTICHANNEL_PRESETS } from './channels';
+} from "../compute/webgpu/multi-channel-pipeline";
+import type { MultiChannelConfig } from "./channels";
+import { MULTICHANNEL_PRESETS } from "./channels";
+import {
+  createParticleSystem,
+  updateParticleSystem,
+  depositToField,
+  calculateFieldGradient,
+  spawnRandomParticles,
+  getActiveParticles,
+  INTERACTION_PRESETS,
+  type ParticleSystemState,
+  type ParticleSystemConfig,
+  type FieldCouplingConfig,
+  type Particle,
+} from "./particles";
 
 // Import shaders as raw text
-import discreteCAShader from '../compute/webgpu/shaders/discrete-ca.wgsl?raw';
-import renderShader from '../compute/webgpu/shaders/render.wgsl?raw';
-import multiChannelRenderShader from '../compute/webgpu/shaders/multi-channel-render.wgsl?raw';
+import discreteCAShader from "../compute/webgpu/shaders/discrete-ca.wgsl?raw";
+import renderShader from "../compute/webgpu/shaders/render.wgsl?raw";
+import multiChannelRenderShader from "../compute/webgpu/shaders/multi-channel-render.wgsl?raw";
 
 export interface EngineConfig {
   canvas: HTMLCanvasElement;
@@ -78,7 +104,9 @@ export interface Engine {
   stop(): void;
   toggle(): void;
   stepOnce(): void;
-  reset(pattern?: 'glider' | 'blinker' | 'random' | 'center-blob' | 'lenia-seed'): void;
+  reset(
+    pattern?: "glider" | "blinker" | "random" | "center-blob" | "lenia-seed",
+  ): void;
   setRule(rule: DiscreteRule): void;
   setParadigm(paradigm: CAParadigm): void;
   setContinuousParams(params: Partial<ContinuousCAParams>): void;
@@ -108,6 +136,8 @@ export interface Engine {
   setObstacles(pattern: ObstaclePattern): void;
   setTargetGradient(targetX: number, targetY: number): void;
   setSensorimotorParams(params: Partial<SensorimotorParams>): void;
+  setShowObstacles(show: boolean): void;
+  isShowingObstacles(): boolean;
 
   // Multi-channel ecology methods
   enableMultiChannel(config?: MultiChannelConfig): void;
@@ -115,6 +145,18 @@ export interface Engine {
   isMultiChannelEnabled(): boolean;
   setEcologyParams(params: Partial<EcologyParams>): void;
   setMultiChannelPreset(presetName: string): void;
+
+  // Particle-Lenia hybrid methods
+  enableParticles(config?: Partial<ParticleSystemConfig>): void;
+  disableParticles(): void;
+  isParticlesEnabled(): boolean;
+  getParticleState(): ParticleSystemState | null;
+  getActiveParticles(): Particle[];
+  setParticleConfig(config: Partial<ParticleSystemConfig>): void;
+  setParticleCoupling(coupling: Partial<FieldCouplingConfig>): void;
+  spawnParticles(count: number, options?: SpawnParticleOptions): void;
+  clearParticles(): void;
+  setParticlePreset(preset: ParticlePresetName): void;
 
   // Getters
   getConfig(): GridConfig;
@@ -125,18 +167,112 @@ export interface Engine {
 }
 
 export interface TrackingConfig {
-  threshold: number;        // Minimum value to consider as creature
-  minMass: number;          // Minimum mass to track
-  updateInterval: number;   // How often to update tracking (in steps)
+  threshold: number; // Minimum value to consider as creature
+  minMass: number; // Minimum mass to track
+  updateInterval: number; // How often to update tracking (in steps)
 }
 
 export type CreatureUpdateCallback = (
   creatures: Creature[],
   largestCreature: Creature | null,
-  tracker: TrackerState
+  tracker: TrackerState,
 ) => void;
 
-export type ObstaclePattern = 'walls' | 'maze' | 'random' | 'ring' | 'none';
+export type ObstaclePattern = "walls" | "maze" | "random" | "ring" | "none";
+
+export type ParticlePresetName =
+  | "attractive"
+  | "clustering"
+  | "chain"
+  | "seeder"
+  | "explorer";
+
+export interface SpawnParticleOptions {
+  centerX?: number;
+  centerY?: number;
+  spread?: number;
+  types?: number[];
+}
+
+/**
+ * Particle-Lenia hybrid presets
+ */
+export const PARTICLE_LENIA_PRESETS: Record<
+  ParticlePresetName,
+  {
+    description: string;
+    particleConfig: Partial<ParticleSystemConfig>;
+    coupling: Partial<FieldCouplingConfig>;
+    interactionPreset: keyof typeof INTERACTION_PRESETS;
+    initialParticles: number;
+  }
+> = {
+  attractive: {
+    description: "Particles attract each other and seed Lenia growth",
+    particleConfig: { maxParticles: 200, numTypes: 2, friction: 0.02 },
+    coupling: {
+      depositEnabled: true,
+      depositAmount: 0.15,
+      depositRadius: 8,
+      gradientResponseEnabled: true,
+      gradientStrength: 0.3,
+    },
+    interactionPreset: "attractive",
+    initialParticles: 50,
+  },
+  clustering: {
+    description: "Same-type particles cluster, creating distinct Lenia colonies",
+    particleConfig: { maxParticles: 300, numTypes: 3, friction: 0.03 },
+    coupling: {
+      depositEnabled: true,
+      depositAmount: 0.1,
+      depositRadius: 6,
+      gradientResponseEnabled: true,
+      gradientStrength: 0.4,
+    },
+    interactionPreset: "clustering",
+    initialParticles: 80,
+  },
+  chain: {
+    description: "Particles form chains that trace growth patterns",
+    particleConfig: { maxParticles: 150, numTypes: 3, friction: 0.01 },
+    coupling: {
+      depositEnabled: true,
+      depositAmount: 0.08,
+      depositRadius: 4,
+      gradientResponseEnabled: false,
+      gradientStrength: 0,
+    },
+    interactionPreset: "chain",
+    initialParticles: 60,
+  },
+  seeder: {
+    description: "Particles seed growth and are attracted to high-density regions",
+    particleConfig: { maxParticles: 100, numTypes: 1, friction: 0.05 },
+    coupling: {
+      depositEnabled: true,
+      depositAmount: 0.2,
+      depositRadius: 10,
+      gradientResponseEnabled: true,
+      gradientStrength: 0.8,
+    },
+    interactionPreset: "attractive",
+    initialParticles: 30,
+  },
+  explorer: {
+    description: "Particles explore and avoid high-density Lenia regions",
+    particleConfig: { maxParticles: 200, numTypes: 2, friction: 0.02 },
+    coupling: {
+      depositEnabled: false,
+      depositAmount: 0,
+      depositRadius: 0,
+      gradientResponseEnabled: true,
+      gradientStrength: -0.5, // Negative = repelled by gradients
+    },
+    interactionPreset: "clustering",
+    initialParticles: 100,
+  },
+};
 
 /**
  * Generate obstacles based on pattern
@@ -144,12 +280,12 @@ export type ObstaclePattern = 'walls' | 'maze' | 'random' | 'ring' | 'none';
 function generateObstacleData(
   width: number,
   height: number,
-  pattern: ObstaclePattern
+  pattern: ObstaclePattern,
 ): Float32Array {
   const data = new Float32Array(width * height);
 
   switch (pattern) {
-    case 'walls':
+    case "walls":
       // Create walls around the edges
       for (let x = 0; x < width; x++) {
         data[x] = 1; // Top wall
@@ -161,7 +297,7 @@ function generateObstacleData(
       }
       break;
 
-    case 'ring':
+    case "ring":
       // Create a ring obstacle in the center
       const centerX = width / 2;
       const centerY = height / 2;
@@ -179,7 +315,7 @@ function generateObstacleData(
       }
       break;
 
-    case 'maze':
+    case "maze":
       // Simple maze-like pattern with horizontal and vertical bars
       const spacing = 64;
       const gapSize = 40;
@@ -188,14 +324,16 @@ function generateObstacleData(
           // Horizontal bars (every spacing pixels)
           if (y % spacing < 4 && y > 20 && y < height - 20) {
             // Leave gaps
-            const gapPos = ((Math.floor(y / spacing) + 1) * 137) % (width - gapSize);
+            const gapPos =
+              ((Math.floor(y / spacing) + 1) * 137) % (width - gapSize);
             if (x < gapPos || x > gapPos + gapSize) {
               data[y * width + x] = 1;
             }
           }
           // Vertical bars offset
           if (x % spacing < 4 && x > 20 && x < width - 20) {
-            const gapPos = ((Math.floor(x / spacing) + 2) * 97) % (height - gapSize);
+            const gapPos =
+              ((Math.floor(x / spacing) + 2) * 97) % (height - gapSize);
             if (y < gapPos || y > gapPos + gapSize) {
               data[y * width + x] = 1;
             }
@@ -204,7 +342,7 @@ function generateObstacleData(
       }
       break;
 
-    case 'random':
+    case "random":
       // Random scattered obstacles (about 5% coverage)
       for (let i = 0; i < data.length; i++) {
         if (Math.random() < 0.05) {
@@ -213,7 +351,7 @@ function generateObstacleData(
       }
       break;
 
-    case 'none':
+    case "none":
     default:
       // No obstacles - array is already zeroed
       break;
@@ -230,7 +368,7 @@ function generateGradientData(
   width: number,
   height: number,
   targetX: number,
-  targetY: number
+  targetY: number,
 ): Float32Array {
   const data = new Float32Array(width * height);
   const maxDist = Math.sqrt(width * width + height * height);
@@ -241,7 +379,7 @@ function generateGradientData(
       const dy = y - targetY;
       const dist = Math.sqrt(dx * dx + dy * dy);
       // Normalize to 0-1 range, higher values closer to target
-      data[y * width + x] = 1 - (dist / maxDist);
+      data[y * width + x] = 1 - dist / maxDist;
     }
   }
 
@@ -267,23 +405,23 @@ function ruleToBitmask(rule: number[]): number {
 export async function createEngine(config: EngineConfig): Promise<Engine> {
   const { canvas } = config;
   const gridConfig = config.gridConfig ?? DEFAULT_GRID_CONFIG;
-  let currentParadigm: CAParadigm = config.paradigm ?? 'discrete';
+  let currentParadigm: CAParadigm = config.paradigm ?? "discrete";
   let discreteRule = config.discreteRule ?? GAME_OF_LIFE_RULE;
 
   // Initialize WebGPU
   const { device } = await initWebGPU();
 
   // Configure canvas context
-  const context = canvas.getContext('webgpu');
+  const context = canvas.getContext("webgpu");
   if (!context) {
-    throw new Error('Failed to get WebGPU canvas context');
+    throw new Error("Failed to get WebGPU canvas context");
   }
 
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
   context.configure({
     device,
     format: presentationFormat,
-    alphaMode: 'premultiplied',
+    alphaMode: "premultiplied",
   });
 
   // Create buffer manager
@@ -292,48 +430,52 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
   // Create staging buffer for GPU -> CPU readback
   const bytesPerRow = Math.ceil((gridConfig.width * 4) / 256) * 256; // Must be multiple of 256
   const stagingBuffer = device.createBuffer({
-    label: 'staging-buffer',
+    label: "staging-buffer",
     size: bytesPerRow * gridConfig.height,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
   });
 
   // Create compute shader module
-  const computeShaderModule = createShaderModule(device, discreteCAShader, 'discrete-ca');
+  const computeShaderModule = createShaderModule(
+    device,
+    discreteCAShader,
+    "discrete-ca",
+  );
 
   // Create render shader module
-  const renderShaderModule = createShaderModule(device, renderShader, 'render');
+  const renderShaderModule = createShaderModule(device, renderShader, "render");
 
   // Create bind group layout for compute
   const computeBindGroupLayout = device.createBindGroupLayout({
-    label: 'compute-bind-group-layout',
+    label: "compute-bind-group-layout",
     entries: [
       {
         binding: 0,
         visibility: GPUShaderStage.COMPUTE,
-        texture: { sampleType: 'unfilterable-float' },
+        texture: { sampleType: "unfilterable-float" },
       },
       {
         binding: 1,
         visibility: GPUShaderStage.COMPUTE,
-        storageTexture: { access: 'write-only', format: 'r32float' },
+        storageTexture: { access: "write-only", format: "r32float" },
       },
       {
         binding: 2,
         visibility: GPUShaderStage.COMPUTE,
-        buffer: { type: 'uniform' },
+        buffer: { type: "uniform" },
       },
     ],
   });
 
   // Create compute pipeline
   const computePipeline = device.createComputePipeline({
-    label: 'discrete-ca-pipeline',
+    label: "discrete-ca-pipeline",
     layout: device.createPipelineLayout({
       bindGroupLayouts: [computeBindGroupLayout],
     }),
     compute: {
       module: computeShaderModule,
-      entryPoint: 'main',
+      entryPoint: "main",
     },
   });
 
@@ -341,21 +483,21 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
   const continuousPipeline = createContinuousPipeline(
     device,
     gridConfig.width,
-    gridConfig.height
+    gridConfig.height,
   );
 
   // Create conservation pipeline for Flow-Lenia
   const conservationPipeline = createConservationPipeline(
     device,
     gridConfig.width,
-    gridConfig.height
+    gridConfig.height,
   );
 
   // Create sensorimotor pipeline
   const sensorimotorPipeline = createSensorimotorPipeline(
     device,
     gridConfig.width,
-    gridConfig.height
+    gridConfig.height,
   );
 
   // Create multi-channel pipeline
@@ -363,38 +505,46 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
     device,
     gridConfig.width,
     gridConfig.height,
-    MULTICHANNEL_PRESETS['single']
+    MULTICHANNEL_PRESETS["single"],
   );
   let multiChannelEnabled = false;
-  let currentMultiChannelConfig = MULTICHANNEL_PRESETS['single'];
+  let currentMultiChannelConfig = MULTICHANNEL_PRESETS["single"];
 
   // Create multi-channel textures (RGBA for up to 4 species)
-  const createMultiChannelTexture = (label: string) => device.createTexture({
-    label,
-    size: [gridConfig.width, gridConfig.height],
-    format: 'rgba32float',
-    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST,
-  });
+  const createMultiChannelTexture = (label: string) =>
+    device.createTexture({
+      label,
+      size: [gridConfig.width, gridConfig.height],
+      format: "rgba32float",
+      usage:
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.STORAGE_BINDING |
+        GPUTextureUsage.COPY_DST,
+    });
 
-  let multiChannelTextureA = createMultiChannelTexture('multi-channel-a');
-  let multiChannelTextureB = createMultiChannelTexture('multi-channel-b');
+  let multiChannelTextureA = createMultiChannelTexture("multi-channel-a");
+  let multiChannelTextureB = createMultiChannelTexture("multi-channel-b");
   let multiChannelRead = multiChannelTextureA;
   let multiChannelWrite = multiChannelTextureB;
 
   // Create sensorimotor textures (RGBA32float for multi-channel state)
   // Main: R=creature, G=obstacle, B=gradient, A=motor
   // Aux: R=proximity, G=pheromone, B=reserved, A=reserved
-  const createSensorimotorTexture = (label: string) => device.createTexture({
-    label,
-    size: [gridConfig.width, gridConfig.height],
-    format: 'rgba32float',
-    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST,
-  });
+  const createSensorimotorTexture = (label: string) =>
+    device.createTexture({
+      label,
+      size: [gridConfig.width, gridConfig.height],
+      format: "rgba32float",
+      usage:
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.STORAGE_BINDING |
+        GPUTextureUsage.COPY_DST,
+    });
 
-  let sensorimotorMainA = createSensorimotorTexture('sensorimotor-main-a');
-  let sensorimotorMainB = createSensorimotorTexture('sensorimotor-main-b');
-  let sensorimotorAuxA = createSensorimotorTexture('sensorimotor-aux-a');
-  let sensorimotorAuxB = createSensorimotorTexture('sensorimotor-aux-b');
+  let sensorimotorMainA = createSensorimotorTexture("sensorimotor-main-a");
+  let sensorimotorMainB = createSensorimotorTexture("sensorimotor-main-b");
+  let sensorimotorAuxA = createSensorimotorTexture("sensorimotor-aux-a");
+  let sensorimotorAuxB = createSensorimotorTexture("sensorimotor-aux-b");
   let sensorimotorMainRead = sensorimotorMainA;
   let sensorimotorMainWrite = sensorimotorMainB;
   let sensorimotorAuxRead = sensorimotorAuxA;
@@ -402,112 +552,138 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
   let sensorimotorEnabled = false;
 
   // Mass conservation state
-  let targetMass: number | null = null;  // Set when conservation is enabled
+  let targetMass: number | null = null; // Set when conservation is enabled
+
+  // Obstacle visualization state
+  let showObstacles = false;
 
   // Create render bind group layout (using unfilterable-float for r32float textures)
   const renderBindGroupLayout = device.createBindGroupLayout({
-    label: 'render-bind-group-layout',
+    label: "render-bind-group-layout",
     entries: [
       {
         binding: 0,
         visibility: GPUShaderStage.FRAGMENT,
-        texture: { sampleType: 'unfilterable-float' },
+        texture: { sampleType: "unfilterable-float" },
       },
       {
         binding: 1,
         visibility: GPUShaderStage.FRAGMENT,
-        buffer: { type: 'uniform' },
+        buffer: { type: "uniform" },
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.FRAGMENT,
+        texture: { sampleType: "unfilterable-float" }, // Obstacle texture (RGBA32float)
       },
     ],
   });
 
-  // Create render uniform buffer for texture size and colormap
+  // Create render uniform buffer for texture size, colormap, and obstacle visibility
   const renderUniformBuffer = device.createBuffer({
-    label: 'render-uniform-buffer',
-    size: 16, // 2 x u32 (size) + u32 (colormap) + u32 (padding) = 16 bytes
+    label: "render-uniform-buffer",
+    size: 16, // 2 x u32 (size) + u32 (colormap) + u32 (show_obstacles) = 16 bytes
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
-  let currentColormap: ColormapName = 'viridis';
-  device.queue.writeBuffer(renderUniformBuffer, 0, new Uint32Array([
-    gridConfig.width,
-    gridConfig.height,
-    COLORMAP_IDS[currentColormap],
-    0, // padding
-  ]));
+  let currentColormap: ColormapName = "viridis";
+
+  // Helper to update render uniforms
+  function updateRenderUniforms() {
+    device.queue.writeBuffer(
+      renderUniformBuffer,
+      0,
+      new Uint32Array([
+        gridConfig.width,
+        gridConfig.height,
+        COLORMAP_IDS[currentColormap],
+        showObstacles ? 1 : 0,
+      ]),
+    );
+  }
+
+  updateRenderUniforms();
 
   // Create render pipeline
   const renderPipeline = device.createRenderPipeline({
-    label: 'render-pipeline',
+    label: "render-pipeline",
     layout: device.createPipelineLayout({
       bindGroupLayouts: [renderBindGroupLayout],
     }),
     vertex: {
       module: renderShaderModule,
-      entryPoint: 'vs_main',
+      entryPoint: "vs_main",
     },
     fragment: {
       module: renderShaderModule,
-      entryPoint: 'fs_main',
+      entryPoint: "fs_main",
       targets: [{ format: presentationFormat }],
     },
     primitive: {
-      topology: 'triangle-list',
+      topology: "triangle-list",
     },
   });
 
   // Create multi-channel render shader module and pipeline
-  const multiChannelRenderShaderModule = createShaderModule(device, multiChannelRenderShader, 'multi-channel-render');
+  const multiChannelRenderShaderModule = createShaderModule(
+    device,
+    multiChannelRenderShader,
+    "multi-channel-render",
+  );
 
   const multiChannelRenderBindGroupLayout = device.createBindGroupLayout({
-    label: 'multi-channel-render-bind-group-layout',
+    label: "multi-channel-render-bind-group-layout",
     entries: [
       {
         binding: 0,
         visibility: GPUShaderStage.FRAGMENT,
-        texture: { sampleType: 'unfilterable-float' },
+        texture: { sampleType: "unfilterable-float" },
       },
       {
         binding: 1,
         visibility: GPUShaderStage.FRAGMENT,
-        buffer: { type: 'uniform' },
+        buffer: { type: "uniform" },
       },
       {
         binding: 2,
         visibility: GPUShaderStage.FRAGMENT,
-        buffer: { type: 'uniform' },
+        buffer: { type: "uniform" },
       },
     ],
   });
 
   const multiChannelRenderPipeline = device.createRenderPipeline({
-    label: 'multi-channel-render-pipeline',
+    label: "multi-channel-render-pipeline",
     layout: device.createPipelineLayout({
       bindGroupLayouts: [multiChannelRenderBindGroupLayout],
     }),
     vertex: {
       module: multiChannelRenderShaderModule,
-      entryPoint: 'vs_main',
+      entryPoint: "vs_main",
     },
     fragment: {
       module: multiChannelRenderShaderModule,
-      entryPoint: 'fs_main',
+      entryPoint: "fs_main",
       targets: [{ format: presentationFormat }],
     },
     primitive: {
-      topology: 'triangle-list',
+      topology: "triangle-list",
     },
   });
 
   // Multi-channel render uniforms
   const multiChannelSizeBuffer = device.createBuffer({
-    label: 'multi-channel-size-buffer',
+    label: "multi-channel-size-buffer",
     size: 8, // 2 x u32
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
-  device.queue.writeBuffer(multiChannelSizeBuffer, 0, new Uint32Array([gridConfig.width, gridConfig.height]));
+  device.queue.writeBuffer(
+    multiChannelSizeBuffer,
+    0,
+    new Uint32Array([gridConfig.width, gridConfig.height]),
+  );
 
   const multiChannelColorsBuffer = device.createBuffer({
-    label: 'multi-channel-colors-buffer',
+    label: "multi-channel-colors-buffer",
     size: 64, // 4 x vec4<f32>
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
@@ -529,7 +705,13 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
   updateMultiChannelColors();
 
   // Initialize state with a pattern
-  initializePattern(device, bufferManager.getReadTexture(), gridConfig.width, gridConfig.height, 'random');
+  initializePattern(
+    device,
+    bufferManager.getReadTexture(),
+    gridConfig.width,
+    gridConfig.height,
+    "random",
+  );
 
   // Engine state
   let running = false;
@@ -550,6 +732,11 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
   };
   let creatureUpdateCallback: CreatureUpdateCallback | null = null;
 
+  // Particle-Lenia hybrid state
+  let particlesEnabled = false;
+  let particleState: ParticleSystemState | null = null;
+  let fieldGradientCache: { x: Float32Array; y: Float32Array } | null = null;
+
   /**
    * Create bind groups for current buffer configuration
    */
@@ -558,21 +745,25 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
     const writeTexture = bufferManager.getWriteTexture();
 
     const computeBindGroup = device.createBindGroup({
-      label: 'compute-bind-group',
+      label: "compute-bind-group",
       layout: computeBindGroupLayout,
       entries: [
         { binding: 0, resource: readTexture.createView() },
         { binding: 1, resource: writeTexture.createView() },
-        { binding: 2, resource: { buffer: bufferManager.buffers.uniformBuffer } },
+        {
+          binding: 2,
+          resource: { buffer: bufferManager.buffers.uniformBuffer },
+        },
       ],
     });
 
     const renderBindGroup = device.createBindGroup({
-      label: 'render-bind-group',
+      label: "render-bind-group",
       layout: renderBindGroupLayout,
       entries: [
         { binding: 0, resource: readTexture.createView() },
         { binding: 1, resource: { buffer: renderUniformBuffer } },
+        { binding: 2, resource: sensorimotorMainRead.createView() }, // Obstacle texture (G channel)
       ],
     });
 
@@ -610,7 +801,10 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
 
     if (multiChannelEnabled) {
       // Multi-channel ecology mode
-      const multiBindGroup = multiChannelPipeline.createBindGroup(multiChannelRead, multiChannelWrite);
+      const multiBindGroup = multiChannelPipeline.createBindGroup(
+        multiChannelRead,
+        multiChannelWrite,
+      );
       const computePass = commandEncoder.beginComputePass();
       computePass.setPipeline(multiChannelPipeline.computePipeline);
       computePass.setBindGroup(0, multiBindGroup);
@@ -621,7 +815,7 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
       const temp = multiChannelRead;
       multiChannelRead = multiChannelWrite;
       multiChannelWrite = temp;
-    } else if (currentParadigm === 'continuous') {
+    } else if (currentParadigm === "continuous") {
       // Continuous CA (Lenia/SmoothLife)
       // Use the dispatch method which handles FFT vs direct convolution automatically
       continuousPipeline.dispatch(
@@ -629,7 +823,7 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
         readTexture,
         writeTexture,
         workgroupsX,
-        workgroupsY
+        workgroupsY,
       );
     } else {
       // Discrete CA (Game of Life)
@@ -649,7 +843,10 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
     // The mass display shows how mass evolves over time
     if (conservationPipeline.getConfig().enabled && step % 10 === 0) {
       const massCommandEncoder = device.createCommandEncoder();
-      conservationPipeline.computeMass(massCommandEncoder, bufferManager.getReadTexture());
+      conservationPipeline.computeMass(
+        massCommandEncoder,
+        bufferManager.getReadTexture(),
+      );
       device.queue.submit([massCommandEncoder.finish()]);
     }
 
@@ -659,8 +856,8 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
         {
           view: context!.getCurrentTexture().createView(),
           clearValue: { r: 0, g: 0, b: 0, a: 1 },
-          loadOp: 'clear',
-          storeOp: 'store',
+          loadOp: "clear",
+          storeOp: "store",
         },
       ],
     });
@@ -668,7 +865,7 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
     if (multiChannelEnabled) {
       // Multi-channel render with species colors
       const multiRenderBindGroup = device.createBindGroup({
-        label: 'multi-channel-render-bind-group',
+        label: "multi-channel-render-bind-group",
         layout: multiChannelRenderBindGroupLayout,
         entries: [
           { binding: 0, resource: multiChannelRead.createView() },
@@ -696,6 +893,106 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
     if (trackingEnabled && step % trackingConfig.updateInterval === 0) {
       updateCreatureTracking();
     }
+
+    // Particle-Lenia hybrid updates
+    if (particlesEnabled && particleState) {
+      updateParticleHybrid();
+    }
+  }
+
+  /**
+   * Update particle-Lenia hybrid system
+   * Updates particles and deposits mass to the Lenia field
+   */
+  function updateParticleHybrid() {
+    if (!particleState) return;
+
+    // Update particle physics (CPU-based)
+    // Use cached gradient if gradient response is enabled
+    const gradient =
+      particleState.fieldCoupling.gradientResponseEnabled && fieldGradientCache
+        ? fieldGradientCache
+        : undefined;
+    updateParticleSystem(particleState, gradient);
+
+    // Deposit particles to field if enabled
+    if (
+      particleState.fieldCoupling.depositEnabled &&
+      currentParadigm === "continuous"
+    ) {
+      // Create a deposit field
+      const depositField = new Float32Array(
+        gridConfig.width * gridConfig.height,
+      );
+      depositToField(particleState, depositField);
+
+      // Check if there's any deposit to apply
+      let hasDeposit = false;
+      for (let i = 0; i < depositField.length; i++) {
+        if (depositField[i] > 0) {
+          hasDeposit = true;
+          break;
+        }
+      }
+
+      if (hasDeposit) {
+        // Read current texture, add deposit, write back
+        // For efficiency, we schedule this as an async operation
+        applyParticleDeposit(depositField);
+      }
+    }
+
+    // Update gradient cache periodically (every 10 steps)
+    if (
+      particleState.fieldCoupling.gradientResponseEnabled &&
+      step % 10 === 0
+    ) {
+      updateGradientCache();
+    }
+  }
+
+  /**
+   * Apply particle deposit to the Lenia field
+   */
+  async function applyParticleDeposit(depositField: Float32Array) {
+    try {
+      const currentState = await engineInstance.readState();
+      if (!currentState) return;
+
+      // Add deposit to current state (clamped to 0-1)
+      for (let i = 0; i < currentState.length; i++) {
+        currentState[i] = Math.min(1, currentState[i] + depositField[i]);
+      }
+
+      // Write back to GPU
+      const readTexture = bufferManager.getReadTexture();
+      device.queue.writeTexture(
+        { texture: readTexture },
+        currentState,
+        { bytesPerRow: gridConfig.width * 4 }, // 1 float = 4 bytes
+        { width: gridConfig.width, height: gridConfig.height },
+      );
+    } catch (e) {
+      console.warn("Failed to apply particle deposit:", e);
+    }
+  }
+
+  /**
+   * Update gradient cache for particle response
+   */
+  async function updateGradientCache() {
+    try {
+      const state = await engineInstance.readState();
+      if (!state) return;
+
+      fieldGradientCache = calculateFieldGradient(
+        state,
+        gridConfig.width,
+        gridConfig.height,
+      );
+    } catch (e) {
+      console.warn("Failed to update gradient cache:", e);
+    }
   }
 
   /**
@@ -716,7 +1013,7 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
         gridConfig.width,
         gridConfig.height,
         trackingConfig.threshold,
-        trackingConfig.minMass
+        trackingConfig.minMass,
       );
 
       // Update trajectory collector
@@ -730,7 +1027,7 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
       }
     } catch (e) {
       // Silently handle tracking errors - don't disrupt simulation
-      console.warn('Tracking update failed:', e);
+      console.warn("Tracking update failed:", e);
     }
   }
 
@@ -766,8 +1063,8 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
         {
           view: context!.getCurrentTexture().createView(),
           clearValue: { r: 0, g: 0, b: 0, a: 1 },
-          loadOp: 'clear',
-          storeOp: 'store',
+          loadOp: "clear",
+          storeOp: "store",
         },
       ],
     });
@@ -783,9 +1080,15 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
   render();
 
   const engine: Engine = {
-    get running() { return running; },
-    get step() { return step; },
-    get fps() { return fps; },
+    get running() {
+      return running;
+    },
+    get step() {
+      return step;
+    },
+    get fps() {
+      return fps;
+    },
 
     start() {
       if (!running) {
@@ -818,20 +1121,33 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
       }
     },
 
-    reset(pattern = 'random') {
+    reset(pattern = "random") {
       this.stop();
       step = 0;
-      initializePattern(device, bufferManager.getReadTexture(), gridConfig.width, gridConfig.height, pattern);
+      initializePattern(
+        device,
+        bufferManager.getReadTexture(),
+        gridConfig.width,
+        gridConfig.height,
+        pattern,
+      );
 
       // Also reinitialize multi-channel textures if ecology mode is enabled
       if (multiChannelEnabled && currentMultiChannelConfig) {
-        const initData = new Float32Array(gridConfig.width * gridConfig.height * 4);
+        const initData = new Float32Array(
+          gridConfig.width * gridConfig.height * 4,
+        );
         const centerX = gridConfig.width / 2;
         const centerY = gridConfig.height / 2;
         const spacing = 80;
 
-        for (let c = 0; c < currentMultiChannelConfig.channels.length && c < 4; c++) {
-          const offsetX = (c % 2 === 0 ? -1 : 1) * spacing * (c < 2 ? 0.5 : 1.5);
+        for (
+          let c = 0;
+          c < currentMultiChannelConfig.channels.length && c < 4;
+          c++
+        ) {
+          const offsetX =
+            (c % 2 === 0 ? -1 : 1) * spacing * (c < 2 ? 0.5 : 1.5);
           const offsetY = (c < 2 ? -1 : 1) * spacing * 0.5;
           const speciesCenterX = centerX + offsetX;
           const speciesCenterY = centerY + offsetY;
@@ -843,7 +1159,9 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
               const dy = y - speciesCenterY;
               const dist = Math.sqrt(dx * dx + dy * dy);
               if (dist < radius) {
-                const value = Math.exp(-(dist * dist) / (radius * radius * 0.5));
+                const value = Math.exp(
+                  -(dist * dist) / (radius * radius * 0.5),
+                );
                 initData[(y * gridConfig.width + x) * 4 + c] = value;
               }
             }
@@ -854,7 +1172,7 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
           { texture: multiChannelRead },
           initData,
           { bytesPerRow: gridConfig.width * 16 },
-          { width: gridConfig.width, height: gridConfig.height }
+          { width: gridConfig.width, height: gridConfig.height },
         );
       }
 
@@ -890,12 +1208,7 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
 
     setColormap(colormap: ColormapName) {
       currentColormap = colormap;
-      device.queue.writeBuffer(renderUniformBuffer, 0, new Uint32Array([
-        gridConfig.width,
-        gridConfig.height,
-        COLORMAP_IDS[colormap],
-        0, // padding
-      ]));
+      updateRenderUniforms();
       // Re-render to show new colormap immediately
       render();
     },
@@ -925,7 +1238,7 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
         commandEncoder.copyTextureToBuffer(
           { texture: readTexture },
           { buffer: stagingBuffer, bytesPerRow },
-          { width: gridConfig.width, height: gridConfig.height }
+          { width: gridConfig.width, height: gridConfig.height },
         );
         device.queue.submit([commandEncoder.finish()]);
 
@@ -948,7 +1261,7 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
         stagingBuffer.unmap();
         return result;
       } catch (e) {
-        console.error('Failed to read state:', e);
+        console.error("Failed to read state:", e);
         return null;
       }
     },
@@ -965,20 +1278,26 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
         }
       };
 
-      safeDestroy(() => bufferManager.destroy(), 'bufferManager');
-      safeDestroy(() => continuousPipeline.destroy(), 'continuousPipeline');
-      safeDestroy(() => conservationPipeline.destroy(), 'conservationPipeline');
-      safeDestroy(() => sensorimotorPipeline.destroy(), 'sensorimotorPipeline');
-      safeDestroy(() => multiChannelPipeline.destroy(), 'multiChannelPipeline');
-      safeDestroy(() => stagingBuffer.destroy(), 'stagingBuffer');
-      safeDestroy(() => sensorimotorMainA.destroy(), 'sensorimotorMainA');
-      safeDestroy(() => sensorimotorMainB.destroy(), 'sensorimotorMainB');
-      safeDestroy(() => sensorimotorAuxA.destroy(), 'sensorimotorAuxA');
-      safeDestroy(() => sensorimotorAuxB.destroy(), 'sensorimotorAuxB');
-      safeDestroy(() => multiChannelTextureA.destroy(), 'multiChannelTextureA');
-      safeDestroy(() => multiChannelTextureB.destroy(), 'multiChannelTextureB');
-      safeDestroy(() => multiChannelSizeBuffer.destroy(), 'multiChannelSizeBuffer');
-      safeDestroy(() => multiChannelColorsBuffer.destroy(), 'multiChannelColorsBuffer');
+      safeDestroy(() => bufferManager.destroy(), "bufferManager");
+      safeDestroy(() => continuousPipeline.destroy(), "continuousPipeline");
+      safeDestroy(() => conservationPipeline.destroy(), "conservationPipeline");
+      safeDestroy(() => sensorimotorPipeline.destroy(), "sensorimotorPipeline");
+      safeDestroy(() => multiChannelPipeline.destroy(), "multiChannelPipeline");
+      safeDestroy(() => stagingBuffer.destroy(), "stagingBuffer");
+      safeDestroy(() => sensorimotorMainA.destroy(), "sensorimotorMainA");
+      safeDestroy(() => sensorimotorMainB.destroy(), "sensorimotorMainB");
+      safeDestroy(() => sensorimotorAuxA.destroy(), "sensorimotorAuxA");
+      safeDestroy(() => sensorimotorAuxB.destroy(), "sensorimotorAuxB");
+      safeDestroy(() => multiChannelTextureA.destroy(), "multiChannelTextureA");
+      safeDestroy(() => multiChannelTextureB.destroy(), "multiChannelTextureB");
+      safeDestroy(
+        () => multiChannelSizeBuffer.destroy(),
+        "multiChannelSizeBuffer",
+      );
+      safeDestroy(
+        () => multiChannelColorsBuffer.destroy(),
+        "multiChannelColorsBuffer",
+      );
     },
 
     getConfig() {
@@ -1010,7 +1329,7 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
       trackerState = createTrackerState();
       trajectoryCollector = createTrajectoryCollector(
         gridConfig.width,
-        gridConfig.height
+        gridConfig.height,
       );
     },
 
@@ -1050,7 +1369,7 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
       return extractBehaviorVector(
         trajectory,
         gridConfig.width,
-        gridConfig.height
+        gridConfig.height,
       );
     },
 
@@ -1063,19 +1382,21 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
       sensorimotorEnabled = true;
       // Initialize sensorimotor textures with current state
       // Copy creature state from main buffer to R channel
-      const initData = new Float32Array(gridConfig.width * gridConfig.height * 4);
+      const initData = new Float32Array(
+        gridConfig.width * gridConfig.height * 4,
+      );
       // Initialize with zeros - creatures will be copied from main state
       device.queue.writeTexture(
         { texture: sensorimotorMainRead },
         initData,
         { bytesPerRow: gridConfig.width * 16 }, // 4 floats * 4 bytes
-        { width: gridConfig.width, height: gridConfig.height }
+        { width: gridConfig.width, height: gridConfig.height },
       );
       device.queue.writeTexture(
         { texture: sensorimotorAuxRead },
         initData,
         { bytesPerRow: gridConfig.width * 16 },
-        { width: gridConfig.width, height: gridConfig.height }
+        { width: gridConfig.width, height: gridConfig.height },
       );
     },
 
@@ -1088,11 +1409,17 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
     },
 
     setObstacles(pattern: ObstaclePattern) {
-      const obstacleData = generateObstacleData(gridConfig.width, gridConfig.height, pattern);
+      const obstacleData = generateObstacleData(
+        gridConfig.width,
+        gridConfig.height,
+        pattern,
+      );
 
       // Read current main texture, update G channel with obstacles, write back
       // For simplicity, create new RGBA data with obstacles in G channel
-      const rgbaData = new Float32Array(gridConfig.width * gridConfig.height * 4);
+      const rgbaData = new Float32Array(
+        gridConfig.width * gridConfig.height * 4,
+      );
       for (let i = 0; i < obstacleData.length; i++) {
         rgbaData[i * 4 + 1] = obstacleData[i]; // G channel = obstacle
       }
@@ -1101,16 +1428,23 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
         { texture: sensorimotorMainRead },
         rgbaData,
         { bytesPerRow: gridConfig.width * 16 },
-        { width: gridConfig.width, height: gridConfig.height }
+        { width: gridConfig.width, height: gridConfig.height },
       );
     },
 
     setTargetGradient(targetX: number, targetY: number) {
-      const gradientData = generateGradientData(gridConfig.width, gridConfig.height, targetX, targetY);
+      const gradientData = generateGradientData(
+        gridConfig.width,
+        gridConfig.height,
+        targetX,
+        targetY,
+      );
 
       // Read current main texture, update B channel with gradient
       // For now, create fresh RGBA data with gradient in B channel
-      const rgbaData = new Float32Array(gridConfig.width * gridConfig.height * 4);
+      const rgbaData = new Float32Array(
+        gridConfig.width * gridConfig.height * 4,
+      );
       for (let i = 0; i < gradientData.length; i++) {
         rgbaData[i * 4 + 2] = gradientData[i]; // B channel = gradient
       }
@@ -1119,7 +1453,7 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
         { texture: sensorimotorMainRead },
         rgbaData,
         { bytesPerRow: gridConfig.width * 16 },
-        { width: gridConfig.width, height: gridConfig.height }
+        { width: gridConfig.width, height: gridConfig.height },
       );
     },
 
@@ -1127,16 +1461,27 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
       sensorimotorPipeline.updateParams(params);
     },
 
+    setShowObstacles(show: boolean) {
+      showObstacles = show;
+      updateRenderUniforms();
+    },
+
+    isShowingObstacles() {
+      return showObstacles;
+    },
+
     // Multi-channel ecology methods
     enableMultiChannel(config?: MultiChannelConfig) {
-      const targetConfig = config ?? MULTICHANNEL_PRESETS['single'];
+      const targetConfig = config ?? MULTICHANNEL_PRESETS["single"];
       currentMultiChannelConfig = targetConfig;
       multiChannelPipeline.updateConfig(targetConfig);
       multiChannelEnabled = true;
       updateMultiChannelColors();
 
       // Initialize multi-channel textures with species patterns
-      const initData = new Float32Array(gridConfig.width * gridConfig.height * 4);
+      const initData = new Float32Array(
+        gridConfig.width * gridConfig.height * 4,
+      );
 
       // Place initial species blobs
       const centerX = gridConfig.width / 2;
@@ -1169,13 +1514,13 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
         { texture: multiChannelRead },
         initData,
         { bytesPerRow: gridConfig.width * 16 }, // 4 floats * 4 bytes
-        { width: gridConfig.width, height: gridConfig.height }
+        { width: gridConfig.width, height: gridConfig.height },
       );
     },
 
     disableMultiChannel() {
       multiChannelEnabled = false;
-      currentMultiChannelConfig = MULTICHANNEL_PRESETS['single'];
+      currentMultiChannelConfig = MULTICHANNEL_PRESETS["single"];
     },
 
     isMultiChannelEnabled() {
@@ -1190,6 +1535,129 @@ export async function createEngine(config: EngineConfig): Promise<Engine> {
       const preset = MULTICHANNEL_PRESETS[presetName];
       if (preset) {
         this.enableMultiChannel(preset);
+      }
+    },
+
+    // Particle-Lenia hybrid methods
+    enableParticles(config?: Partial<ParticleSystemConfig>) {
+      particlesEnabled = true;
+      particleState = createParticleSystem(
+        {
+          maxParticles: config?.maxParticles ?? 500,
+          numTypes: config?.numTypes ?? 3,
+          gridWidth: gridConfig.width,
+          gridHeight: gridConfig.height,
+          wrapBoundaries: config?.wrapBoundaries ?? true,
+          friction: config?.friction ?? 0.02,
+          dt: config?.dt ?? 0.5,
+        },
+        {
+          depositEnabled: true,
+          depositAmount: 0.1,
+          depositRadius: 5,
+          gradientResponseEnabled: true,
+          gradientStrength: 0.5,
+        },
+      );
+      fieldGradientCache = null;
+    },
+
+    disableParticles() {
+      particlesEnabled = false;
+      particleState = null;
+      fieldGradientCache = null;
+    },
+
+    isParticlesEnabled() {
+      return particlesEnabled;
+    },
+
+    getParticleState() {
+      return particleState;
+    },
+
+    getActiveParticles() {
+      if (!particleState) return [];
+      return getActiveParticles(particleState);
+    },
+
+    setParticleConfig(config: Partial<ParticleSystemConfig>) {
+      if (!particleState) return;
+
+      // Update mutable config properties
+      if (config.friction !== undefined) {
+        particleState.config.friction = config.friction;
+      }
+      if (config.dt !== undefined) {
+        particleState.config.dt = config.dt;
+      }
+      if (config.wrapBoundaries !== undefined) {
+        particleState.config.wrapBoundaries = config.wrapBoundaries;
+      }
+    },
+
+    setParticleCoupling(coupling: Partial<FieldCouplingConfig>) {
+      if (!particleState) return;
+
+      particleState.fieldCoupling = {
+        ...particleState.fieldCoupling,
+        ...coupling,
+      };
+
+      // Clear gradient cache if gradient response changed
+      if (coupling.gradientResponseEnabled !== undefined) {
+        fieldGradientCache = null;
+      }
+    },
+
+    spawnParticles(count: number, options?: SpawnParticleOptions) {
+      if (!particleState) return;
+
+      spawnRandomParticles(particleState, count, {
+        centerX: options?.centerX ?? gridConfig.width / 2,
+        centerY: options?.centerY ?? gridConfig.height / 2,
+        spread: options?.spread ?? 50,
+        types: options?.types,
+      });
+    },
+
+    clearParticles() {
+      if (!particleState) return;
+
+      // Mark all particles as inactive
+      for (const particle of particleState.particles) {
+        particle.active = false;
+      }
+      particleState.activeCount = 0;
+    },
+
+    setParticlePreset(preset: ParticlePresetName) {
+      const presetConfig = PARTICLE_LENIA_PRESETS[preset];
+      if (!presetConfig) return;
+
+      // Clear existing particles
+      this.clearParticles();
+
+      // Apply preset config
+      if (particleState) {
+        // Update config
+        Object.assign(particleState.config, presetConfig.particleConfig);
+        particleState.config.gridWidth = gridConfig.width;
+        particleState.config.gridHeight = gridConfig.height;
+
+        // Update coupling
+        Object.assign(particleState.fieldCoupling, presetConfig.coupling);
+
+        // Update interaction matrix
+        const numTypes = presetConfig.particleConfig.numTypes ?? 3;
+        particleState.interactionMatrix =
+          INTERACTION_PRESETS[presetConfig.interactionPreset](numTypes);
+
+        // Spawn initial particles
+        this.spawnParticles(presetConfig.initialParticles);
+
+        // Clear gradient cache
+        fieldGradientCache = null;
       }
     },
   };
@@ -1218,3 +1686,8 @@ export type { ObstaclePattern };
 // Re-export multi-channel types
 export type { EcologyParams };
 export type { MultiChannelConfig };
+
+// Re-export particle types
+export type { ParticleSystemState, ParticleSystemConfig, FieldCouplingConfig, Particle };
+export type { SpawnParticleOptions, ParticlePresetName };
+// PARTICLE_LENIA_PRESETS is already exported where it's defined

@@ -10,12 +10,12 @@
 
 export interface CAParameters {
   // Kernel parameters (learnable)
-  kernelWeights: Float32Array;  // Kernel shape weights
+  kernelWeights: Float32Array; // Kernel shape weights
   kernelRadius: number;
 
   // Growth function parameters (learnable)
-  growthCenter: number;    // μ
-  growthWidth: number;     // σ
+  growthCenter: number; // μ
+  growthWidth: number; // σ
 
   // Time step (learnable or fixed)
   dt: number;
@@ -47,7 +47,11 @@ export function softGrowth(n: number, mu: number, sigma: number): number {
  * Derivative of soft growth function with respect to n
  * Used for backpropagation
  */
-export function softGrowthDerivative(n: number, mu: number, sigma: number): number {
+export function softGrowthDerivative(
+  n: number,
+  mu: number,
+  sigma: number,
+): number {
   const x = (n - mu) / (3 * sigma);
   if (Math.abs(x) >= 1) {
     return 0;
@@ -62,7 +66,11 @@ export function softGrowthDerivative(n: number, mu: number, sigma: number): numb
 /**
  * Derivative of soft growth with respect to μ
  */
-export function softGrowthDerivativeMu(n: number, mu: number, sigma: number): number {
+export function softGrowthDerivativeMu(
+  n: number,
+  mu: number,
+  sigma: number,
+): number {
   // dx/dμ = -1/(3σ)
   return -softGrowthDerivative(n, mu, sigma);
 }
@@ -70,7 +78,11 @@ export function softGrowthDerivativeMu(n: number, mu: number, sigma: number): nu
 /**
  * Derivative of soft growth with respect to σ
  */
-export function softGrowthDerivativeSigma(n: number, mu: number, sigma: number): number {
+export function softGrowthDerivativeSigma(
+  n: number,
+  mu: number,
+  sigma: number,
+): number {
   const x = (n - mu) / (3 * sigma);
   if (Math.abs(x) >= 1) {
     return 0;
@@ -87,9 +99,9 @@ export function softGrowthDerivativeSigma(n: number, mu: number, sigma: number):
  * Stores intermediate values needed for backpropagation
  */
 export interface ForwardCache {
-  states: Float32Array[];        // State at each time step
-  neighborSums: Float32Array[];  // Convolution results
-  growthValues: Float32Array[];  // Growth function outputs
+  states: Float32Array[]; // State at each time step
+  neighborSums: Float32Array[]; // Convolution results
+  growthValues: Float32Array[]; // Growth function outputs
 }
 
 /**
@@ -101,7 +113,7 @@ export function forwardPass(
   params: CAParameters,
   width: number,
   height: number,
-  steps: number
+  steps: number,
 ): { finalState: Float32Array; cache: ForwardCache } {
   const cache: ForwardCache = {
     states: [new Float32Array(initialState)],
@@ -139,12 +151,19 @@ export function forwardPass(
 
     // Growth function
     for (let i = 0; i < width * height; i++) {
-      growthValues[i] = softGrowth(neighborSums[i], params.growthCenter, params.growthWidth);
+      growthValues[i] = softGrowth(
+        neighborSums[i],
+        params.growthCenter,
+        params.growthWidth,
+      );
     }
 
     // State update
     for (let i = 0; i < width * height; i++) {
-      newState[i] = Math.max(0, Math.min(1, state[i] + params.dt * growthValues[i]));
+      newState[i] = Math.max(
+        0,
+        Math.min(1, state[i] + params.dt * growthValues[i]),
+      );
     }
 
     cache.neighborSums.push(neighborSums);
@@ -164,7 +183,7 @@ export function backwardPass(
   params: CAParameters,
   targetState: Float32Array,
   width: number,
-  height: number
+  height: number,
 ): CAGradients {
   const steps = cache.states.length - 1;
   const kernelSize = params.kernelRadius * 2 + 1;
@@ -192,7 +211,7 @@ export function backwardPass(
     const clampGradient = new Float32Array(width * height);
     for (let i = 0; i < width * height; i++) {
       const newVal = state[i] + params.dt * growthValues[i];
-      clampGradient[i] = (newVal > 0 && newVal < 1) ? stateGradient[i] : 0;
+      clampGradient[i] = newVal > 0 && newVal < 1 ? stateGradient[i] : 0;
     }
 
     // Gradient through state update: new = old + dt * growth
@@ -208,9 +227,21 @@ export function backwardPass(
     // Gradient through growth function
     const neighborSumGradient = new Float32Array(width * height);
     for (let i = 0; i < width * height; i++) {
-      const dgdn = softGrowthDerivative(neighborSums[i], params.growthCenter, params.growthWidth);
-      const dgdmu = softGrowthDerivativeMu(neighborSums[i], params.growthCenter, params.growthWidth);
-      const dgdsigma = softGrowthDerivativeSigma(neighborSums[i], params.growthCenter, params.growthWidth);
+      const dgdn = softGrowthDerivative(
+        neighborSums[i],
+        params.growthCenter,
+        params.growthWidth,
+      );
+      const dgdmu = softGrowthDerivativeMu(
+        neighborSums[i],
+        params.growthCenter,
+        params.growthWidth,
+      );
+      const dgdsigma = softGrowthDerivativeSigma(
+        neighborSums[i],
+        params.growthCenter,
+        params.growthWidth,
+      );
 
       neighborSumGradient[i] = growthGradient[i] * dgdn;
       gradients.growthCenter += growthGradient[i] * dgdmu;
@@ -240,10 +271,13 @@ export function backwardPass(
             const kidx = ky * kernelSize + kx;
 
             // Gradient to kernel weight
-            gradients.kernelWeights[kidx] += neighborSumGradient[idx] * state[ny * width + nx] / kernelSum;
+            gradients.kernelWeights[kidx] +=
+              (neighborSumGradient[idx] * state[ny * width + nx]) / kernelSum;
 
             // Gradient to previous state
-            newStateGradient[ny * width + nx] += neighborSumGradient[idx] * params.kernelWeights[kidx] / kernelSum;
+            newStateGradient[ny * width + nx] +=
+              (neighborSumGradient[idx] * params.kernelWeights[kidx]) /
+              kernelSum;
           }
         }
       }
@@ -258,7 +292,10 @@ export function backwardPass(
 /**
  * Mean squared error loss
  */
-export function mseLoss(prediction: Float32Array, target: Float32Array): number {
+export function mseLoss(
+  prediction: Float32Array,
+  target: Float32Array,
+): number {
   let sum = 0;
   for (let i = 0; i < prediction.length; i++) {
     const diff = prediction[i] - target[i];
@@ -275,13 +312,15 @@ export function createTargetState(
   width: number,
   height: number,
   targetX: number,
-  targetY: number
+  targetY: number,
 ): Float32Array {
   // Shift the pattern toward target position
   const target = new Float32Array(width * height);
 
   // Calculate current center of mass
-  let cx = 0, cy = 0, total = 0;
+  let cx = 0,
+    cy = 0,
+    total = 0;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const val = currentState[y * width + x];

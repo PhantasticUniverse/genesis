@@ -45,7 +45,7 @@ export function findConnectedComponents(
   width: number,
   height: number,
   threshold: number = 0.1,
-  minMass: number = 50
+  minMass: number = 50,
 ): { labels: Int32Array; components: ComponentStats[] } {
   const labels = new Int32Array(width * height);
   const components: ComponentStats[] = [];
@@ -68,7 +68,10 @@ export function findConnectedComponents(
       let mass = 0;
       let sumX = 0;
       let sumY = 0;
-      let minX = width, maxX = 0, minY = height, maxY = 0;
+      let minX = width,
+        maxX = 0,
+        minY = height,
+        maxY = 0;
 
       // Flood fill
       queue.push(startIdx);
@@ -146,7 +149,7 @@ interface ComponentStats {
 export function matchCreatures(
   previousCreatures: Map<number, Creature>,
   newComponents: ComponentStats[],
-  maxMatchDistance: number = 50
+  maxMatchDistance: number = 50,
 ): Map<number, number> {
   // Map from component label to creature ID
   const matches = new Map<number, number>();
@@ -197,9 +200,15 @@ export function updateTracker(
   width: number,
   height: number,
   threshold: number = 0.1,
-  minMass: number = 50
+  minMass: number = 50,
 ): TrackerState {
-  const { labels, components } = findConnectedComponents(state, width, height, threshold, minMass);
+  const { labels, components } = findConnectedComponents(
+    state,
+    width,
+    height,
+    threshold,
+    minMass,
+  );
 
   // Match to existing creatures
   const matches = matchCreatures(tracker.creatures, components);
@@ -269,7 +278,7 @@ export function getLargestCreature(tracker: TrackerState): Creature | null {
 export function getNearestCreature(
   tracker: TrackerState,
   x: number,
-  y: number
+  y: number,
 ): Creature | null {
   let nearest: Creature | null = null;
   let minDist = Infinity;

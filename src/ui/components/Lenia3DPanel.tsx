@@ -3,12 +3,16 @@
  * Controls for 3D Lenia simulation
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Engine3D } from '../../core/engine-3d';
-import type { SlicePlane } from '../../core/types-3d';
-import { getSliceDimensions, getPlaneLabel, getSliceAxisName } from '../../render/slice-renderer';
-import { ExpandablePanel, ToggleButton, RangeSlider, StatGrid } from './common';
-import { COLORMAPS } from '../../render/colormaps';
+import { useState, useEffect, useCallback, useRef } from "react";
+import type { Engine3D } from "../../core/engine-3d";
+import type { SlicePlane } from "../../core/types-3d";
+import {
+  getSliceDimensions,
+  getPlaneLabel,
+  getSliceAxisName,
+} from "../../render/slice-renderer";
+import { ExpandablePanel, ToggleButton, RangeSlider, StatGrid } from "./common";
+import { COLORMAPS } from "../../render/colormaps";
 
 interface Lenia3DPanelProps {
   engine: Engine3D | null;
@@ -19,10 +23,10 @@ export function Lenia3DPanel({ engine, onInit }: Lenia3DPanelProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [step, setStep] = useState(0);
   const [fps, setFps] = useState(0);
-  const [slicePlane, setSlicePlane] = useState<SlicePlane>('xy');
+  const [slicePlane, setSlicePlane] = useState<SlicePlane>("xy");
   const [slicePosition, setSlicePosition] = useState(32);
-  const [colormap, setColormap] = useState('viridis');
-  const [selectedPreset, setSelectedPreset] = useState('stable-sphere');
+  const [colormap, setColormap] = useState("viridis");
+  const [selectedPreset, setSelectedPreset] = useState("stable-sphere");
   const pollRef = useRef<number | null>(null);
 
   // Poll engine state when running
@@ -70,29 +74,38 @@ export function Lenia3DPanel({ engine, onInit }: Lenia3DPanelProps) {
     engine?.reset(selectedPreset);
   }, [engine, selectedPreset]);
 
-  const handleSlicePlaneChange = useCallback((plane: SlicePlane) => {
-    if (engine) {
-      engine.setSlicePlane(plane);
-      setSlicePlane(plane);
-      // Update position slider range
-      const dims = getSliceDimensions(engine.getGridConfig(), plane);
-      setSlicePosition(Math.min(slicePosition, dims.maxPosition));
-    }
-  }, [engine, slicePosition]);
+  const handleSlicePlaneChange = useCallback(
+    (plane: SlicePlane) => {
+      if (engine) {
+        engine.setSlicePlane(plane);
+        setSlicePlane(plane);
+        // Update position slider range
+        const dims = getSliceDimensions(engine.getGridConfig(), plane);
+        setSlicePosition(Math.min(slicePosition, dims.maxPosition));
+      }
+    },
+    [engine, slicePosition],
+  );
 
-  const handleSlicePositionChange = useCallback((position: number) => {
-    if (engine) {
-      engine.setSlicePosition(position);
-      setSlicePosition(position);
-    }
-  }, [engine]);
+  const handleSlicePositionChange = useCallback(
+    (position: number) => {
+      if (engine) {
+        engine.setSlicePosition(position);
+        setSlicePosition(position);
+      }
+    },
+    [engine],
+  );
 
-  const handleColormapChange = useCallback((name: string) => {
-    if (engine) {
-      engine.setColormap(name);
-      setColormap(name);
-    }
-  }, [engine]);
+  const handleColormapChange = useCallback(
+    (name: string) => {
+      if (engine) {
+        engine.setColormap(name);
+        setColormap(name);
+      }
+    },
+    [engine],
+  );
 
   const handlePresetChange = useCallback((preset: string) => {
     setSelectedPreset(preset);
@@ -112,7 +125,9 @@ export function Lenia3DPanel({ engine, onInit }: Lenia3DPanelProps) {
         defaultExpanded={false}
       >
         <div className="text-center py-4">
-          <p className="text-zinc-500 text-sm mb-3">3D Lenia simulation not initialized</p>
+          <p className="text-zinc-500 text-sm mb-3">
+            3D Lenia simulation not initialized
+          </p>
           {onInit && (
             <button
               onClick={onInit}
@@ -135,16 +150,29 @@ export function Lenia3DPanel({ engine, onInit }: Lenia3DPanelProps) {
     <ExpandablePanel
       title="3D Lenia"
       titleColor="text-purple-400"
-      statusBadge={isRunning ? { text: 'Running', color: 'bg-green-900 text-green-400' } : undefined}
+      statusBadge={
+        isRunning
+          ? { text: "Running", color: "bg-green-900 text-green-400" }
+          : undefined
+      }
       defaultExpanded={true}
     >
       <div className="space-y-4">
         {/* Stats */}
         <StatGrid
           stats={[
-            { label: 'Step', value: step.toLocaleString() },
-            { label: 'FPS', value: fps, color: fps > 30 ? 'text-green-400' : fps > 15 ? 'text-yellow-400' : 'text-red-400' },
-            { label: 'Grid', value: `${gridConfig.width}³` },
+            { label: "Step", value: step.toLocaleString() },
+            {
+              label: "FPS",
+              value: fps,
+              color:
+                fps > 30
+                  ? "text-green-400"
+                  : fps > 15
+                    ? "text-yellow-400"
+                    : "text-red-400",
+            },
+            { label: "Grid", value: `${gridConfig.width}³` },
           ]}
           columns={3}
         />
@@ -214,14 +242,14 @@ export function Lenia3DPanel({ engine, onInit }: Lenia3DPanelProps) {
 
           {/* Plane Selector */}
           <div className="flex gap-1">
-            {(['xy', 'xz', 'yz'] as SlicePlane[]).map((plane) => (
+            {(["xy", "xz", "yz"] as SlicePlane[]).map((plane) => (
               <button
                 key={plane}
                 onClick={() => handleSlicePlaneChange(plane)}
                 className={`flex-1 px-2 py-1.5 rounded text-xs ${
                   slicePlane === plane
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                    ? "bg-purple-600 text-white"
+                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
                 }`}
               >
                 {getPlaneLabel(plane)}
@@ -264,19 +292,27 @@ export function Lenia3DPanel({ engine, onInit }: Lenia3DPanelProps) {
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="p-2 bg-zinc-800 rounded">
               <div className="text-zinc-500">Kernel R</div>
-              <div className="font-mono text-purple-400">{params.kernelRadius}</div>
+              <div className="font-mono text-purple-400">
+                {params.kernelRadius}
+              </div>
             </div>
             <div className="p-2 bg-zinc-800 rounded">
               <div className="text-zinc-500">Growth μ</div>
-              <div className="font-mono text-purple-400">{params.growthCenter.toFixed(3)}</div>
+              <div className="font-mono text-purple-400">
+                {params.growthCenter.toFixed(3)}
+              </div>
             </div>
             <div className="p-2 bg-zinc-800 rounded">
               <div className="text-zinc-500">Growth σ</div>
-              <div className="font-mono text-purple-400">{params.growthWidth.toFixed(3)}</div>
+              <div className="font-mono text-purple-400">
+                {params.growthWidth.toFixed(3)}
+              </div>
             </div>
             <div className="p-2 bg-zinc-800 rounded">
               <div className="text-zinc-500">dt</div>
-              <div className="font-mono text-purple-400">{params.dt.toFixed(2)}</div>
+              <div className="font-mono text-purple-400">
+                {params.dt.toFixed(2)}
+              </div>
             </div>
           </div>
         </div>

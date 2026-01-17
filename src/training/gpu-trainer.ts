@@ -8,14 +8,14 @@ import {
   type GPUTrainingPipeline,
   type TrainingParams,
   type TrainingGradients,
-} from '../compute/webgpu/training-pipeline';
-import {
-  type AdamState,
-  createAdamState,
-} from './optimizer';
+} from "../compute/webgpu/training-pipeline";
+import { type AdamState, createAdamState } from "./optimizer";
 
 // Simple scalar gradient clipping
-function clipGradientNormScalar(gradients: number[], maxNorm: number): number[] {
+function clipGradientNormScalar(
+  gradients: number[],
+  maxNorm: number,
+): number[] {
   let norm = 0;
   for (const g of gradients) {
     norm += g * g;
@@ -24,7 +24,7 @@ function clipGradientNormScalar(gradients: number[], maxNorm: number): number[] 
 
   if (norm > maxNorm) {
     const scale = maxNorm / norm;
-    return gradients.map(g => g * scale);
+    return gradients.map((g) => g * scale);
   }
   return gradients;
 }
@@ -36,7 +36,7 @@ function adamStepScalar(
   lr: number,
   beta1 = 0.9,
   beta2 = 0.999,
-  epsilon = 1e-8
+  epsilon = 1e-8,
 ): Record<string, number> {
   state.t++;
 
@@ -66,7 +66,7 @@ function adamStepScalar(
     const vHat = v[0] / biasCorrection2;
 
     // Compute update
-    const update = lr * mHat / (Math.sqrt(vHat) + epsilon);
+    const update = (lr * mHat) / (Math.sqrt(vHat) + epsilon);
 
     // Return updated value
     result[param.name] = param.value - update;
@@ -77,10 +77,15 @@ function adamStepScalar(
 
 // Simple learning rate schedulers
 function warmupLR(baseLR: number, step: number, warmupSteps: number): number {
-  return baseLR * (step + 1) / warmupSteps;
+  return (baseLR * (step + 1)) / warmupSteps;
 }
 
-function cosineLR(baseLR: number, step: number, totalSteps: number, minLR = 0): number {
+function cosineLR(
+  baseLR: number,
+  step: number,
+  totalSteps: number,
+  minLR = 0,
+): number {
   const progress = Math.min(step / totalSteps, 1);
   return minLR + 0.5 * (baseLR - minLR) * (1 + Math.cos(Math.PI * progress));
 }
@@ -161,7 +166,9 @@ export interface GPUTrainer {
   onUpdate(callback: (state: GPUTrainerState) => void): void;
 
   // Set callback for training errors
-  onError(callback: (error: TrainingError, state: GPUTrainerState) => void): void;
+  onError(
+    callback: (error: TrainingError, state: GPUTrainerState) => void,
+  ): void;
 
   // Clear error state (allows resuming after fixing issues)
   clearErrors(): void;
@@ -175,7 +182,7 @@ export interface GPUTrainer {
  */
 export async function createGPUTrainer(
   device: GPUDevice,
-  config: Partial<GPUTrainingConfig> = {}
+  config: Partial<GPUTrainingConfig> = {},
 ): Promise<GPUTrainer> {
   const cfg: GPUTrainingConfig = { ...DEFAULT_CONFIG, ...config };
 
@@ -189,18 +196,25 @@ export async function createGPUTrainer(
 
   // Create initial state texture
   const initialStateTexture = device.createTexture({
-    label: 'initial-state',
+    label: "initial-state",
     size: [cfg.width, cfg.height],
-    format: 'r32float',
-    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
+    format: "r32float",
+    usage:
+      GPUTextureUsage.TEXTURE_BINDING |
+      GPUTextureUsage.COPY_DST |
+      GPUTextureUsage.COPY_SRC,
   });
 
   // Create target state texture
   const targetStateTexture = device.createTexture({
-    label: 'target-state',
+    label: "target-state",
     size: [cfg.width, cfg.height],
-    format: 'r32float',
-    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING,
+    format: "r32float",
+    usage:
+      GPUTextureUsage.TEXTURE_BINDING |
+      GPUTextureUsage.COPY_DST |
+      GPUTextureUsage.COPY_SRC |
+      GPUTextureUsage.STORAGE_BINDING,
   });
 
   // Initialize with a blob in the center
@@ -214,7 +228,9 @@ export async function createGPUTrainer(
       const dy = y - centerY;
       const r = Math.sqrt(dx * dx + dy * dy);
       if (r < radius) {
-        initialData[y * cfg.width + x] = Math.exp(-(r * r) / (radius * radius * 0.5));
+        initialData[y * cfg.width + x] = Math.exp(
+          -(r * r) / (radius * radius * 0.5),
+        );
       }
     }
   }
@@ -222,7 +238,7 @@ export async function createGPUTrainer(
     { texture: initialStateTexture },
     initialData,
     { bytesPerRow: cfg.width * 4 },
-    { width: cfg.width, height: cfg.height }
+    { width: cfg.width, height: cfg.height },
   );
 
   // Maximum consecutive errors before stopping
@@ -251,7 +267,9 @@ export async function createGPUTrainer(
   let updateCallback: ((state: GPUTrainerState) => void) | null = null;
 
   // Error callback
-  let errorCallback: ((error: TrainingError, state: GPUTrainerState) => void) | null = null;
+  let errorCallback:
+    | ((error: TrainingError, state: GPUTrainerState) => void)
+    | null = null;
 
   // Training loop handle
   let trainingFrameId: number | null = null;
@@ -260,7 +278,8 @@ export async function createGPUTrainer(
    * Sample a target based on current difficulty
    */
   function sampleTarget(): { x: number; y: number } {
-    const maxDist = state.currentDifficulty * Math.min(cfg.width, cfg.height) * 0.4;
+    const maxDist =
+      state.currentDifficulty * Math.min(cfg.width, cfg.height) * 0.4;
     const angle = Math.random() * 2 * Math.PI;
     const dist = maxDist * (0.5 + 0.5 * Math.random());
 
@@ -280,8 +299,8 @@ export async function createGPUTrainer(
 
     for (let y = 0; y < cfg.height; y++) {
       for (let x = 0; x < cfg.width; x++) {
-        const srcX = ((x - shiftX) % cfg.width + cfg.width) % cfg.width;
-        const srcY = ((y - shiftY) % cfg.height + cfg.height) % cfg.height;
+        const srcX = (((x - shiftX) % cfg.width) + cfg.width) % cfg.width;
+        const srcY = (((y - shiftY) % cfg.height) + cfg.height) % cfg.height;
         target[y * cfg.width + x] = initialData[srcY * cfg.width + srcX];
       }
     }
@@ -298,12 +317,17 @@ export async function createGPUTrainer(
       state.recentSuccesses.shift();
     }
 
-    state.successRate = state.recentSuccesses.filter(s => s).length / state.recentSuccesses.length;
+    state.successRate =
+      state.recentSuccesses.filter((s) => s).length /
+      state.recentSuccesses.length;
 
-    if (state.successRate >= cfg.successRateTarget && state.currentDifficulty < cfg.maxDifficulty) {
+    if (
+      state.successRate >= cfg.successRateTarget &&
+      state.currentDifficulty < cfg.maxDifficulty
+    ) {
       state.currentDifficulty = Math.min(
         cfg.maxDifficulty,
-        state.currentDifficulty + cfg.difficultyIncrement
+        state.currentDifficulty + cfg.difficultyIncrement,
       );
     }
   }
@@ -325,13 +349,13 @@ export async function createGPUTrainer(
       { texture: targetStateTexture },
       targetData,
       { bytesPerRow: cfg.width * 4 },
-      { width: cfg.width, height: cfg.height }
+      { width: cfg.width, height: cfg.height },
     );
 
     // Forward pass
     const { finalState, cache } = await pipeline.forward(
       initialStateTexture,
-      cfg.stepsPerEpisode
+      cfg.stepsPerEpisode,
     );
 
     // Compute loss
@@ -341,23 +365,46 @@ export async function createGPUTrainer(
     const gradients = await pipeline.backward(targetStateTexture, cache);
 
     // Clip gradients
-    const gradArray = [gradients.growthCenter, gradients.growthWidth, gradients.dt];
-    const clippedGradArray = clipGradientNormScalar(gradArray, cfg.maxGradientNorm);
+    const gradArray = [
+      gradients.growthCenter,
+      gradients.growthWidth,
+      gradients.dt,
+    ];
+    const clippedGradArray = clipGradientNormScalar(
+      gradArray,
+      cfg.maxGradientNorm,
+    );
 
     // Compute learning rate with warmup and cosine decay
     let lr = cfg.learningRate;
     if (state.currentStep < cfg.warmupSteps) {
       lr = warmupLR(cfg.learningRate, state.currentStep, cfg.warmupSteps);
     } else {
-      lr = cosineLR(cfg.learningRate, state.currentStep - cfg.warmupSteps, cfg.totalSteps - cfg.warmupSteps);
+      lr = cosineLR(
+        cfg.learningRate,
+        state.currentStep - cfg.warmupSteps,
+        cfg.totalSteps - cfg.warmupSteps,
+      );
     }
 
     // Update parameters with Adam
     const currentParams = pipeline.getParams();
-    const paramGroups: Array<{ value: number; gradient: number; name: string }> = [
-      { value: currentParams.growthCenter, gradient: clippedGradArray[0], name: 'growthCenter' },
-      { value: currentParams.growthWidth, gradient: clippedGradArray[1], name: 'growthWidth' },
-      { value: currentParams.dt, gradient: clippedGradArray[2], name: 'dt' },
+    const paramGroups: Array<{
+      value: number;
+      gradient: number;
+      name: string;
+    }> = [
+      {
+        value: currentParams.growthCenter,
+        gradient: clippedGradArray[0],
+        name: "growthCenter",
+      },
+      {
+        value: currentParams.growthWidth,
+        gradient: clippedGradArray[1],
+        name: "growthWidth",
+      },
+      { value: currentParams.dt, gradient: clippedGradArray[2], name: "dt" },
     ];
 
     const updatedValues = adamStepScalar(optimizerState, paramGroups, lr);
@@ -376,7 +423,8 @@ export async function createGPUTrainer(
     if (state.recentLosses.length > 50) {
       state.recentLosses.shift();
     }
-    state.averageLoss = state.recentLosses.reduce((a, b) => a + b, 0) / state.recentLosses.length;
+    state.averageLoss =
+      state.recentLosses.reduce((a, b) => a + b, 0) / state.recentLosses.length;
 
     const success = loss < cfg.successThreshold;
     updateCurriculum(success);
@@ -409,7 +457,9 @@ export async function createGPUTrainer(
 
     // Stop training after too many consecutive errors
     if (state.consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-      console.error(`Training stopped after ${MAX_CONSECUTIVE_ERRORS} consecutive errors`);
+      console.error(
+        `Training stopped after ${MAX_CONSECUTIVE_ERRORS} consecutive errors`,
+      );
       state.isTraining = false;
       return true; // Should stop
     }
@@ -429,7 +479,7 @@ export async function createGPUTrainer(
       state.consecutiveErrors = 0;
       updateCallback?.(state);
     } catch (e) {
-      console.error('Training step failed:', e);
+      console.error("Training step failed:", e);
       const shouldStop = recordError(e);
       if (shouldStop) {
         updateCallback?.(state);

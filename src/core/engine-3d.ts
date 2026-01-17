@@ -3,18 +3,37 @@
  * Engine for running 3D Lenia cellular automata simulations
  */
 
-import type { Grid3DConfig, Lenia3DParams, Kernel3DConfig, View3DConfig, SlicePlane } from './types-3d';
-import { DEFAULT_GRID_3D_CONFIG, DEFAULT_LENIA_3D_PARAMS, DEFAULT_KERNEL_3D_CONFIG, DEFAULT_VIEW_3D_CONFIG } from './types-3d';
-import { initWebGPU } from '../compute/webgpu/context';
+import type {
+  Grid3DConfig,
+  Lenia3DParams,
+  Kernel3DConfig,
+  View3DConfig,
+  SlicePlane,
+} from "./types-3d";
+import {
+  DEFAULT_GRID_3D_CONFIG,
+  DEFAULT_LENIA_3D_PARAMS,
+  DEFAULT_KERNEL_3D_CONFIG,
+  DEFAULT_VIEW_3D_CONFIG,
+} from "./types-3d";
+import { initWebGPU } from "../compute/webgpu/context";
 import {
   createLenia3DPipeline,
   generateSphericalBlob,
   extract3DSlice,
   LENIA_3D_PRESETS,
   type Lenia3DPipeline,
-} from '../compute/webgpu/lenia-3d-pipeline';
-import { createSliceRenderer, getSliceDimensions, type SliceRenderer } from '../render/slice-renderer';
-import { ORGANISM_3D_PRESETS, createOrganism3D, type Organism3DPreset } from '../patterns/lenia-3d-library';
+} from "../compute/webgpu/lenia-3d-pipeline";
+import {
+  createSliceRenderer,
+  getSliceDimensions,
+  type SliceRenderer,
+} from "../render/slice-renderer";
+import {
+  ORGANISM_3D_PRESETS,
+  createOrganism3D,
+  type Organism3DPreset,
+} from "../patterns/lenia-3d-library";
 
 export interface Engine3DConfig {
   canvas: HTMLCanvasElement;
@@ -85,7 +104,9 @@ export interface Engine3D {
 /**
  * Create a 3D Lenia engine
  */
-export async function createEngine3D(config: Engine3DConfig): Promise<Engine3D> {
+export async function createEngine3D(
+  config: Engine3DConfig,
+): Promise<Engine3D> {
   const { canvas } = config;
   const gridConfig = config.gridConfig ?? DEFAULT_GRID_3D_CONFIG;
   const initialParams = config.params ?? DEFAULT_LENIA_3D_PARAMS;
@@ -99,14 +120,14 @@ export async function createEngine3D(config: Engine3DConfig): Promise<Engine3D> 
     device,
     gridConfig,
     initialParams,
-    initialKernel
+    initialKernel,
   );
 
   // Create slice renderer
   const renderer = createSliceRenderer({
     canvas,
     gridConfig,
-    colormap: 'viridis',
+    colormap: "viridis",
   });
 
   // State
@@ -167,9 +188,15 @@ export async function createEngine3D(config: Engine3DConfig): Promise<Engine3D> 
   await render();
 
   return {
-    get running() { return running; },
-    get step() { return step; },
-    get fps() { return fps; },
+    get running() {
+      return running;
+    },
+    get step() {
+      return step;
+    },
+    get fps() {
+      return fps;
+    },
 
     start() {
       if (running) return;
@@ -271,13 +298,19 @@ export async function createEngine3D(config: Engine3DConfig): Promise<Engine3D> 
       currentView.slicePlane = plane;
       // Adjust slice position to be in valid range for new plane
       const dims = getSliceDimensions(gridConfig, plane);
-      currentView.slicePosition = Math.min(currentView.slicePosition, dims.maxPosition);
+      currentView.slicePosition = Math.min(
+        currentView.slicePosition,
+        dims.maxPosition,
+      );
       render();
     },
 
     setSlicePosition(position: number) {
       const dims = getSliceDimensions(gridConfig, currentView.slicePlane);
-      currentView.slicePosition = Math.max(0, Math.min(position, dims.maxPosition));
+      currentView.slicePosition = Math.max(
+        0,
+        Math.min(position, dims.maxPosition),
+      );
       render();
     },
 
@@ -297,7 +330,10 @@ export async function createEngine3D(config: Engine3DConfig): Promise<Engine3D> 
       return cachedState;
     },
 
-    async getSlice(plane?: SlicePlane, position?: number): Promise<Float32Array> {
+    async getSlice(
+      plane?: SlicePlane,
+      position?: number,
+    ): Promise<Float32Array> {
       const state = await this.getState();
       const p = plane ?? currentView.slicePlane;
       const pos = position ?? currentView.slicePosition;
@@ -325,6 +361,10 @@ export async function createEngine3D(config: Engine3DConfig): Promise<Engine3D> 
 }
 
 // Re-export useful types and functions
-export { ORGANISM_3D_PRESETS } from '../patterns/lenia-3d-library';
-export { LENIA_3D_PRESETS } from '../compute/webgpu/lenia-3d-pipeline';
-export { getSliceDimensions, getPlaneLabel, getSliceAxisName } from '../render/slice-renderer';
+export { ORGANISM_3D_PRESETS } from "../patterns/lenia-3d-library";
+export { LENIA_3D_PRESETS } from "../compute/webgpu/lenia-3d-pipeline";
+export {
+  getSliceDimensions,
+  getPlaneLabel,
+  getSliceAxisName,
+} from "../render/slice-renderer";

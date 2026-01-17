@@ -3,8 +3,12 @@
  * Renders 2D slices from 3D Lenia state for visualization
  */
 
-import type { Grid3DConfig, SlicePlane, View3DConfig } from '../core/types-3d';
-import { COLORMAPS, DEFAULT_COLORMAP, type ColormapFunction } from './colormaps';
+import type { Grid3DConfig, SlicePlane, View3DConfig } from "../core/types-3d";
+import {
+  COLORMAPS,
+  DEFAULT_COLORMAP,
+  type ColormapFunction,
+} from "./colormaps";
 
 export interface SliceRendererConfig {
   /** Canvas element to render to */
@@ -42,7 +46,7 @@ export function extractSlice(
   state: Float32Array,
   config: Grid3DConfig,
   plane: SlicePlane,
-  position: number
+  position: number,
 ): { data: Float32Array; width: number; height: number } {
   const { width, height, depth } = config;
 
@@ -51,17 +55,17 @@ export function extractSlice(
   let maxPos: number;
 
   switch (plane) {
-    case 'xy':
+    case "xy":
       sliceWidth = width;
       sliceHeight = height;
       maxPos = depth - 1;
       break;
-    case 'xz':
+    case "xz":
       sliceWidth = width;
       sliceHeight = depth;
       maxPos = height - 1;
       break;
-    case 'yz':
+    case "yz":
       sliceWidth = height;
       sliceHeight = depth;
       maxPos = width - 1;
@@ -76,15 +80,15 @@ export function extractSlice(
       let index: number;
 
       switch (plane) {
-        case 'xy':
+        case "xy":
           // Z = position, iterate X (b) and Y (a)
           index = clampedPos * width * height + a * width + b;
           break;
-        case 'xz':
+        case "xz":
           // Y = position, iterate X (b) and Z (a)
           index = a * width * height + clampedPos * width + b;
           break;
-        case 'yz':
+        case "yz":
           // X = position, iterate Y (b) and Z (a)
           index = a * width * height + b * width + clampedPos;
           break;
@@ -100,22 +104,29 @@ export function extractSlice(
 /**
  * Create a slice renderer using Canvas 2D
  */
-export function createSliceRenderer(config: SliceRendererConfig): SliceRenderer {
+export function createSliceRenderer(
+  config: SliceRendererConfig,
+): SliceRenderer {
   const { canvas, gridConfig } = config;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
 
   if (!ctx) {
-    throw new Error('Failed to get 2D canvas context');
+    throw new Error("Failed to get 2D canvas context");
   }
 
   let currentColormap = config.colormap ?? DEFAULT_COLORMAP;
-  let colormapFn: ColormapFunction = COLORMAPS[currentColormap]?.fn ?? COLORMAPS[DEFAULT_COLORMAP].fn;
+  let colormapFn: ColormapFunction =
+    COLORMAPS[currentColormap]?.fn ?? COLORMAPS[DEFAULT_COLORMAP].fn;
 
   // Image data for rendering
   let imageData: ImageData | null = null;
 
   function ensureImageData(width: number, height: number): ImageData {
-    if (!imageData || imageData.width !== width || imageData.height !== height) {
+    if (
+      !imageData ||
+      imageData.width !== width ||
+      imageData.height !== height
+    ) {
       imageData = ctx!.createImageData(width, height);
     }
     return imageData;
@@ -127,7 +138,7 @@ export function createSliceRenderer(config: SliceRendererConfig): SliceRenderer 
         state,
         gridConfig,
         view.slicePlane,
-        view.slicePosition
+        view.slicePosition,
       );
       this.renderSlice(data, width, height);
     },
@@ -159,14 +170,14 @@ export function createSliceRenderer(config: SliceRendererConfig): SliceRenderer 
       const offsetY = (canvas.height - scaledHeight) / 2;
 
       // Clear canvas
-      ctx!.fillStyle = '#000';
+      ctx!.fillStyle = "#000";
       ctx!.fillRect(0, 0, canvas.width, canvas.height);
 
       // Create temporary canvas for the slice
-      const tempCanvas = document.createElement('canvas');
+      const tempCanvas = document.createElement("canvas");
       tempCanvas.width = width;
       tempCanvas.height = height;
-      const tempCtx = tempCanvas.getContext('2d');
+      const tempCtx = tempCanvas.getContext("2d");
       if (tempCtx) {
         tempCtx.putImageData(imgData, 0, 0);
 
@@ -174,8 +185,14 @@ export function createSliceRenderer(config: SliceRendererConfig): SliceRenderer 
         ctx!.imageSmoothingEnabled = false;
         ctx!.drawImage(
           tempCanvas,
-          0, 0, width, height,
-          offsetX, offsetY, scaledWidth, scaledHeight
+          0,
+          0,
+          width,
+          height,
+          offsetX,
+          offsetY,
+          scaledWidth,
+          scaledHeight,
         );
       }
     },
@@ -209,16 +226,16 @@ export function createSliceRenderer(config: SliceRendererConfig): SliceRenderer 
  */
 export function getSliceDimensions(
   config: Grid3DConfig,
-  plane: SlicePlane
+  plane: SlicePlane,
 ): { width: number; height: number; maxPosition: number } {
   const { width, height, depth } = config;
 
   switch (plane) {
-    case 'xy':
+    case "xy":
       return { width, height, maxPosition: depth - 1 };
-    case 'xz':
+    case "xz":
       return { width, height: depth, maxPosition: height - 1 };
-    case 'yz':
+    case "yz":
       return { width: height, height: depth, maxPosition: width - 1 };
   }
 }
@@ -228,12 +245,12 @@ export function getSliceDimensions(
  */
 export function getPlaneLabel(plane: SlicePlane): string {
   switch (plane) {
-    case 'xy':
-      return 'XY (Top View)';
-    case 'xz':
-      return 'XZ (Front View)';
-    case 'yz':
-      return 'YZ (Side View)';
+    case "xy":
+      return "XY (Top View)";
+    case "xz":
+      return "XZ (Front View)";
+    case "yz":
+      return "YZ (Side View)";
   }
 }
 
@@ -242,11 +259,11 @@ export function getPlaneLabel(plane: SlicePlane): string {
  */
 export function getSliceAxisName(plane: SlicePlane): string {
   switch (plane) {
-    case 'xy':
-      return 'Z';
-    case 'xz':
-      return 'Y';
-    case 'yz':
-      return 'X';
+    case "xy":
+      return "Z";
+    case "xz":
+      return "Y";
+    case "yz":
+      return "X";
   }
 }

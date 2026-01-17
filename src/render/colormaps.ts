@@ -207,22 +207,22 @@ export const earth = createGradientColormap(earthStops);
 
 // All available colormaps
 export const COLORMAPS: Record<string, Colormap> = {
-  grayscale: { name: 'Grayscale', fn: grayscale },
-  classic: { name: 'Classic', fn: classic },
-  viridis: { name: 'Viridis', fn: viridis },
-  plasma: { name: 'Plasma', fn: plasma },
-  inferno: { name: 'Inferno', fn: inferno },
-  magma: { name: 'Magma', fn: magma },
-  ocean: { name: 'Ocean', fn: ocean },
-  fire: { name: 'Fire', fn: fire },
-  rainbow: { name: 'Rainbow', fn: rainbow },
-  twilight: { name: 'Twilight', fn: twilight },
-  turbo: { name: 'Turbo', fn: turbo },
-  neon: { name: 'Neon', fn: neon },
-  earth: { name: 'Earth', fn: earth },
+  grayscale: { name: "Grayscale", fn: grayscale },
+  classic: { name: "Classic", fn: classic },
+  viridis: { name: "Viridis", fn: viridis },
+  plasma: { name: "Plasma", fn: plasma },
+  inferno: { name: "Inferno", fn: inferno },
+  magma: { name: "Magma", fn: magma },
+  ocean: { name: "Ocean", fn: ocean },
+  fire: { name: "Fire", fn: fire },
+  rainbow: { name: "Rainbow", fn: rainbow },
+  twilight: { name: "Twilight", fn: twilight },
+  turbo: { name: "Turbo", fn: turbo },
+  neon: { name: "Neon", fn: neon },
+  earth: { name: "Earth", fn: earth },
 };
 
-export const DEFAULT_COLORMAP = 'viridis';
+export const DEFAULT_COLORMAP = "viridis";
 
 /**
  * Generate a colormap lookup table (256 entries)
@@ -250,11 +250,14 @@ export function rgbToCSS(rgb: RGB): string {
 /**
  * Generate colormap preview gradient CSS
  */
-export function colormapToGradientCSS(colormap: ColormapFunction, steps = 10): string {
+export function colormapToGradientCSS(
+  colormap: ColormapFunction,
+  steps = 10,
+): string {
   const colors: string[] = [];
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;
     colors.push(`${rgbToCSS(colormap(t))} ${t * 100}%`);
   }
-  return `linear-gradient(to right, ${colors.join(', ')})`;
+  return `linear-gradient(to right, ${colors.join(", ")})`;
 }

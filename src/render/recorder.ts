@@ -5,7 +5,7 @@
 
 export interface RecorderConfig {
   fps: number;
-  quality: number;  // 0-1 for video quality
+  quality: number; // 0-1 for video quality
   width: number;
   height: number;
 }
@@ -33,14 +33,17 @@ export class FrameCapturer {
   private startTime: number = 0;
   private isCapturing: boolean = false;
 
-  constructor(sourceCanvas: HTMLCanvasElement, config: Partial<RecorderConfig> = {}) {
+  constructor(
+    sourceCanvas: HTMLCanvasElement,
+    config: Partial<RecorderConfig> = {},
+  ) {
     this.config = { ...DEFAULT_CONFIG, ...config };
 
     // Create an offscreen canvas for capturing
-    this.canvas = document.createElement('canvas');
+    this.canvas = document.createElement("canvas");
     this.canvas.width = this.config.width;
     this.canvas.height = this.config.height;
-    this.ctx = this.canvas.getContext('2d', { willReadFrequently: true })!;
+    this.ctx = this.canvas.getContext("2d", { willReadFrequently: true })!;
   }
 
   start(): void {
@@ -55,11 +58,22 @@ export class FrameCapturer {
     // Draw source canvas to our capture canvas (with scaling)
     this.ctx.drawImage(
       sourceCanvas,
-      0, 0, sourceCanvas.width, sourceCanvas.height,
-      0, 0, this.config.width, this.config.height
+      0,
+      0,
+      sourceCanvas.width,
+      sourceCanvas.height,
+      0,
+      0,
+      this.config.width,
+      this.config.height,
     );
 
-    const imageData = this.ctx.getImageData(0, 0, this.config.width, this.config.height);
+    const imageData = this.ctx.getImageData(
+      0,
+      0,
+      this.config.width,
+      this.config.height,
+    );
     const timestamp = performance.now() - this.startTime;
 
     this.frames.push({ imageData, timestamp });
@@ -143,21 +157,21 @@ export class GIFEncoder {
     }
 
     // GIF Trailer
-    chunks.push(new Uint8Array([0x3B]));
+    chunks.push(new Uint8Array([0x3b]));
 
-    return new Blob(chunks, { type: 'image/gif' });
+    return new Blob(chunks, { type: "image/gif" });
   }
 
   private createLogicalScreenDescriptor(): Uint8Array {
     const desc = new Uint8Array(7);
     // Width (little-endian)
-    desc[0] = this.width & 0xFF;
-    desc[1] = (this.width >> 8) & 0xFF;
+    desc[0] = this.width & 0xff;
+    desc[1] = (this.width >> 8) & 0xff;
     // Height (little-endian)
-    desc[2] = this.height & 0xFF;
-    desc[3] = (this.height >> 8) & 0xFF;
+    desc[2] = this.height & 0xff;
+    desc[3] = (this.height >> 8) & 0xff;
     // Packed field: Global Color Table Flag = 1, Color Resolution = 7, Sort = 0, Size = 7
-    desc[4] = 0xF7; // 1 111 0 111
+    desc[4] = 0xf7; // 1 111 0 111
     // Background color index
     desc[5] = 0;
     // Pixel aspect ratio
@@ -168,39 +182,63 @@ export class GIFEncoder {
   private createLoopExtension(): Uint8Array {
     // NETSCAPE2.0 application extension for infinite loop
     return new Uint8Array([
-      0x21, 0xFF, 0x0B, // Extension introducer
-      0x4E, 0x45, 0x54, 0x53, 0x43, 0x41, 0x50, 0x45, // "NETSCAPE"
-      0x32, 0x2E, 0x30, // "2.0"
-      0x03, 0x01, 0x00, 0x00, // Loop count = 0 (infinite)
-      0x00 // Block terminator
+      0x21,
+      0xff,
+      0x0b, // Extension introducer
+      0x4e,
+      0x45,
+      0x54,
+      0x53,
+      0x43,
+      0x41,
+      0x50,
+      0x45, // "NETSCAPE"
+      0x32,
+      0x2e,
+      0x30, // "2.0"
+      0x03,
+      0x01,
+      0x00,
+      0x00, // Loop count = 0 (infinite)
+      0x00, // Block terminator
     ]);
   }
 
   private createGraphicsControlExtension(delay: number): Uint8Array {
     return new Uint8Array([
-      0x21, 0xF9, 0x04, // Extension introducer
+      0x21,
+      0xf9,
+      0x04, // Extension introducer
       0x00, // Packed: disposal = 0, user input = 0, transparency = 0
-      delay & 0xFF, (delay >> 8) & 0xFF, // Delay time
+      delay & 0xff,
+      (delay >> 8) & 0xff, // Delay time
       0x00, // Transparent color index
-      0x00 // Block terminator
+      0x00, // Block terminator
     ]);
   }
 
   private createImageDescriptor(): Uint8Array {
     return new Uint8Array([
-      0x2C, // Image separator
-      0x00, 0x00, // Left position
-      0x00, 0x00, // Top position
-      this.width & 0xFF, (this.width >> 8) & 0xFF, // Width
-      this.height & 0xFF, (this.height >> 8) & 0xFF, // Height
-      0x00 // Packed: no local color table
+      0x2c, // Image separator
+      0x00,
+      0x00, // Left position
+      0x00,
+      0x00, // Top position
+      this.width & 0xff,
+      (this.width >> 8) & 0xff, // Width
+      this.height & 0xff,
+      (this.height >> 8) & 0xff, // Height
+      0x00, // Packed: no local color table
     ]);
   }
 
   /**
    * Quantize 24-bit color to 256-color palette
    */
-  private quantize(imageData: ImageData): { indices: Uint8Array; palette: Uint8Array } {
+  private quantize(imageData: ImageData): {
+    indices: Uint8Array;
+    palette: Uint8Array;
+  } {
     const data = imageData.data;
     const width = imageData.width;
     const height = imageData.height;
@@ -229,9 +267,9 @@ export class GIFEncoder {
 
     for (let i = 0; i < sortedColors.length; i++) {
       const [key] = sortedColors[i];
-      const r = ((key >> 10) & 0x1F) << 3;
-      const g = ((key >> 5) & 0x1F) << 3;
-      const b = (key & 0x1F) << 3;
+      const r = ((key >> 10) & 0x1f) << 3;
+      const g = ((key >> 5) & 0x1f) << 3;
+      const b = (key & 0x1f) << 3;
       palette[i * 3] = r;
       palette[i * 3 + 1] = g;
       palette[i * 3 + 2] = b;
@@ -261,9 +299,9 @@ export class GIFEncoder {
         let minDist = Infinity;
         let bestIdx = 0;
         for (const [pKey, pIdx] of colorMap) {
-          const pr = (pKey >> 10) & 0x1F;
-          const pg = (pKey >> 5) & 0x1F;
-          const pb = pKey & 0x1F;
+          const pr = (pKey >> 10) & 0x1f;
+          const pg = (pKey >> 5) & 0x1f;
+          const pb = pKey & 0x1f;
           const dist = Math.abs(r - pr) + Math.abs(g - pg) + Math.abs(b - pb);
           if (dist < minDist) {
             minDist = dist;
@@ -303,7 +341,7 @@ export class GIFEncoder {
       bitBuffer |= code << bitCount;
       bitCount += bits;
       while (bitCount >= 8) {
-        output.push(bitBuffer & 0xFF);
+        output.push(bitBuffer & 0xff);
         bitBuffer >>= 8;
         bitCount -= 8;
       }
@@ -316,7 +354,7 @@ export class GIFEncoder {
 
     for (let i = 1; i < indices.length; i++) {
       const pixel = String(indices[i]);
-      const combined = sequence + ',' + pixel;
+      const combined = sequence + "," + pixel;
 
       if (codeTable.has(combined)) {
         sequence = combined;
@@ -327,7 +365,7 @@ export class GIFEncoder {
         // Add new sequence to table
         if (nextCode <= maxCode) {
           codeTable.set(combined, nextCode++);
-          if (nextCode > (1 << codeSize) && codeSize < 12) {
+          if (nextCode > 1 << codeSize && codeSize < 12) {
             codeSize++;
           }
         } else {
@@ -351,7 +389,7 @@ export class GIFEncoder {
 
     // Flush remaining bits
     if (bitCount > 0) {
-      output.push(bitBuffer & 0xFF);
+      output.push(bitBuffer & 0xff);
     }
 
     // Pack into sub-blocks (max 255 bytes each)
@@ -386,7 +424,7 @@ export interface Recorder {
 
 export function createRecorder(config: Partial<RecorderConfig> = {}): Recorder {
   const cfg = { ...DEFAULT_CONFIG, ...config };
-  const capturer = new FrameCapturer(document.createElement('canvas'), cfg);
+  const capturer = new FrameCapturer(document.createElement("canvas"), cfg);
   let frames: FrameCapture[] = [];
 
   return {
@@ -412,26 +450,27 @@ export function createRecorder(config: Partial<RecorderConfig> = {}): Recorder {
 
     async exportGIF(): Promise<Blob> {
       if (frames.length === 0) {
-        throw new Error('No frames captured');
+        throw new Error("No frames captured");
       }
 
       const encoder = new GIFEncoder(cfg.width, cfg.height);
 
       // Calculate delay based on timestamps
       for (let i = 0; i < frames.length; i++) {
-        const delay = i < frames.length - 1
-          ? frames[i + 1].timestamp - frames[i].timestamp
-          : 1000 / cfg.fps;
+        const delay =
+          i < frames.length - 1
+            ? frames[i + 1].timestamp - frames[i].timestamp
+            : 1000 / cfg.fps;
         encoder.addFrame(frames[i].imageData, delay);
       }
 
       return encoder.build();
     },
 
-    async downloadGIF(filename = 'genesis-recording.gif') {
+    async downloadGIF(filename = "genesis-recording.gif") {
       const blob = await this.exportGIF();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = filename;
       document.body.appendChild(link);
@@ -445,16 +484,19 @@ export function createRecorder(config: Partial<RecorderConfig> = {}): Recorder {
 /**
  * Simple screenshot function
  */
-export function takeScreenshot(canvas: HTMLCanvasElement, filename = 'genesis-screenshot.png'): void {
+export function takeScreenshot(
+  canvas: HTMLCanvasElement,
+  filename = "genesis-screenshot.png",
+): void {
   canvas.toBlob((blob) => {
     if (!blob) return;
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  }, 'image/png');
+  }, "image/png");
 }

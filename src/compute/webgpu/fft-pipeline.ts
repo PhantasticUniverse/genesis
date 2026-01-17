@@ -11,17 +11,17 @@
  * 5. Extract real part back to r32float
  */
 
-import { createShaderModule } from './context';
-import fftButterflyShader from './shaders/fft-butterfly.wgsl?raw';
-import fftMultiplyShader from './shaders/fft-multiply.wgsl?raw';
-import fftConvertShader from './shaders/fft-convert.wgsl?raw';
+import { createShaderModule } from "./context";
+import fftButterflyShader from "./shaders/fft-butterfly.wgsl?raw";
+import fftMultiplyShader from "./shaders/fft-multiply.wgsl?raw";
+import fftConvertShader from "./shaders/fft-convert.wgsl?raw";
 
 export interface FFTPipeline {
   // Perform FFT convolution
   convolve: (
     commandEncoder: GPUCommandEncoder,
     inputTexture: GPUTexture,
-    outputTexture: GPUTexture
+    outputTexture: GPUTexture,
   ) => void;
 
   // Update kernel (precomputes kernel FFT)
@@ -41,7 +41,7 @@ export interface FFTPipeline {
  */
 export function createFFTPipeline(
   device: GPUDevice,
-  size: number
+  size: number,
 ): FFTPipeline {
   // Validate size is power of 2
   if ((size & (size - 1)) !== 0) {
@@ -51,40 +51,57 @@ export function createFFTPipeline(
   const numStages = Math.log2(size);
 
   // Create shader modules
-  const butterflyModule = createShaderModule(device, fftButterflyShader, 'fft-butterfly');
-  const multiplyModule = createShaderModule(device, fftMultiplyShader, 'fft-multiply');
-  const convertModule = createShaderModule(device, fftConvertShader, 'fft-convert');
+  const butterflyModule = createShaderModule(
+    device,
+    fftButterflyShader,
+    "fft-butterfly",
+  );
+  const multiplyModule = createShaderModule(
+    device,
+    fftMultiplyShader,
+    "fft-multiply",
+  );
+  const convertModule = createShaderModule(
+    device,
+    fftConvertShader,
+    "fft-convert",
+  );
 
   // Create textures for intermediate FFT results (complex values = rg32float)
-  const createComplexTexture = (label: string) => device.createTexture({
-    label,
-    size: [size, size],
-    format: 'rg32float',
-    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
-  });
+  const createComplexTexture = (label: string) =>
+    device.createTexture({
+      label,
+      size: [size, size],
+      format: "rg32float",
+      usage:
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.STORAGE_BINDING |
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.COPY_SRC,
+    });
 
   // Ping-pong textures for FFT passes
-  let fftTextureA = createComplexTexture('fft-texture-a');
-  let fftTextureB = createComplexTexture('fft-texture-b');
+  let fftTextureA = createComplexTexture("fft-texture-a");
+  let fftTextureB = createComplexTexture("fft-texture-b");
 
   // Kernel FFT texture (precomputed)
-  let kernelFFTTexture = createComplexTexture('kernel-fft');
+  let kernelFFTTexture = createComplexTexture("kernel-fft");
 
   // Uniform buffers
   const butterflyUniformBuffer = device.createBuffer({
-    label: 'fft-butterfly-uniform',
+    label: "fft-butterfly-uniform",
     size: 16, // 4 x u32
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
   const multiplyUniformBuffer = device.createBuffer({
-    label: 'fft-multiply-uniform',
+    label: "fft-multiply-uniform",
     size: 16, // 2 x u32 + f32 + padding
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
   const convertUniformBuffer = device.createBuffer({
-    label: 'fft-convert-uniform',
+    label: "fft-convert-uniform",
     size: 16, // width, height, scale, padding
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
@@ -100,68 +117,132 @@ export function createFFTPipeline(
 
   // Create bind group layouts
   const butterflyBindGroupLayout = device.createBindGroupLayout({
-    label: 'fft-butterfly-bind-group-layout',
+    label: "fft-butterfly-bind-group-layout",
     entries: [
-      { binding: 0, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 1, visibility: GPUShaderStage.COMPUTE, storageTexture: { access: 'write-only', format: 'rg32float' } },
-      { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        storageTexture: { access: "write-only", format: "rg32float" },
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "uniform" },
+      },
     ],
   });
 
   const multiplyBindGroupLayout = device.createBindGroupLayout({
-    label: 'fft-multiply-bind-group-layout',
+    label: "fft-multiply-bind-group-layout",
     entries: [
-      { binding: 0, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 1, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 2, visibility: GPUShaderStage.COMPUTE, storageTexture: { access: 'write-only', format: 'rg32float' } },
-      { binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        storageTexture: { access: "write-only", format: "rg32float" },
+      },
+      {
+        binding: 3,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "uniform" },
+      },
     ],
   });
 
   // Real-to-complex conversion bind group layout
   const realToComplexBindGroupLayout = device.createBindGroupLayout({
-    label: 'fft-real-to-complex-bind-group-layout',
+    label: "fft-real-to-complex-bind-group-layout",
     entries: [
-      { binding: 0, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 1, visibility: GPUShaderStage.COMPUTE, storageTexture: { access: 'write-only', format: 'rg32float' } },
-      { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        storageTexture: { access: "write-only", format: "rg32float" },
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "uniform" },
+      },
     ],
   });
 
   // Complex-to-real extraction bind group layout
   const complexToRealBindGroupLayout = device.createBindGroupLayout({
-    label: 'fft-complex-to-real-bind-group-layout',
+    label: "fft-complex-to-real-bind-group-layout",
     entries: [
-      { binding: 0, visibility: GPUShaderStage.COMPUTE, texture: { sampleType: 'unfilterable-float' } },
-      { binding: 1, visibility: GPUShaderStage.COMPUTE, storageTexture: { access: 'write-only', format: 'rg32float' } }, // dummy - shader needs this binding
-      { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
-      { binding: 3, visibility: GPUShaderStage.COMPUTE, storageTexture: { access: 'write-only', format: 'r32float' } },
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        storageTexture: { access: "write-only", format: "rg32float" },
+      }, // dummy - shader needs this binding
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "uniform" },
+      },
+      {
+        binding: 3,
+        visibility: GPUShaderStage.COMPUTE,
+        storageTexture: { access: "write-only", format: "r32float" },
+      },
     ],
   });
 
   // Create pipelines
   const butterflyPipeline = device.createComputePipeline({
-    label: 'fft-butterfly-pipeline',
-    layout: device.createPipelineLayout({ bindGroupLayouts: [butterflyBindGroupLayout] }),
-    compute: { module: butterflyModule, entryPoint: 'main' },
+    label: "fft-butterfly-pipeline",
+    layout: device.createPipelineLayout({
+      bindGroupLayouts: [butterflyBindGroupLayout],
+    }),
+    compute: { module: butterflyModule, entryPoint: "main" },
   });
 
   const multiplyPipeline = device.createComputePipeline({
-    label: 'fft-multiply-pipeline',
-    layout: device.createPipelineLayout({ bindGroupLayouts: [multiplyBindGroupLayout] }),
-    compute: { module: multiplyModule, entryPoint: 'main' },
+    label: "fft-multiply-pipeline",
+    layout: device.createPipelineLayout({
+      bindGroupLayouts: [multiplyBindGroupLayout],
+    }),
+    compute: { module: multiplyModule, entryPoint: "main" },
   });
 
   const realToComplexPipeline = device.createComputePipeline({
-    label: 'fft-real-to-complex-pipeline',
-    layout: device.createPipelineLayout({ bindGroupLayouts: [realToComplexBindGroupLayout] }),
-    compute: { module: convertModule, entryPoint: 'real_to_complex' },
+    label: "fft-real-to-complex-pipeline",
+    layout: device.createPipelineLayout({
+      bindGroupLayouts: [realToComplexBindGroupLayout],
+    }),
+    compute: { module: convertModule, entryPoint: "real_to_complex" },
   });
 
   const complexToRealPipeline = device.createComputePipeline({
-    label: 'fft-complex-to-real-pipeline',
-    layout: device.createPipelineLayout({ bindGroupLayouts: [complexToRealBindGroupLayout] }),
-    compute: { module: convertModule, entryPoint: 'complex_to_real' },
+    label: "fft-complex-to-real-pipeline",
+    layout: device.createPipelineLayout({
+      bindGroupLayouts: [complexToRealBindGroupLayout],
+    }),
+    compute: { module: convertModule, entryPoint: "complex_to_real" },
   });
 
   const workgroupsPerDim = Math.ceil(size / 16);
@@ -174,7 +255,7 @@ export function createFFTPipeline(
     input: GPUTexture,
     output: GPUTexture,
     horizontal: boolean,
-    inverse: boolean
+    inverse: boolean,
   ): GPUTexture {
     let currentInput = input;
     let currentOutput = output;
@@ -222,7 +303,7 @@ export function createFFTPipeline(
   function realToComplex(
     commandEncoder: GPUCommandEncoder,
     realTexture: GPUTexture,
-    complexTexture: GPUTexture
+    complexTexture: GPUTexture,
   ) {
     const bindGroup = device.createBindGroup({
       layout: realToComplexBindGroupLayout,
@@ -247,7 +328,7 @@ export function createFFTPipeline(
   function complexToReal(
     commandEncoder: GPUCommandEncoder,
     complexTexture: GPUTexture,
-    realTexture: GPUTexture
+    realTexture: GPUTexture,
   ) {
     const bindGroup = device.createBindGroup({
       layout: complexToRealBindGroupLayout,
@@ -291,23 +372,35 @@ export function createFFTPipeline(
       { texture: fftTextureA },
       paddedKernel,
       { bytesPerRow: size * 8 }, // 2 floats per pixel * 4 bytes
-      { width: size, height: size }
+      { width: size, height: size },
     );
 
     // Perform 2D FFT on kernel
     const commandEncoder = device.createCommandEncoder();
 
     // Horizontal FFT
-    let result = performFFT1D(commandEncoder, fftTextureA, fftTextureB, true, false);
+    let result = performFFT1D(
+      commandEncoder,
+      fftTextureA,
+      fftTextureB,
+      true,
+      false,
+    );
 
     // Vertical FFT (ping-pong handled by selecting opposite texture as output)
-    result = performFFT1D(commandEncoder, result, result === fftTextureA ? fftTextureB : fftTextureA, false, false);
+    result = performFFT1D(
+      commandEncoder,
+      result,
+      result === fftTextureA ? fftTextureB : fftTextureA,
+      false,
+      false,
+    );
 
     // Copy to kernel FFT texture
     commandEncoder.copyTextureToTexture(
       { texture: result },
       { texture: kernelFFTTexture },
-      { width: size, height: size }
+      { width: size, height: size },
     );
 
     device.queue.submit([commandEncoder.finish()]);
@@ -317,14 +410,20 @@ export function createFFTPipeline(
     convolve(
       commandEncoder: GPUCommandEncoder,
       inputTexture: GPUTexture,
-      outputTexture: GPUTexture
+      outputTexture: GPUTexture,
     ) {
       // Step 1: Convert real input (r32float) to complex (rg32float)
       realToComplex(commandEncoder, inputTexture, fftTextureA);
 
       // Step 2: Forward 2D FFT
       // Horizontal forward FFT
-      let stateFFT = performFFT1D(commandEncoder, fftTextureA, fftTextureB, true, false);
+      let stateFFT = performFFT1D(
+        commandEncoder,
+        fftTextureA,
+        fftTextureB,
+        true,
+        false,
+      );
 
       // Vertical forward FFT
       stateFFT = performFFT1D(
@@ -332,7 +431,7 @@ export function createFFTPipeline(
         stateFFT,
         stateFFT === fftTextureA ? fftTextureB : fftTextureA,
         false,
-        false
+        false,
       );
 
       // Step 3: Multiply in frequency domain
@@ -344,7 +443,8 @@ export function createFFTPipeline(
       f32View[2] = 1.0; // Scale factor (normalization done in complexToReal)
       device.queue.writeBuffer(multiplyUniformBuffer, 0, multiplyUniformData);
 
-      const multiplyOutput = stateFFT === fftTextureA ? fftTextureB : fftTextureA;
+      const multiplyOutput =
+        stateFFT === fftTextureA ? fftTextureB : fftTextureA;
 
       const multiplyBindGroup = device.createBindGroup({
         layout: multiplyBindGroupLayout,
@@ -364,7 +464,13 @@ export function createFFTPipeline(
 
       // Step 4: Inverse 2D FFT
       // Horizontal inverse FFT
-      let result = performFFT1D(commandEncoder, multiplyOutput, stateFFT, true, true);
+      let result = performFFT1D(
+        commandEncoder,
+        multiplyOutput,
+        stateFFT,
+        true,
+        true,
+      );
 
       // Vertical inverse FFT
       result = performFFT1D(
@@ -372,7 +478,7 @@ export function createFFTPipeline(
         result,
         result === fftTextureA ? fftTextureB : fftTextureA,
         false,
-        true
+        true,
       );
 
       // Step 5: Extract real part back to r32float with normalization

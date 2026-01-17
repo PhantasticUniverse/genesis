@@ -3,9 +3,9 @@
  * Handles ping-pong buffer allocation and management for CA state
  */
 
-import type { GridConfig } from './types';
+import type { GridConfig } from "./types";
 
-export type TextureMode = 'single' | 'multi';  // r32float or rgba32float
+export type TextureMode = "single" | "multi"; // r32float or rgba32float
 
 export interface CABuffers {
   // Ping-pong state textures
@@ -22,7 +22,7 @@ export interface CABuffers {
 export interface BufferManager {
   config: GridConfig;
   buffers: CABuffers;
-  currentBuffer: 'A' | 'B';
+  currentBuffer: "A" | "B";
   mode: TextureMode;
 
   // Methods
@@ -38,16 +38,16 @@ export interface BufferManager {
 export function createBufferManager(
   device: GPUDevice,
   config: GridConfig,
-  mode: TextureMode = 'single'
+  mode: TextureMode = "single",
 ): BufferManager {
   const { width, height } = config;
 
   // Choose format based on mode
   let format: GPUTextureFormat;
-  if (mode === 'multi') {
-    format = 'rgba32float';  // 4 channels for multi-channel mode
+  if (mode === "multi") {
+    format = "rgba32float"; // 4 channels for multi-channel mode
   } else {
-    format = config.precision === 'f32' ? 'r32float' : 'r16float';
+    format = config.precision === "f32" ? "r32float" : "r16float";
   }
 
   // Create state textures (ping-pong pair)
@@ -63,20 +63,21 @@ export function createBufferManager(
 
   const stateA = device.createTexture({
     ...textureDescriptor,
-    label: 'state-texture-A',
+    label: "state-texture-A",
   });
 
   const stateB = device.createTexture({
     ...textureDescriptor,
-    label: 'state-texture-B',
+    label: "state-texture-B",
   });
 
   // Staging buffer for CPU read/write
-  const bytesPerPixel = mode === 'multi' ? 16 : (config.precision === 'f32' ? 4 : 2);
+  const bytesPerPixel =
+    mode === "multi" ? 16 : config.precision === "f32" ? 4 : 2;
   const bufferSize = width * height * bytesPerPixel;
 
   const stagingBuffer = device.createBuffer({
-    label: 'staging-buffer',
+    label: "staging-buffer",
     size: bufferSize,
     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
   });
@@ -84,7 +85,7 @@ export function createBufferManager(
   // Uniform buffer for simulation parameters
   // Layout: [width, height, step, dt, ...]
   const uniformBuffer = device.createBuffer({
-    label: 'uniform-buffer',
+    label: "uniform-buffer",
     size: 64, // Enough for basic params
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
@@ -96,7 +97,7 @@ export function createBufferManager(
     uniformBuffer,
   };
 
-  let currentBuffer: 'A' | 'B' = 'A';
+  let currentBuffer: "A" | "B" = "A";
 
   return {
     config,
@@ -105,15 +106,15 @@ export function createBufferManager(
     mode,
 
     getReadTexture() {
-      return currentBuffer === 'A' ? buffers.stateA : buffers.stateB;
+      return currentBuffer === "A" ? buffers.stateA : buffers.stateB;
     },
 
     getWriteTexture() {
-      return currentBuffer === 'A' ? buffers.stateB : buffers.stateA;
+      return currentBuffer === "A" ? buffers.stateB : buffers.stateA;
     },
 
     swap() {
-      currentBuffer = currentBuffer === 'A' ? 'B' : 'A';
+      currentBuffer = currentBuffer === "A" ? "B" : "A";
     },
 
     destroy() {
@@ -133,7 +134,7 @@ export async function initializeRandom(
   texture: GPUTexture,
   width: number,
   height: number,
-  density: number = 0.3
+  density: number = 0.3,
 ): Promise<void> {
   const data = new Float32Array(width * height);
 
@@ -145,7 +146,7 @@ export async function initializeRandom(
     { texture },
     data,
     { bytesPerRow: width * 4 },
-    { width, height }
+    { width, height },
   );
 }
 
@@ -157,7 +158,7 @@ export function initializePattern(
   texture: GPUTexture,
   width: number,
   height: number,
-  pattern: 'glider' | 'blinker' | 'random' | 'center-blob' | 'lenia-seed'
+  pattern: "glider" | "blinker" | "random" | "center-blob" | "lenia-seed",
 ): void {
   const data = new Float32Array(width * height);
 
@@ -168,7 +169,7 @@ export function initializePattern(
   };
 
   switch (pattern) {
-    case 'glider': {
+    case "glider": {
       // Glider at center
       const cx = Math.floor(width / 4);
       const cy = Math.floor(height / 4);
@@ -180,7 +181,7 @@ export function initializePattern(
       break;
     }
 
-    case 'blinker': {
+    case "blinker": {
       // Blinker at center
       const cx = Math.floor(width / 2);
       const cy = Math.floor(height / 2);
@@ -190,7 +191,7 @@ export function initializePattern(
       break;
     }
 
-    case 'center-blob': {
+    case "center-blob": {
       // Gaussian blob at center (for Lenia)
       const cx = Math.floor(width / 2);
       const cy = Math.floor(height / 2);
@@ -208,7 +209,7 @@ export function initializePattern(
       break;
     }
 
-    case 'lenia-seed': {
+    case "lenia-seed": {
       // Dense ring seed for Lenia - produces convolution values in growth window
       const cx = Math.floor(width / 2);
       const cy = Math.floor(height / 2);
@@ -226,20 +227,20 @@ export function initializePattern(
 
           // Create wider ring at distance ~0.5*radius (where kernel peaks)
           const peakR = radius * 0.5;
-          const ringWidth = radius * 0.4;  // Wider ring (was 0.25)
+          const ringWidth = radius * 0.4; // Wider ring (was 0.25)
           const distFromPeak = Math.abs(r / asymmetry - peakR);
 
           if (distFromPeak < ringWidth) {
             // Smooth polynomial bump with higher values for denser pattern
-            const t = 1 - (distFromPeak / ringWidth);
-            data[y * width + x] = 0.9 * t * t;  // Higher max (was 0.6)
+            const t = 1 - distFromPeak / ringWidth;
+            data[y * width + x] = 0.9 * t * t; // Higher max (was 0.6)
           }
         }
       }
       break;
     }
 
-    case 'random':
+    case "random":
     default: {
       for (let i = 0; i < data.length; i++) {
         data[i] = Math.random() < 0.3 ? 1.0 : 0.0;
@@ -252,7 +253,7 @@ export function initializePattern(
     { texture },
     data,
     { bytesPerRow: width * 4 },
-    { width, height }
+    { width, height },
   );
 }
 
@@ -264,12 +265,19 @@ export function initializeMultiChannelPattern(
   texture: GPUTexture,
   width: number,
   height: number,
-  pattern: 'two-blobs' | 'predator-prey' | 'random-multi'
+  pattern: "two-blobs" | "predator-prey" | "random-multi",
 ): void {
   // RGBA = 4 floats per pixel
   const data = new Float32Array(width * height * 4);
 
-  const setPixel = (x: number, y: number, r: number, g: number, b: number, a: number) => {
+  const setPixel = (
+    x: number,
+    y: number,
+    r: number,
+    g: number,
+    b: number,
+    a: number,
+  ) => {
     if (x >= 0 && x < width && y >= 0 && y < height) {
       const idx = (y * width + x) * 4;
       data[idx + 0] = r;
@@ -280,11 +288,11 @@ export function initializeMultiChannelPattern(
   };
 
   switch (pattern) {
-    case 'two-blobs': {
+    case "two-blobs": {
       // Two species as blobs in different locations
       const cx1 = Math.floor(width / 3);
       const cy1 = Math.floor(height / 2);
-      const cx2 = Math.floor(2 * width / 3);
+      const cx2 = Math.floor((2 * width) / 3);
       const cy2 = Math.floor(height / 2);
       const radius = 15;
 
@@ -304,7 +312,7 @@ export function initializeMultiChannelPattern(
       break;
     }
 
-    case 'predator-prey': {
+    case "predator-prey": {
       // Prey (channel 0) spread out, predator (channel 1) in center
       const cx = Math.floor(width / 2);
       const cy = Math.floor(height / 2);
@@ -324,7 +332,7 @@ export function initializeMultiChannelPattern(
       break;
     }
 
-    case 'random-multi':
+    case "random-multi":
     default: {
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
@@ -341,6 +349,6 @@ export function initializeMultiChannelPattern(
     { texture },
     data,
     { bytesPerRow: width * 16 }, // 4 floats * 4 bytes = 16 bytes per pixel
-    { width, height }
+    { width, height },
   );
 }

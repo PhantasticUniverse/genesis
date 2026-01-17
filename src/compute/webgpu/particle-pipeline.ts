@@ -8,8 +8,11 @@ import type {
   ParticleSystemConfig,
   InteractionRule,
   FieldCouplingConfig,
-} from '../../core/particles';
-import { DEFAULT_PARTICLE_CONFIG, DEFAULT_FIELD_COUPLING } from '../../core/particles';
+} from "../../core/particles";
+import {
+  DEFAULT_PARTICLE_CONFIG,
+  DEFAULT_FIELD_COUPLING,
+} from "../../core/particles";
 
 /** GPU-friendly particle structure (aligned to 32 bytes) */
 export interface GPUParticle {
@@ -19,7 +22,7 @@ export interface GPUParticle {
   vy: number;
   type: number;
   mass: number;
-  active: number;  // 0 or 1 (bool as float for GPU)
+  active: number; // 0 or 1 (bool as float for GPU)
   _padding: number;
 }
 
@@ -56,7 +59,7 @@ const MAX_TYPES = 8;
  */
 export function createParticlePipeline(
   device: GPUDevice,
-  config: ParticleSystemConfig = DEFAULT_PARTICLE_CONFIG
+  config: ParticleSystemConfig = DEFAULT_PARTICLE_CONFIG,
 ): ParticlePipeline {
   const { maxParticles, numTypes, gridWidth, gridHeight } = config;
 
@@ -65,11 +68,17 @@ export function createParticlePipeline(
   const particleBuffers: [GPUBuffer, GPUBuffer] = [
     device.createBuffer({
       size: particleBufferSize,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
+      usage:
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.COPY_DST |
+        GPUBufferUsage.COPY_SRC,
     }),
     device.createBuffer({
       size: particleBufferSize,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
+      usage:
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.COPY_DST |
+        GPUBufferUsage.COPY_SRC,
     }),
   ];
 
@@ -99,10 +108,10 @@ export function createParticlePipeline(
 
   // Create compute pipeline
   const computePipeline = device.createComputePipeline({
-    layout: 'auto',
+    layout: "auto",
     compute: {
       module: shaderModule,
-      entryPoint: 'main',
+      entryPoint: "main",
     },
   });
 
@@ -116,7 +125,10 @@ export function createParticlePipeline(
   let bindGroups: [GPUBindGroup, GPUBindGroup];
 
   function createBindGroups(fieldTexture?: GPUTexture) {
-    const entries = (inputIdx: number, outputIdx: number): GPUBindGroupEntry[] => [
+    const entries = (
+      inputIdx: number,
+      outputIdx: number,
+    ): GPUBindGroupEntry[] => [
       { binding: 0, resource: { buffer: particleBuffers[inputIdx] } },
       { binding: 1, resource: { buffer: particleBuffers[outputIdx] } },
       { binding: 2, resource: { buffer: interactionBuffer } },
@@ -156,7 +168,9 @@ export function createParticlePipeline(
       fieldCouplingConfig.depositEnabled ? 1 : 0,
       fieldCouplingConfig.depositAmount,
       fieldCouplingConfig.depositRadius,
-      0, 0, 0, // padding
+      0,
+      0,
+      0, // padding
     ]);
     device.queue.writeBuffer(uniformBuffer, 0, uniforms);
   }
@@ -201,7 +215,7 @@ export function createParticlePipeline(
         0,
         stagingBuffer,
         0,
-        activeParticleCount * PARTICLE_STRIDE
+        activeParticleCount * PARTICLE_STRIDE,
       );
       device.queue.submit([commandEncoder.finish()]);
 
@@ -263,7 +277,7 @@ export function createParticlePipeline(
       passEncoder.end();
 
       // Swap buffers
-      currentBuffer = 1 - currentBuffer as 0 | 1;
+      currentBuffer = (1 - currentBuffer) as 0 | 1;
     },
 
     getParticlePositions(): Float32Array {

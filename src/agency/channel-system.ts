@@ -4,78 +4,78 @@
  */
 
 export enum ChannelRole {
-  CREATURE = 0,      // Primary body mass (C0)
-  OBSTACLE = 1,      // Environmental barriers (C1)
-  GRADIENT = 2,      // Chemical gradient field (C2)
-  PROXIMITY = 3,     // Proximity sensor output (C3)
-  MOTOR = 4,         // Motor actuator field (C4)
-  PHEROMONE = 5,     // Inter-creature signaling (C5)
+  CREATURE = 0, // Primary body mass (C0)
+  OBSTACLE = 1, // Environmental barriers (C1)
+  GRADIENT = 2, // Chemical gradient field (C2)
+  PROXIMITY = 3, // Proximity sensor output (C3)
+  MOTOR = 4, // Motor actuator field (C4)
+  PHEROMONE = 5, // Inter-creature signaling (C5)
 }
 
 export interface ChannelConfig {
   role: ChannelRole;
   name: string;
   description: string;
-  isFixed: boolean;       // If true, channel doesn't update via CA rules
-  diffusionRate: number;  // How quickly values spread
-  decayRate: number;      // How quickly values decay
-  renderColor: [number, number, number];  // RGB for visualization
+  isFixed: boolean; // If true, channel doesn't update via CA rules
+  diffusionRate: number; // How quickly values spread
+  decayRate: number; // How quickly values decay
+  renderColor: [number, number, number]; // RGB for visualization
 }
 
 export const CHANNEL_CONFIGS: ChannelConfig[] = [
   {
     role: ChannelRole.CREATURE,
-    name: 'Creature',
-    description: 'Primary organism body mass',
+    name: "Creature",
+    description: "Primary organism body mass",
     isFixed: false,
     diffusionRate: 0,
     decayRate: 0,
-    renderColor: [0, 255, 128],  // Green
+    renderColor: [0, 255, 128], // Green
   },
   {
     role: ChannelRole.OBSTACLE,
-    name: 'Obstacle',
-    description: 'Fixed environmental barriers',
+    name: "Obstacle",
+    description: "Fixed environmental barriers",
     isFixed: true,
     diffusionRate: 0,
     decayRate: 0,
-    renderColor: [128, 128, 128],  // Gray
+    renderColor: [128, 128, 128], // Gray
   },
   {
     role: ChannelRole.GRADIENT,
-    name: 'Gradient',
-    description: 'Chemical gradient for navigation',
+    name: "Gradient",
+    description: "Chemical gradient for navigation",
     isFixed: false,
     diffusionRate: 0.1,
     decayRate: 0.01,
-    renderColor: [255, 128, 0],  // Orange
+    renderColor: [255, 128, 0], // Orange
   },
   {
     role: ChannelRole.PROXIMITY,
-    name: 'Proximity',
-    description: 'Distance sensor output',
+    name: "Proximity",
+    description: "Distance sensor output",
     isFixed: false,
     diffusionRate: 0.05,
     decayRate: 0.1,
-    renderColor: [255, 0, 128],  // Pink
+    renderColor: [255, 0, 128], // Pink
   },
   {
     role: ChannelRole.MOTOR,
-    name: 'Motor',
-    description: 'Movement actuator field',
+    name: "Motor",
+    description: "Movement actuator field",
     isFixed: false,
     diffusionRate: 0.02,
     decayRate: 0.05,
-    renderColor: [0, 128, 255],  // Blue
+    renderColor: [0, 128, 255], // Blue
   },
   {
     role: ChannelRole.PHEROMONE,
-    name: 'Pheromone',
-    description: 'Inter-creature signaling',
+    name: "Pheromone",
+    description: "Inter-creature signaling",
     isFixed: false,
     diffusionRate: 0.15,
     decayRate: 0.02,
-    renderColor: [255, 255, 0],  // Yellow
+    renderColor: [255, 255, 0], // Yellow
   },
 ];
 
@@ -87,17 +87,17 @@ export interface SensorimotorConfig {
   creatureDt: number;
 
   // Sensor parameters
-  gradientStrength: number;    // How strongly creature emits gradient
+  gradientStrength: number; // How strongly creature emits gradient
   proximitySensorRadius: number;
   proximityDecay: number;
 
   // Motor parameters
-  motorInfluence: number;      // How motor field affects growth asymmetry
-  motorBias: number;           // Base movement direction bias
+  motorInfluence: number; // How motor field affects growth asymmetry
+  motorBias: number; // Base movement direction bias
 
   // Interaction parameters
-  obstacleRepulsion: number;   // How strongly obstacles inhibit growth
-  pheromoneEmission: number;   // Rate of pheromone emission
+  obstacleRepulsion: number; // How strongly obstacles inhibit growth
+  pheromoneEmission: number; // Rate of pheromone emission
 }
 
 export const DEFAULT_SENSORIMOTOR_CONFIG: SensorimotorConfig = {
@@ -122,12 +122,12 @@ export const DEFAULT_SENSORIMOTOR_CONFIG: SensorimotorConfig = {
  */
 export function createSensorimotorState(
   width: number,
-  height: number
+  height: number,
 ): Float32Array {
   // 6 channels packed into RGBA pairs (2 textures with RGBA)
   // Or we can use a single texture array with 6 layers
   // For simplicity, we'll use 2 RGBA textures (8 channels, using 6)
-  return new Float32Array(width * height * 4 * 2);  // 2 RGBA textures
+  return new Float32Array(width * height * 4 * 2); // 2 RGBA textures
 }
 
 /**
@@ -136,12 +136,12 @@ export function createSensorimotorState(
 export function generateObstacles(
   width: number,
   height: number,
-  pattern: 'walls' | 'maze' | 'random' | 'ring' = 'walls'
+  pattern: "walls" | "maze" | "random" | "ring" = "walls",
 ): Float32Array {
   const obstacles = new Float32Array(width * height);
 
   switch (pattern) {
-    case 'walls':
+    case "walls":
       // Create walls with a gap
       const wallY1 = Math.floor(height * 0.3);
       const wallY2 = Math.floor(height * 0.7);
@@ -156,7 +156,7 @@ export function generateObstacles(
       }
       break;
 
-    case 'ring':
+    case "ring":
       // Create a ring obstacle
       const centerX = width / 2;
       const centerY = height / 2;
@@ -175,7 +175,7 @@ export function generateObstacles(
       }
       break;
 
-    case 'maze':
+    case "maze":
       // Simple maze-like pattern
       const cellSize = 30;
       for (let cy = 0; cy < Math.floor(height / cellSize); cy++) {
@@ -193,7 +193,7 @@ export function generateObstacles(
       }
       break;
 
-    case 'random':
+    case "random":
       // Random circular obstacles
       const numObstacles = 8;
       for (let i = 0; i < numObstacles; i++) {
@@ -225,7 +225,7 @@ export function generateTargetGradient(
   height: number,
   targetX: number,
   targetY: number,
-  radius: number = 50
+  radius: number = 50,
 ): Float32Array {
   const gradient = new Float32Array(width * height);
 
@@ -235,7 +235,9 @@ export function generateTargetGradient(
       const dy = y - targetY;
       const dist = Math.sqrt(dx * dx + dy * dy);
       // Gaussian falloff from target
-      gradient[y * width + x] = Math.exp(-dist * dist / (2 * radius * radius));
+      gradient[y * width + x] = Math.exp(
+        (-dist * dist) / (2 * radius * radius),
+      );
     }
   }
 

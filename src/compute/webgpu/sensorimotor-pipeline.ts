@@ -3,9 +3,9 @@
  * WebGPU compute pipeline for sensorimotor CA
  */
 
-import sensorimotorShader from './shaders/sensorimotor-ca.wgsl?raw';
-import { createShaderModule } from './context';
-import { generateGaussianKernel } from '../../core/kernels';
+import sensorimotorShader from "./shaders/sensorimotor-ca.wgsl?raw";
+import { createShaderModule } from "./context";
+import { generateGaussianKernel } from "../../core/kernels";
 
 export interface SensorimotorParams {
   kernelRadius: number;
@@ -43,7 +43,7 @@ export interface SensorimotorPipeline {
     inputMain: GPUTexture,
     inputAux: GPUTexture,
     outputMain: GPUTexture,
-    outputAux: GPUTexture
+    outputAux: GPUTexture,
   ) => GPUBindGroup;
   updateParams: (params: Partial<SensorimotorParams>) => void;
   updateKernel: (radius: number) => void;
@@ -55,12 +55,16 @@ export function createSensorimotorPipeline(
   device: GPUDevice,
   width: number,
   height: number,
-  initialParams: Partial<SensorimotorParams> = {}
+  initialParams: Partial<SensorimotorParams> = {},
 ): SensorimotorPipeline {
   let params: SensorimotorParams = { ...DEFAULT_PARAMS, ...initialParams };
 
   // Create shader module
-  const shaderModule = createShaderModule(device, sensorimotorShader, 'sensorimotor-ca');
+  const shaderModule = createShaderModule(
+    device,
+    sensorimotorShader,
+    "sensorimotor-ca",
+  );
 
   // Create uniform buffer (padded to 16 bytes alignment)
   // Total params: width, height, kernelRadius, dt, growthCenter, growthWidth,
@@ -68,7 +72,7 @@ export function createSensorimotorPipeline(
   //               proximityRadius, pheromoneEmission, pheromoneDiffusion, pheromoneDecay
   // = 14 values = 56 bytes, padded to 64
   const uniformBuffer = device.createBuffer({
-    label: 'sensorimotor-uniform-buffer',
+    label: "sensorimotor-uniform-buffer",
     size: 64,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
@@ -82,9 +86,9 @@ export function createSensorimotorPipeline(
     const kernelData = generateGaussianKernel(radius, radius / 3);
 
     const texture = device.createTexture({
-      label: 'kernel-texture',
+      label: "kernel-texture",
       size: [size, size],
-      format: 'r32float',
+      format: "r32float",
       usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
     });
 
@@ -92,7 +96,7 @@ export function createSensorimotorPipeline(
       { texture },
       kernelData,
       { bytesPerRow: size * 4 },
-      { width: size, height: size }
+      { width: size, height: size },
     );
 
     return texture;
@@ -126,50 +130,50 @@ export function createSensorimotorPipeline(
 
   // Create bind group layout
   const bindGroupLayout = device.createBindGroupLayout({
-    label: 'sensorimotor-bind-group-layout',
+    label: "sensorimotor-bind-group-layout",
     entries: [
       {
         binding: 0,
         visibility: GPUShaderStage.COMPUTE,
-        texture: { sampleType: 'unfilterable-float' },
+        texture: { sampleType: "unfilterable-float" },
       },
       {
         binding: 1,
         visibility: GPUShaderStage.COMPUTE,
-        texture: { sampleType: 'unfilterable-float' },
+        texture: { sampleType: "unfilterable-float" },
       },
       {
         binding: 2,
         visibility: GPUShaderStage.COMPUTE,
-        storageTexture: { access: 'write-only', format: 'rgba32float' },
+        storageTexture: { access: "write-only", format: "rgba32float" },
       },
       {
         binding: 3,
         visibility: GPUShaderStage.COMPUTE,
-        storageTexture: { access: 'write-only', format: 'rgba32float' },
+        storageTexture: { access: "write-only", format: "rgba32float" },
       },
       {
         binding: 4,
         visibility: GPUShaderStage.COMPUTE,
-        texture: { sampleType: 'unfilterable-float' },
+        texture: { sampleType: "unfilterable-float" },
       },
       {
         binding: 5,
         visibility: GPUShaderStage.COMPUTE,
-        buffer: { type: 'uniform' },
+        buffer: { type: "uniform" },
       },
     ],
   });
 
   // Create compute pipeline
   const computePipeline = device.createComputePipeline({
-    label: 'sensorimotor-compute-pipeline',
+    label: "sensorimotor-compute-pipeline",
     layout: device.createPipelineLayout({
       bindGroupLayouts: [bindGroupLayout],
     }),
     compute: {
       module: shaderModule,
-      entryPoint: 'main',
+      entryPoint: "main",
     },
   });
 
@@ -180,10 +184,10 @@ export function createSensorimotorPipeline(
       inputMain: GPUTexture,
       inputAux: GPUTexture,
       outputMain: GPUTexture,
-      outputAux: GPUTexture
+      outputAux: GPUTexture,
     ): GPUBindGroup {
       return device.createBindGroup({
-        label: 'sensorimotor-bind-group',
+        label: "sensorimotor-bind-group",
         layout: bindGroupLayout,
         entries: [
           { binding: 0, resource: inputMain.createView() },

@@ -3,7 +3,7 @@
  * Reusable collapsible panel with consistent styling
  */
 
-import { useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from "react";
 
 export interface ExpandablePanelProps {
   /** Panel title */
@@ -27,17 +27,19 @@ export interface ExpandablePanelProps {
 
 export function ExpandablePanel({
   title,
-  titleColor = 'text-zinc-300',
+  titleColor = "text-zinc-300",
   badge,
   statusBadge,
   defaultExpanded = false,
   children,
-  className = '',
+  className = "",
 }: ExpandablePanelProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <div className={`p-4 bg-zinc-900 rounded-lg border border-zinc-800 ${className}`}>
+    <div
+      className={`p-4 bg-zinc-900 rounded-lg border border-zinc-800 ${className}`}
+    >
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between text-left"
@@ -46,19 +48,17 @@ export function ExpandablePanel({
           <h3 className={`font-medium ${titleColor}`}>{title}</h3>
           {badge}
           {statusBadge && (
-            <span className={`text-xs px-2 py-0.5 rounded ${statusBadge.color}`}>
+            <span
+              className={`text-xs px-2 py-0.5 rounded ${statusBadge.color}`}
+            >
               {statusBadge.text}
             </span>
           )}
         </div>
-        <span className="text-zinc-500">{isExpanded ? '−' : '+'}</span>
+        <span className="text-zinc-500">{isExpanded ? "−" : "+"}</span>
       </button>
 
-      {isExpanded && (
-        <div className="mt-4">
-          {children}
-        </div>
-      )}
+      {isExpanded && <div className="mt-4">{children}</div>}
     </div>
   );
 }

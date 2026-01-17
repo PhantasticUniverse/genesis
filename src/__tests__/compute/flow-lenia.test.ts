@@ -2,15 +2,15 @@
  * Tests for Flow-Lenia Pipeline
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 import {
   DEFAULT_FLOW_CONFIG,
   type FlowLeniaConfig,
-} from '../../compute/webgpu/flow-lenia-pipeline';
+} from "../../compute/webgpu/flow-lenia-pipeline";
 
-describe('Flow-Lenia Pipeline', () => {
-  describe('DEFAULT_FLOW_CONFIG', () => {
-    it('has valid default values', () => {
+describe("Flow-Lenia Pipeline", () => {
+  describe("DEFAULT_FLOW_CONFIG", () => {
+    it("has valid default values", () => {
       expect(DEFAULT_FLOW_CONFIG.width).toBe(512);
       expect(DEFAULT_FLOW_CONFIG.height).toBe(512);
       expect(DEFAULT_FLOW_CONFIG.growthCenter).toBe(0.15);
@@ -22,37 +22,37 @@ describe('Flow-Lenia Pipeline', () => {
       expect(DEFAULT_FLOW_CONFIG.useReintegration).toBe(true);
     });
 
-    it('has positive dimensions', () => {
+    it("has positive dimensions", () => {
       expect(DEFAULT_FLOW_CONFIG.width).toBeGreaterThan(0);
       expect(DEFAULT_FLOW_CONFIG.height).toBeGreaterThan(0);
     });
 
-    it('has valid growth parameters', () => {
+    it("has valid growth parameters", () => {
       expect(DEFAULT_FLOW_CONFIG.growthCenter).toBeGreaterThanOrEqual(0);
       expect(DEFAULT_FLOW_CONFIG.growthCenter).toBeLessThanOrEqual(1);
       expect(DEFAULT_FLOW_CONFIG.growthWidth).toBeGreaterThan(0);
     });
 
-    it('has valid time step', () => {
+    it("has valid time step", () => {
       expect(DEFAULT_FLOW_CONFIG.dt).toBeGreaterThan(0);
       expect(DEFAULT_FLOW_CONFIG.dt).toBeLessThanOrEqual(1);
     });
 
-    it('has valid flow strength', () => {
+    it("has valid flow strength", () => {
       expect(DEFAULT_FLOW_CONFIG.flowStrength).toBeGreaterThanOrEqual(0);
     });
 
-    it('has valid diffusion coefficient', () => {
+    it("has valid diffusion coefficient", () => {
       expect(DEFAULT_FLOW_CONFIG.diffusion).toBeGreaterThanOrEqual(0);
     });
 
-    it('has valid growth type', () => {
+    it("has valid growth type", () => {
       expect([0, 1]).toContain(DEFAULT_FLOW_CONFIG.growthType);
     });
   });
 
-  describe('FlowLeniaConfig interface', () => {
-    it('allows partial configuration', () => {
+  describe("FlowLeniaConfig interface", () => {
+    it("allows partial configuration", () => {
       const partialConfig: Partial<FlowLeniaConfig> = {
         flowStrength: 1.0,
         diffusion: 0.05,
@@ -65,7 +65,7 @@ describe('Flow-Lenia Pipeline', () => {
       expect(mergedConfig.width).toBe(512); // Default preserved
     });
 
-    it('supports custom dimensions', () => {
+    it("supports custom dimensions", () => {
       const customConfig: FlowLeniaConfig = {
         ...DEFAULT_FLOW_CONFIG,
         width: 256,
@@ -76,7 +76,7 @@ describe('Flow-Lenia Pipeline', () => {
       expect(customConfig.height).toBe(256);
     });
 
-    it('supports polynomial growth type', () => {
+    it("supports polynomial growth type", () => {
       const customConfig: FlowLeniaConfig = {
         ...DEFAULT_FLOW_CONFIG,
         growthType: 0, // Polynomial
@@ -85,7 +85,7 @@ describe('Flow-Lenia Pipeline', () => {
       expect(customConfig.growthType).toBe(0);
     });
 
-    it('supports disabling reintegration', () => {
+    it("supports disabling reintegration", () => {
       const customConfig: FlowLeniaConfig = {
         ...DEFAULT_FLOW_CONFIG,
         useReintegration: false,
@@ -95,8 +95,8 @@ describe('Flow-Lenia Pipeline', () => {
     });
   });
 
-  describe('Flow-Lenia shader configuration', () => {
-    it('uniform buffer structure matches shader expectations', () => {
+  describe("Flow-Lenia shader configuration", () => {
+    it("uniform buffer structure matches shader expectations", () => {
       // The shader expects:
       // width: u32 (4 bytes)
       // height: u32 (4 bytes)
@@ -115,7 +115,7 @@ describe('Flow-Lenia Pipeline', () => {
       expect(configFields * bytesPerField).toBe(uniformSize);
     });
 
-    it('workgroup size is compatible with shader', () => {
+    it("workgroup size is compatible with shader", () => {
       // Shader uses @workgroup_size(16, 16)
       const workgroupSize = 16;
       const width = DEFAULT_FLOW_CONFIG.width;
@@ -127,19 +127,19 @@ describe('Flow-Lenia Pipeline', () => {
     });
   });
 
-  describe('Mass conservation properties', () => {
-    it('reintegration method is preferred for conservation', () => {
+  describe("Mass conservation properties", () => {
+    it("reintegration method is preferred for conservation", () => {
       // The reintegration method explicitly tracks mass flux
       // and should provide better mass conservation
       expect(DEFAULT_FLOW_CONFIG.useReintegration).toBe(true);
     });
 
-    it('diffusion is low by default to preserve mass', () => {
+    it("diffusion is low by default to preserve mass", () => {
       // High diffusion can cause numerical mass loss at boundaries
       expect(DEFAULT_FLOW_CONFIG.diffusion).toBeLessThan(0.1);
     });
 
-    it('flow strength is moderate by default', () => {
+    it("flow strength is moderate by default", () => {
       // Very high flow strength can cause instability
       expect(DEFAULT_FLOW_CONFIG.flowStrength).toBeLessThanOrEqual(2);
       expect(DEFAULT_FLOW_CONFIG.flowStrength).toBeGreaterThan(0);

@@ -3,7 +3,7 @@
  * Configures test environment with WebGPU mocks and global utilities
  */
 
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 // Mock WebGPU types and objects
 class MockGPUBuffer {
@@ -12,7 +12,7 @@ class MockGPUBuffer {
   usage: number;
 
   constructor(descriptor: GPUBufferDescriptor) {
-    this.label = descriptor.label ?? '';
+    this.label = descriptor.label ?? "";
     this.size = descriptor.size;
     this.usage = descriptor.usage;
   }
@@ -37,7 +37,7 @@ class MockGPUTexture {
   format: string;
 
   constructor(descriptor: GPUTextureDescriptor) {
-    this.label = descriptor.label ?? '';
+    this.label = descriptor.label ?? "";
     this.width = (descriptor.size as GPUExtent3DDict).width ?? 256;
     this.height = (descriptor.size as GPUExtent3DDict).height ?? 256;
     this.format = descriptor.format;
@@ -56,7 +56,7 @@ class MockGPUShaderModule {
   label: string;
 
   constructor(descriptor: GPUShaderModuleDescriptor) {
-    this.label = descriptor.label ?? '';
+    this.label = descriptor.label ?? "";
   }
 }
 
@@ -79,14 +79,16 @@ class MockGPUCommandEncoder {
     return new MockGPUComputePassEncoder();
   }
 
-  beginRenderPass(_descriptor: GPURenderPassDescriptor): MockGPURenderPassEncoder {
+  beginRenderPass(
+    _descriptor: GPURenderPassDescriptor,
+  ): MockGPURenderPassEncoder {
     return new MockGPURenderPassEncoder();
   }
 
   copyTextureToBuffer(
     _source: GPUImageCopyTexture,
     _destination: GPUImageCopyBuffer,
-    _copySize: GPUExtent3DStrict
+    _copySize: GPUExtent3DStrict,
   ): void {}
 
   copyBufferToBuffer(
@@ -94,7 +96,7 @@ class MockGPUCommandEncoder {
     _sourceOffset: number,
     _destination: GPUBuffer,
     _destinationOffset: number,
-    _size: number
+    _size: number,
   ): void {}
 
   finish(): MockGPUCommandBuffer {
@@ -110,14 +112,14 @@ class MockGPUQueue {
   writeBuffer(
     _buffer: GPUBuffer,
     _bufferOffset: number,
-    _data: BufferSource
+    _data: BufferSource,
   ): void {}
 
   writeTexture(
     _destination: GPUImageCopyTexture,
     _data: BufferSource,
     _dataLayout: GPUImageDataLayout,
-    _size: GPUExtent3DStrict
+    _size: GPUExtent3DStrict,
   ): void {}
 
   async onSubmittedWorkDone(): Promise<void> {
@@ -129,7 +131,7 @@ class MockGPUBindGroupLayout {
   label: string;
 
   constructor(descriptor: GPUBindGroupLayoutDescriptor) {
-    this.label = descriptor.label ?? '';
+    this.label = descriptor.label ?? "";
   }
 }
 
@@ -137,7 +139,7 @@ class MockGPUBindGroup {
   label: string;
 
   constructor(descriptor: GPUBindGroupDescriptor) {
-    this.label = descriptor.label ?? '';
+    this.label = descriptor.label ?? "";
   }
 }
 
@@ -145,7 +147,7 @@ class MockGPUPipelineLayout {
   label: string;
 
   constructor(descriptor: GPUPipelineLayoutDescriptor) {
-    this.label = descriptor.label ?? '';
+    this.label = descriptor.label ?? "";
   }
 }
 
@@ -153,7 +155,7 @@ class MockGPUComputePipeline {
   label: string;
 
   constructor(descriptor: GPUComputePipelineDescriptor) {
-    this.label = descriptor.label ?? '';
+    this.label = descriptor.label ?? "";
   }
 }
 
@@ -161,7 +163,7 @@ class MockGPURenderPipeline {
   label: string;
 
   constructor(descriptor: GPURenderPipelineDescriptor) {
-    this.label = descriptor.label ?? '';
+    this.label = descriptor.label ?? "";
   }
 }
 
@@ -176,11 +178,15 @@ class MockGPUDevice {
     return new MockGPUTexture(descriptor);
   }
 
-  createShaderModule(descriptor: GPUShaderModuleDescriptor): MockGPUShaderModule {
+  createShaderModule(
+    descriptor: GPUShaderModuleDescriptor,
+  ): MockGPUShaderModule {
     return new MockGPUShaderModule(descriptor);
   }
 
-  createBindGroupLayout(descriptor: GPUBindGroupLayoutDescriptor): MockGPUBindGroupLayout {
+  createBindGroupLayout(
+    descriptor: GPUBindGroupLayoutDescriptor,
+  ): MockGPUBindGroupLayout {
     return new MockGPUBindGroupLayout(descriptor);
   }
 
@@ -188,15 +194,21 @@ class MockGPUDevice {
     return new MockGPUBindGroup(descriptor);
   }
 
-  createPipelineLayout(descriptor: GPUPipelineLayoutDescriptor): MockGPUPipelineLayout {
+  createPipelineLayout(
+    descriptor: GPUPipelineLayoutDescriptor,
+  ): MockGPUPipelineLayout {
     return new MockGPUPipelineLayout(descriptor);
   }
 
-  createComputePipeline(descriptor: GPUComputePipelineDescriptor): MockGPUComputePipeline {
+  createComputePipeline(
+    descriptor: GPUComputePipelineDescriptor,
+  ): MockGPUComputePipeline {
     return new MockGPUComputePipeline(descriptor);
   }
 
-  createRenderPipeline(descriptor: GPURenderPipelineDescriptor): MockGPURenderPipeline {
+  createRenderPipeline(
+    descriptor: GPURenderPipelineDescriptor,
+  ): MockGPURenderPipeline {
     return new MockGPURenderPipeline(descriptor);
   }
 
@@ -219,7 +231,7 @@ class MockGPU {
   }
 
   getPreferredCanvasFormat(): string {
-    return 'bgra8unorm';
+    return "bgra8unorm";
   }
 }
 
@@ -227,7 +239,7 @@ class MockGPU {
 const mockGPU = new MockGPU();
 
 // Mock navigator.gpu
-Object.defineProperty(globalThis.navigator, 'gpu', {
+Object.defineProperty(globalThis.navigator, "gpu", {
   value: mockGPU,
   writable: true,
   configurable: true,
@@ -280,7 +292,11 @@ export {
 };
 
 // Global test utilities
-export function createTestGrid(width: number, height: number, fillValue = 0): Float32Array {
+export function createTestGrid(
+  width: number,
+  height: number,
+  fillValue = 0,
+): Float32Array {
   const grid = new Float32Array(width * height);
   if (fillValue !== 0) {
     grid.fill(fillValue);
@@ -319,8 +335,8 @@ export function createAsymmetricPattern(size: number): Float32Array {
 
 // Console spy for error tracking
 beforeEach(() => {
-  vi.spyOn(console, 'error').mockImplementation(() => {});
-  vi.spyOn(console, 'warn').mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
 afterEach(() => {

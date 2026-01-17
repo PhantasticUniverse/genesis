@@ -3,8 +3,13 @@
  * UI for sensorimotor creature control and obstacle placement
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import type { Engine, Creature, TrackerState, ObstaclePattern } from '../../core/engine';
+import { useState, useCallback, useEffect } from "react";
+import type {
+  Engine,
+  Creature,
+  TrackerState,
+  ObstaclePattern,
+} from "../../core/engine";
 
 interface AgencyPanelProps {
   engine: Engine | null;
@@ -20,35 +25,49 @@ interface CreatureInfo {
 }
 
 export function AgencyPanel({ engine }: AgencyPanelProps) {
-  const [obstaclePattern, setObstaclePattern] = useState<ObstaclePattern>('none');
+  const [obstaclePattern, setObstaclePattern] =
+    useState<ObstaclePattern>("none");
   const [targetX, setTargetX] = useState(400);
   const [targetY, setTargetY] = useState(100);
   const [motorInfluence, setMotorInfluence] = useState(0.3);
   const [isAgencyMode, setIsAgencyMode] = useState(false);
+  const [showObstacles, setShowObstacles] = useState(false);
   const [creatures, setCreatures] = useState<CreatureInfo[]>([]);
-  const [largestCreature, setLargestCreature] = useState<CreatureInfo | null>(null);
+  const [largestCreature, setLargestCreature] = useState<CreatureInfo | null>(
+    null,
+  );
 
   // Setup creature tracking callback
   useEffect(() => {
     if (!engine || !isAgencyMode) return;
 
-    const callback = (creatureList: Creature[], largest: Creature | null, _tracker: TrackerState) => {
-      setCreatures(creatureList.slice(0, 5).map(c => ({
-        id: c.id,
-        mass: c.mass,
-        x: c.centroidX,
-        y: c.centroidY,
-        vx: c.velocityX,
-        vy: c.velocityY,
-      })));
-      setLargestCreature(largest ? {
-        id: largest.id,
-        mass: largest.mass,
-        x: largest.centroidX,
-        y: largest.centroidY,
-        vx: largest.velocityX,
-        vy: largest.velocityY,
-      } : null);
+    const callback = (
+      creatureList: Creature[],
+      largest: Creature | null,
+      _tracker: TrackerState,
+    ) => {
+      setCreatures(
+        creatureList.slice(0, 5).map((c) => ({
+          id: c.id,
+          mass: c.mass,
+          x: c.centroidX,
+          y: c.centroidY,
+          vx: c.velocityX,
+          vy: c.velocityY,
+        })),
+      );
+      setLargestCreature(
+        largest
+          ? {
+              id: largest.id,
+              mass: largest.mass,
+              x: largest.centroidX,
+              y: largest.centroidY,
+              vx: largest.velocityX,
+              vy: largest.velocityY,
+            }
+          : null,
+      );
     };
 
     engine.onCreatureUpdate(callback);
@@ -80,30 +99,48 @@ export function AgencyPanel({ engine }: AgencyPanelProps) {
     setLargestCreature(null);
   }, [engine]);
 
-  const handleSetObstacles = useCallback((pattern: ObstaclePattern) => {
-    if (!engine) return;
-    setObstaclePattern(pattern);
-    engine.setObstacles(pattern);
-  }, [engine]);
+  const handleSetObstacles = useCallback(
+    (pattern: ObstaclePattern) => {
+      if (!engine) return;
+      setObstaclePattern(pattern);
+      engine.setObstacles(pattern);
+    },
+    [engine],
+  );
 
   const handleSetTarget = useCallback(() => {
     if (!engine) return;
     engine.setTargetGradient(targetX, targetY);
   }, [engine, targetX, targetY]);
 
-  const handleMotorInfluenceChange = useCallback((value: number) => {
-    setMotorInfluence(value);
-    if (engine && isAgencyMode) {
-      engine.setSensorimotorParams({ motorInfluence: value });
-    }
-  }, [engine, isAgencyMode]);
+  const handleMotorInfluenceChange = useCallback(
+    (value: number) => {
+      setMotorInfluence(value);
+      if (engine && isAgencyMode) {
+        engine.setSensorimotorParams({ motorInfluence: value });
+      }
+    },
+    [engine, isAgencyMode],
+  );
+
+  const handleShowObstaclesChange = useCallback(
+    (show: boolean) => {
+      setShowObstacles(show);
+      if (engine) {
+        engine.setShowObstacles(show);
+      }
+    },
+    [engine],
+  );
 
   return (
     <div className="mt-4 p-4 bg-zinc-900 rounded-lg border border-zinc-800">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-medium text-zinc-300">Sensorimotor Agency</h3>
-        <span className={`text-xs px-2 py-0.5 rounded ${isAgencyMode ? 'bg-blue-600' : 'bg-zinc-700'}`}>
-          {isAgencyMode ? 'Active' : 'Inactive'}
+        <span
+          className={`text-xs px-2 py-0.5 rounded ${isAgencyMode ? "bg-blue-600" : "bg-zinc-700"}`}
+        >
+          {isAgencyMode ? "Active" : "Inactive"}
         </span>
       </div>
 
@@ -129,17 +166,33 @@ export function AgencyPanel({ engine }: AgencyPanelProps) {
 
       {/* Obstacle Pattern */}
       <div className="mb-4">
-        <label className="text-xs text-zinc-500 block mb-1">Obstacle Pattern</label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="text-xs text-zinc-500">Obstacle Pattern</label>
+          <label className="flex items-center gap-1.5 text-xs text-zinc-400 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showObstacles}
+              onChange={(e) => handleShowObstaclesChange(e.target.checked)}
+              disabled={!isAgencyMode}
+              className="w-3 h-3 rounded border-zinc-600 bg-zinc-800 text-orange-500 focus:ring-orange-500 focus:ring-offset-0 disabled:opacity-50"
+            />
+            <span className={showObstacles ? "text-orange-400" : ""}>
+              Show Obstacles
+            </span>
+          </label>
+        </div>
         <div className="flex flex-wrap gap-1">
-          {(['none', 'walls', 'ring', 'maze', 'random'] as ObstaclePattern[]).map((pattern) => (
+          {(
+            ["none", "walls", "ring", "maze", "random"] as ObstaclePattern[]
+          ).map((pattern) => (
             <button
               key={pattern}
               onClick={() => handleSetObstacles(pattern)}
               disabled={!isAgencyMode}
               className={`px-2 py-1 text-xs rounded transition-colors ${
                 obstaclePattern === pattern
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                  ? "bg-blue-600 text-white"
+                  : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
               } disabled:opacity-50`}
             >
               {pattern.charAt(0).toUpperCase() + pattern.slice(1)}
@@ -150,7 +203,9 @@ export function AgencyPanel({ engine }: AgencyPanelProps) {
 
       {/* Target Position */}
       <div className="mb-4">
-        <label className="text-xs text-zinc-500 block mb-1">Target Position</label>
+        <label className="text-xs text-zinc-500 block mb-1">
+          Target Position
+        </label>
         <div className="flex gap-2 items-center">
           <input
             type="number"
@@ -198,21 +253,48 @@ export function AgencyPanel({ engine }: AgencyPanelProps) {
       {/* Creature Tracking Display */}
       {isAgencyMode && (
         <div className="mb-4 p-3 bg-zinc-800 rounded">
-          <h4 className="text-xs font-medium text-zinc-400 mb-2">Creature Tracking</h4>
+          <h4 className="text-xs font-medium text-zinc-400 mb-2">
+            Creature Tracking
+          </h4>
           {largestCreature ? (
             <div className="space-y-1">
               <div className="text-xs text-green-400">
                 Primary Creature #{largestCreature.id}
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-zinc-400">
-                <span>Mass: <span className="text-zinc-200">{largestCreature.mass.toFixed(1)}</span></span>
-                <span>Pos: <span className="text-zinc-200">({largestCreature.x.toFixed(0)}, {largestCreature.y.toFixed(0)})</span></span>
-                <span>Vel: <span className="text-zinc-200">({largestCreature.vx.toFixed(2)}, {largestCreature.vy.toFixed(2)})</span></span>
-                <span>Speed: <span className="text-zinc-200">{Math.sqrt(largestCreature.vx ** 2 + largestCreature.vy ** 2).toFixed(2)}</span></span>
+                <span>
+                  Mass:{" "}
+                  <span className="text-zinc-200">
+                    {largestCreature.mass.toFixed(1)}
+                  </span>
+                </span>
+                <span>
+                  Pos:{" "}
+                  <span className="text-zinc-200">
+                    ({largestCreature.x.toFixed(0)},{" "}
+                    {largestCreature.y.toFixed(0)})
+                  </span>
+                </span>
+                <span>
+                  Vel:{" "}
+                  <span className="text-zinc-200">
+                    ({largestCreature.vx.toFixed(2)},{" "}
+                    {largestCreature.vy.toFixed(2)})
+                  </span>
+                </span>
+                <span>
+                  Speed:{" "}
+                  <span className="text-zinc-200">
+                    {Math.sqrt(
+                      largestCreature.vx ** 2 + largestCreature.vy ** 2,
+                    ).toFixed(2)}
+                  </span>
+                </span>
               </div>
               {creatures.length > 1 && (
                 <div className="mt-2 text-xs text-zinc-500">
-                  +{creatures.length - 1} other creature{creatures.length > 2 ? 's' : ''} detected
+                  +{creatures.length - 1} other creature
+                  {creatures.length > 2 ? "s" : ""} detected
                 </div>
               )}
             </div>
@@ -236,7 +318,8 @@ export function AgencyPanel({ engine }: AgencyPanelProps) {
       {/* Status indicator */}
       {isAgencyMode && (
         <div className="mt-4 p-2 bg-blue-900/30 border border-blue-800 rounded text-xs text-blue-400">
-          Sensorimotor mode active. Set obstacles and targets to influence creature behavior.
+          Sensorimotor mode active. Set obstacles and targets to influence
+          creature behavior.
         </div>
       )}
     </div>

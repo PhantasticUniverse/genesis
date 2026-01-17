@@ -3,15 +3,15 @@
  * Tests for KD-tree implementation for novelty search
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 import {
   BehaviorKDTree,
   createBehaviorIndex,
   weightedDistance,
   weightedSquaredDistance,
   BEHAVIOR_WEIGHTS,
-} from '../../discovery/spatial-index';
-import type { BehaviorVector } from '../../discovery/fitness';
+} from "../../discovery/spatial-index";
+import type { BehaviorVector } from "../../discovery/fitness";
 
 // Helper to create a behavior vector
 function createBehavior(values: Partial<BehaviorVector> = {}): BehaviorVector {
@@ -25,9 +25,9 @@ function createBehavior(values: Partial<BehaviorVector> = {}): BehaviorVector {
   };
 }
 
-describe('spatial-index', () => {
-  describe('BEHAVIOR_WEIGHTS', () => {
-    it('has correct weight values', () => {
+describe("spatial-index", () => {
+  describe("BEHAVIOR_WEIGHTS", () => {
+    it("has correct weight values", () => {
       expect(BEHAVIOR_WEIGHTS.avgMass).toBe(1);
       expect(BEHAVIOR_WEIGHTS.massVariance).toBe(0.5);
       expect(BEHAVIOR_WEIGHTS.avgSpeed).toBe(1.5);
@@ -37,13 +37,13 @@ describe('spatial-index', () => {
     });
   });
 
-  describe('weightedSquaredDistance', () => {
-    it('returns 0 for identical vectors', () => {
+  describe("weightedSquaredDistance", () => {
+    it("returns 0 for identical vectors", () => {
       const v = createBehavior({ avgMass: 100, lifespan: 0.5 });
       expect(weightedSquaredDistance(v, v)).toBe(0);
     });
 
-    it('calculates weighted squared distance correctly', () => {
+    it("calculates weighted squared distance correctly", () => {
       const v1 = createBehavior({ avgMass: 0 });
       const v2 = createBehavior({ avgMass: 1 });
 
@@ -52,7 +52,7 @@ describe('spatial-index', () => {
       expect(weightedSquaredDistance(v1, v2)).toBe(1);
     });
 
-    it('applies lifespan weight correctly', () => {
+    it("applies lifespan weight correctly", () => {
       const v1 = createBehavior({ lifespan: 0 });
       const v2 = createBehavior({ lifespan: 1 });
 
@@ -61,7 +61,7 @@ describe('spatial-index', () => {
       expect(weightedSquaredDistance(v1, v2)).toBe(2);
     });
 
-    it('combines multiple dimensions', () => {
+    it("combines multiple dimensions", () => {
       const v1 = createBehavior({ avgMass: 0, avgSpeed: 0 });
       const v2 = createBehavior({ avgMass: 1, avgSpeed: 1 });
 
@@ -72,13 +72,13 @@ describe('spatial-index', () => {
     });
   });
 
-  describe('weightedDistance', () => {
-    it('returns 0 for identical vectors', () => {
+  describe("weightedDistance", () => {
+    it("returns 0 for identical vectors", () => {
       const v = createBehavior({ avgMass: 100 });
       expect(weightedDistance(v, v)).toBe(0);
     });
 
-    it('returns sqrt of weighted squared distance', () => {
+    it("returns sqrt of weighted squared distance", () => {
       const v1 = createBehavior({ lifespan: 0 });
       const v2 = createBehavior({ lifespan: 1 });
 
@@ -87,25 +87,23 @@ describe('spatial-index', () => {
     });
   });
 
-  describe('BehaviorKDTree', () => {
-    describe('build', () => {
-      it('creates empty tree from empty array', () => {
+  describe("BehaviorKDTree", () => {
+    describe("build", () => {
+      it("creates empty tree from empty array", () => {
         const tree = BehaviorKDTree.build<{ id: string }>([]);
         expect(tree.isEmpty()).toBe(true);
         expect(tree.getSize()).toBe(0);
       });
 
-      it('creates tree from single item', () => {
+      it("creates tree from single item", () => {
         const behavior = createBehavior({ avgMass: 100 });
-        const tree = BehaviorKDTree.build([
-          { behavior, data: { id: '1' } },
-        ]);
+        const tree = BehaviorKDTree.build([{ behavior, data: { id: "1" } }]);
 
         expect(tree.isEmpty()).toBe(false);
         expect(tree.getSize()).toBe(1);
       });
 
-      it('creates balanced tree from multiple items', () => {
+      it("creates balanced tree from multiple items", () => {
         const items = Array.from({ length: 10 }, (_, i) => ({
           behavior: createBehavior({ avgMass: i * 10 }),
           data: { id: String(i) },
@@ -116,8 +114,8 @@ describe('spatial-index', () => {
       });
     });
 
-    describe('kNearest', () => {
-      it('returns empty array for empty tree', () => {
+    describe("kNearest", () => {
+      it("returns empty array for empty tree", () => {
         const tree = BehaviorKDTree.build<{ id: string }>([]);
         const query = createBehavior();
         const result = tree.kNearest(query, 5);
@@ -125,20 +123,20 @@ describe('spatial-index', () => {
         expect(result).toEqual([]);
       });
 
-      it('returns k=0 as empty array', () => {
+      it("returns k=0 as empty array", () => {
         const tree = BehaviorKDTree.build([
-          { behavior: createBehavior(), data: { id: '1' } },
+          { behavior: createBehavior(), data: { id: "1" } },
         ]);
         const result = tree.kNearest(createBehavior(), 0);
 
         expect(result).toEqual([]);
       });
 
-      it('finds single nearest neighbor', () => {
+      it("finds single nearest neighbor", () => {
         const items = [
-          { behavior: createBehavior({ avgMass: 0 }), data: { id: 'a' } },
-          { behavior: createBehavior({ avgMass: 100 }), data: { id: 'b' } },
-          { behavior: createBehavior({ avgMass: 50 }), data: { id: 'c' } },
+          { behavior: createBehavior({ avgMass: 0 }), data: { id: "a" } },
+          { behavior: createBehavior({ avgMass: 100 }), data: { id: "b" } },
+          { behavior: createBehavior({ avgMass: 50 }), data: { id: "c" } },
         ];
         const tree = BehaviorKDTree.build(items);
 
@@ -146,15 +144,15 @@ describe('spatial-index', () => {
         const result = tree.kNearest(query, 1);
 
         expect(result).toHaveLength(1);
-        expect(result[0].data.id).toBe('c'); // 50 is closest to 45
+        expect(result[0].data.id).toBe("c"); // 50 is closest to 45
       });
 
-      it('finds k nearest neighbors in correct order', () => {
+      it("finds k nearest neighbors in correct order", () => {
         const items = [
-          { behavior: createBehavior({ avgMass: 0 }), data: { id: 'a' } },
-          { behavior: createBehavior({ avgMass: 100 }), data: { id: 'b' } },
-          { behavior: createBehavior({ avgMass: 50 }), data: { id: 'c' } },
-          { behavior: createBehavior({ avgMass: 25 }), data: { id: 'd' } },
+          { behavior: createBehavior({ avgMass: 0 }), data: { id: "a" } },
+          { behavior: createBehavior({ avgMass: 100 }), data: { id: "b" } },
+          { behavior: createBehavior({ avgMass: 50 }), data: { id: "c" } },
+          { behavior: createBehavior({ avgMass: 25 }), data: { id: "d" } },
         ];
         const tree = BehaviorKDTree.build(items);
 
@@ -163,14 +161,14 @@ describe('spatial-index', () => {
 
         expect(result).toHaveLength(2);
         // 25 is closest (diff=5), then 50 (diff=20)
-        expect(result[0].data.id).toBe('d');
-        expect(result[1].data.id).toBe('c');
+        expect(result[0].data.id).toBe("d");
+        expect(result[1].data.id).toBe("c");
       });
 
-      it('returns all items when k > size', () => {
+      it("returns all items when k > size", () => {
         const items = [
-          { behavior: createBehavior({ avgMass: 0 }), data: { id: 'a' } },
-          { behavior: createBehavior({ avgMass: 100 }), data: { id: 'b' } },
+          { behavior: createBehavior({ avgMass: 0 }), data: { id: "a" } },
+          { behavior: createBehavior({ avgMass: 100 }), data: { id: "b" } },
         ];
         const tree = BehaviorKDTree.build(items);
 
@@ -179,37 +177,37 @@ describe('spatial-index', () => {
         expect(result).toHaveLength(2);
       });
 
-      it('excludes items matching predicate', () => {
+      it("excludes items matching predicate", () => {
         const items = [
-          { behavior: createBehavior({ avgMass: 0 }), data: { id: 'a' } },
-          { behavior: createBehavior({ avgMass: 50 }), data: { id: 'b' } },
-          { behavior: createBehavior({ avgMass: 100 }), data: { id: 'c' } },
+          { behavior: createBehavior({ avgMass: 0 }), data: { id: "a" } },
+          { behavior: createBehavior({ avgMass: 50 }), data: { id: "b" } },
+          { behavior: createBehavior({ avgMass: 100 }), data: { id: "c" } },
         ];
         const tree = BehaviorKDTree.build(items);
 
         const query = createBehavior({ avgMass: 50 });
         // Exclude the exact match
-        const result = tree.kNearest(query, 1, (data) => data.id === 'b');
+        const result = tree.kNearest(query, 1, (data) => data.id === "b");
 
         expect(result).toHaveLength(1);
-        expect(result[0].data.id).not.toBe('b');
+        expect(result[0].data.id).not.toBe("b");
       });
     });
 
-    describe('noveltyScore', () => {
-      it('returns 1 for empty tree', () => {
+    describe("noveltyScore", () => {
+      it("returns 1 for empty tree", () => {
         const tree = BehaviorKDTree.build<{ id: string }>([]);
         const score = tree.noveltyScore(createBehavior(), 5);
 
         expect(score).toBe(1);
       });
 
-      it('calculates average distance to k neighbors', () => {
+      it("calculates average distance to k neighbors", () => {
         // Create points at known distances
         const items = [
-          { behavior: createBehavior({ avgMass: 10 }), data: { id: 'a' } },
-          { behavior: createBehavior({ avgMass: 20 }), data: { id: 'b' } },
-          { behavior: createBehavior({ avgMass: 30 }), data: { id: 'c' } },
+          { behavior: createBehavior({ avgMass: 10 }), data: { id: "a" } },
+          { behavior: createBehavior({ avgMass: 20 }), data: { id: "b" } },
+          { behavior: createBehavior({ avgMass: 30 }), data: { id: "c" } },
         ];
         const tree = BehaviorKDTree.build(items);
 
@@ -221,15 +219,15 @@ describe('spatial-index', () => {
         expect(score).toBeCloseTo(15, 5);
       });
 
-      it('excludes self when calculating novelty', () => {
+      it("excludes self when calculating novelty", () => {
         const items = [
-          { behavior: createBehavior({ avgMass: 0 }), data: { id: 'self' } },
-          { behavior: createBehavior({ avgMass: 100 }), data: { id: 'other' } },
+          { behavior: createBehavior({ avgMass: 0 }), data: { id: "self" } },
+          { behavior: createBehavior({ avgMass: 100 }), data: { id: "other" } },
         ];
         const tree = BehaviorKDTree.build(items);
 
         const query = createBehavior({ avgMass: 0 });
-        const score = tree.noveltyScore(query, 1, (data) => data.id === 'self');
+        const score = tree.noveltyScore(query, 1, (data) => data.id === "self");
 
         // Should only find 'other' at distance 100
         expect(score).toBeCloseTo(100, 5);
@@ -237,12 +235,12 @@ describe('spatial-index', () => {
     });
   });
 
-  describe('createBehaviorIndex', () => {
-    it('filters out null behaviors', () => {
+  describe("createBehaviorIndex", () => {
+    it("filters out null behaviors", () => {
       const items = [
-        { behavior: createBehavior({ avgMass: 10 }), data: { id: 'a' } },
-        { behavior: null, data: { id: 'b' } },
-        { behavior: createBehavior({ avgMass: 20 }), data: { id: 'c' } },
+        { behavior: createBehavior({ avgMass: 10 }), data: { id: "a" } },
+        { behavior: null, data: { id: "b" } },
+        { behavior: createBehavior({ avgMass: 20 }), data: { id: "c" } },
       ];
 
       const tree = createBehaviorIndex(items);
@@ -250,10 +248,10 @@ describe('spatial-index', () => {
       expect(tree.getSize()).toBe(2);
     });
 
-    it('creates empty tree from all nulls', () => {
+    it("creates empty tree from all nulls", () => {
       const items = [
-        { behavior: null, data: { id: 'a' } },
-        { behavior: null, data: { id: 'b' } },
+        { behavior: null, data: { id: "a" } },
+        { behavior: null, data: { id: "b" } },
       ];
 
       const tree = createBehaviorIndex(items);
@@ -262,8 +260,8 @@ describe('spatial-index', () => {
     });
   });
 
-  describe('performance characteristics', () => {
-    it('handles large datasets', () => {
+  describe("performance characteristics", () => {
+    it("handles large datasets", () => {
       // Create 1000 random behavior vectors
       const items = Array.from({ length: 1000 }, (_, i) => ({
         behavior: createBehavior({
@@ -287,11 +285,13 @@ describe('spatial-index', () => {
       expect(result).toHaveLength(10);
       // Results should be sorted by distance
       for (let i = 1; i < result.length; i++) {
-        expect(result[i].distance).toBeGreaterThanOrEqual(result[i - 1].distance);
+        expect(result[i].distance).toBeGreaterThanOrEqual(
+          result[i - 1].distance,
+        );
       }
     });
 
-    it('produces consistent results with brute force', () => {
+    it("produces consistent results with brute force", () => {
       // Create test data
       const items = Array.from({ length: 50 }, (_, i) => ({
         behavior: createBehavior({
@@ -309,7 +309,7 @@ describe('spatial-index', () => {
 
       // Brute force result
       const bruteForce = items
-        .map(item => ({
+        .map((item) => ({
           ...item,
           distance: weightedDistance(query, item.behavior),
         }))
@@ -317,7 +317,9 @@ describe('spatial-index', () => {
         .slice(0, 5);
 
       // Should match
-      expect(kdResult.map(r => r.data.id)).toEqual(bruteForce.map(r => r.data.id));
+      expect(kdResult.map((r) => r.data.id)).toEqual(
+        bruteForce.map((r) => r.data.id),
+      );
     });
   });
 });

@@ -91,14 +91,17 @@ export function findConnectedComponents(
   state: Float32Array,
   width: number,
   height: number,
-  threshold: number
+  threshold: number,
 ): Component[] {
   const visited = new Uint8Array(width * height);
   const components: Component[] = [];
   let componentId = 0;
 
   // Get 8-connected neighbors
-  const getNeighbors = (x: number, y: number): Array<{ x: number; y: number }> => {
+  const getNeighbors = (
+    x: number,
+    y: number,
+  ): Array<{ x: number; y: number }> => {
     const neighbors: Array<{ x: number; y: number }> = [];
     for (let dy = -1; dy <= 1; dy++) {
       for (let dx = -1; dx <= 1; dx++) {
@@ -118,9 +121,13 @@ export function findConnectedComponents(
     const pixels: Array<{ x: number; y: number; value: number }> = [];
     const stack: Array<{ x: number; y: number }> = [{ x: startX, y: startY }];
 
-    let minX = startX, maxX = startX, minY = startY, maxY = startY;
+    let minX = startX,
+      maxX = startX,
+      minY = startY,
+      maxY = startY;
     let totalMass = 0;
-    let centroidX = 0, centroidY = 0;
+    let centroidX = 0,
+      centroidY = 0;
 
     while (stack.length > 0) {
       const { x, y } = stack.pop()!;
@@ -212,7 +219,7 @@ export function calculatePatternSimilarity(
   height1: number,
   pattern2: Float32Array,
   width2: number,
-  height2: number
+  height2: number,
 ): number {
   // Resize patterns to same size (use the smaller dimensions)
   const targetWidth = Math.min(width1, width2);
@@ -223,12 +230,26 @@ export function calculatePatternSimilarity(
   }
 
   // Simple resize using nearest neighbor
-  const resized1 = resizePattern(pattern1, width1, height1, targetWidth, targetHeight);
-  const resized2 = resizePattern(pattern2, width2, height2, targetWidth, targetHeight);
+  const resized1 = resizePattern(
+    pattern1,
+    width1,
+    height1,
+    targetWidth,
+    targetHeight,
+  );
+  const resized2 = resizePattern(
+    pattern2,
+    width2,
+    height2,
+    targetWidth,
+    targetHeight,
+  );
 
   // Calculate normalized cross-correlation
-  let sum1 = 0, sum2 = 0;
-  let sumSq1 = 0, sumSq2 = 0;
+  let sum1 = 0,
+    sum2 = 0;
+  let sumSq1 = 0,
+    sumSq2 = 0;
   let sumProd = 0;
   const n = targetWidth * targetHeight;
 
@@ -267,7 +288,7 @@ function resizePattern(
   srcWidth: number,
   srcHeight: number,
   dstWidth: number,
-  dstHeight: number
+  dstHeight: number,
 ): Float32Array {
   const result = new Float32Array(dstWidth * dstHeight);
 
@@ -308,7 +329,7 @@ function resizePattern(
 export function matchComponents(
   prevComponents: Component[],
   currComponents: Component[],
-  maxDistance: number
+  maxDistance: number,
 ): Map<number, number[]> {
   const matches = new Map<number, number[]>();
 
@@ -339,7 +360,7 @@ export function matchComponents(
 export function detectReplication(
   parent: Component,
   daughters: [Component, Component],
-  config: ReplicationConfig
+  config: ReplicationConfig,
 ): { isReplication: boolean; similarity: number; parentSimilarity: number } {
   // Calculate similarity between daughters
   const similarity = calculatePatternSimilarity(
@@ -348,7 +369,7 @@ export function detectReplication(
     daughters[0].patternHeight,
     daughters[1].pattern,
     daughters[1].patternWidth,
-    daughters[1].patternHeight
+    daughters[1].patternHeight,
   );
 
   // Calculate similarity of daughters to parent
@@ -358,7 +379,7 @@ export function detectReplication(
     parent.patternHeight,
     daughters[0].pattern,
     daughters[0].patternWidth,
-    daughters[0].patternHeight
+    daughters[0].patternHeight,
   );
 
   const sim1 = calculatePatternSimilarity(
@@ -367,7 +388,7 @@ export function detectReplication(
     parent.patternHeight,
     daughters[1].pattern,
     daughters[1].patternWidth,
-    daughters[1].patternHeight
+    daughters[1].patternHeight,
   );
 
   const parentSimilarity = (sim0 + sim1) / 2;
@@ -375,13 +396,15 @@ export function detectReplication(
   // Check mass conservation (daughters should have similar combined mass to parent)
   const combinedMass = daughters[0].mass + daughters[1].mass;
   const massRatio = combinedMass / parent.mass;
-  const massConserved = massRatio > (1 - config.maxMassRatioChange) &&
-                        massRatio < (1 + config.maxMassRatioChange);
+  const massConserved =
+    massRatio > 1 - config.maxMassRatioChange &&
+    massRatio < 1 + config.maxMassRatioChange;
 
   // Replication if daughters are similar to each other and to parent
-  const isReplication = similarity >= config.minSimilarity &&
-                        parentSimilarity >= config.minSimilarity * 0.8 &&
-                        massConserved;
+  const isReplication =
+    similarity >= config.minSimilarity &&
+    parentSimilarity >= config.minSimilarity * 0.8 &&
+    massConserved;
 
   return { isReplication, similarity, parentSimilarity };
 }
@@ -392,9 +415,12 @@ export function detectReplication(
 export function createReplicationDetector(
   width: number,
   height: number,
-  config: Partial<ReplicationConfig> = {}
+  config: Partial<ReplicationConfig> = {},
 ): ReplicationDetector {
-  const fullConfig: ReplicationConfig = { ...DEFAULT_REPLICATION_CONFIG, ...config };
+  const fullConfig: ReplicationConfig = {
+    ...DEFAULT_REPLICATION_CONFIG,
+    ...config,
+  };
   const events: ReplicationEvent[] = [];
   let prevComponents: Component[] = [];
   let currentComponents: Component[] = [];
@@ -411,8 +437,8 @@ export function createReplicationDetector(
         state,
         width,
         height,
-        fullConfig.activationThreshold
-      ).filter(c => c.mass >= fullConfig.minMass);
+        fullConfig.activationThreshold,
+      ).filter((c) => c.mass >= fullConfig.minMass);
 
       if (prevComponents.length === 0) {
         prevComponents = currentComponents;
@@ -420,15 +446,19 @@ export function createReplicationDetector(
       }
 
       // Match components between frames
-      const matches = matchComponents(prevComponents, currentComponents, maxMatchDistance);
+      const matches = matchComponents(
+        prevComponents,
+        currentComponents,
+        maxMatchDistance,
+      );
 
       // Look for split events (one -> two)
       for (const [prevId, currIds] of matches) {
         if (currIds.length === 2) {
-          const parent = prevComponents.find(c => c.id === prevId)!;
+          const parent = prevComponents.find((c) => c.id === prevId)!;
           const daughters: [Component, Component] = [
-            currentComponents.find(c => c.id === currIds[0])!,
-            currentComponents.find(c => c.id === currIds[1])!,
+            currentComponents.find((c) => c.id === currIds[0])!,
+            currentComponents.find((c) => c.id === currIds[1])!,
           ];
 
           const { isReplication, similarity, parentSimilarity } =
@@ -485,14 +515,17 @@ export function createReplicationDetector(
  * Calculate replication fitness score
  * Higher scores for organisms that replicate successfully
  */
-export function calculateReplicationFitness(events: ReplicationEvent[]): number {
+export function calculateReplicationFitness(
+  events: ReplicationEvent[],
+): number {
   if (events.length === 0) return 0;
 
   // Base score for having any replication events
   let score = Math.min(events.length * 0.2, 0.4);
 
   // Bonus for high-quality replications
-  const avgSimilarity = events.reduce((sum, e) => sum + e.similarity, 0) / events.length;
+  const avgSimilarity =
+    events.reduce((sum, e) => sum + e.similarity, 0) / events.length;
   score += avgSimilarity * 0.3;
 
   // Bonus for consistent replication (similar time between events)
@@ -502,7 +535,9 @@ export function calculateReplicationFitness(events: ReplicationEvent[]): number 
       intervals.push(events[i].step - events[i - 1].step);
     }
     const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-    const variance = intervals.reduce((sum, i) => sum + (i - avgInterval) ** 2, 0) / intervals.length;
+    const variance =
+      intervals.reduce((sum, i) => sum + (i - avgInterval) ** 2, 0) /
+      intervals.length;
     const consistency = 1 / (1 + Math.sqrt(variance) / avgInterval);
     score += consistency * 0.3;
   }

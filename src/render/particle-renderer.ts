@@ -3,8 +3,8 @@
  * Renders particles overlaid on the Lenia field
  */
 
-import type { Particle, ParticleSystemState } from '../core/particles';
-import { PARTICLE_COLORS, getActiveParticles } from '../core/particles';
+import type { Particle, ParticleSystemState } from "../core/particles";
+import { PARTICLE_COLORS, getActiveParticles } from "../core/particles";
 
 export interface ParticleRendererConfig {
   /** Canvas to render to */
@@ -55,13 +55,13 @@ const DEFAULT_CONFIG: ParticleRendererConfig = {
  * Create a particle renderer
  */
 export function createParticleRenderer(
-  config: Partial<ParticleRendererConfig> & { canvas: HTMLCanvasElement }
+  config: Partial<ParticleRendererConfig> & { canvas: HTMLCanvasElement },
 ): ParticleRenderer {
   const fullConfig: ParticleRendererConfig = { ...DEFAULT_CONFIG, ...config };
-  const ctx = fullConfig.canvas.getContext('2d');
+  const ctx = fullConfig.canvas.getContext("2d");
 
   if (!ctx) {
-    throw new Error('Could not get 2D context for particle rendering');
+    throw new Error("Could not get 2D context for particle rendering");
   }
 
   // Trail history: array of position arrays per particle
@@ -87,7 +87,10 @@ export function createParticleRenderer(
         ctx!.moveTo(trail[0].x * scaleX, trail[0].y * scaleY);
         for (let i = 1; i < trail.length; i++) {
           const alpha = (i / trail.length) * 0.5;
-          ctx!.strokeStyle = getParticleColor(p.type, alpha * fullConfig.opacity);
+          ctx!.strokeStyle = getParticleColor(
+            p.type,
+            alpha * fullConfig.opacity,
+          );
           ctx!.lineTo(trail[i].x * scaleX, trail[i].y * scaleY);
         }
         ctx!.lineWidth = radius * 0.5;
@@ -118,7 +121,11 @@ export function createParticleRenderer(
     ctx!.stroke();
   }
 
-  function renderInteractions(particles: Particle[], scaleX: number, scaleY: number) {
+  function renderInteractions(
+    particles: Particle[],
+    scaleX: number,
+    scaleY: number,
+  ) {
     if (!fullConfig.showInteractions) return;
 
     ctx!.lineWidth = 0.5;
@@ -136,7 +143,10 @@ export function createParticleRenderer(
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist < fullConfig.interactionThreshold) {
-          const alpha = (1 - dist / fullConfig.interactionThreshold) * 0.3 * fullConfig.opacity;
+          const alpha =
+            (1 - dist / fullConfig.interactionThreshold) *
+            0.3 *
+            fullConfig.opacity;
           ctx!.beginPath();
           ctx!.moveTo(p1.x * scaleX, p1.y * scaleY);
           ctx!.lineTo(p2.x * scaleX, p2.y * scaleY);
@@ -246,7 +256,7 @@ export function renderParticlesOverlay(
     radius?: number;
     opacity?: number;
     showVelocity?: boolean;
-  } = {}
+  } = {},
 ): void {
   const radius = options.radius ?? 4;
   const opacity = options.opacity ?? 0.9;

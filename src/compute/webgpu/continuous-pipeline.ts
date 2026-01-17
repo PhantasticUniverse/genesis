@@ -7,18 +7,27 @@
  * - FFT: O(N^2 * log N) - better for large kernels (R >= 16)
  */
 
-import { generateKernel, normalizeKernel, createKernelTexture, type KernelConfig } from '../../core/kernels';
-import { createShaderModule } from './context';
-import { createFFTPipeline, shouldUseFFT, type FFTPipeline } from './fft-pipeline';
-import continuousCAShader from './shaders/continuous-ca.wgsl?raw';
-import continuousGrowthShader from './shaders/continuous-growth.wgsl?raw';
+import {
+  generateKernel,
+  normalizeKernel,
+  createKernelTexture,
+  type KernelConfig,
+} from "../../core/kernels";
+import { createShaderModule } from "./context";
+import {
+  createFFTPipeline,
+  shouldUseFFT,
+  type FFTPipeline,
+} from "./fft-pipeline";
+import continuousCAShader from "./shaders/continuous-ca.wgsl?raw";
+import continuousGrowthShader from "./shaders/continuous-growth.wgsl?raw";
 
 export interface ContinuousCAParams {
   kernelRadius: number;
-  growthCenter: number;    // μ
-  growthWidth: number;     // σ
-  dt: number;              // Time step
-  growthType: number;      // 0=polynomial, 1=gaussian, 2=step
+  growthCenter: number; // μ
+  growthWidth: number; // σ
+  dt: number; // Time step
+  growthType: number; // 0=polynomial, 1=gaussian, 2=step
 }
 
 export interface ContinuousPipeline {
@@ -32,7 +41,7 @@ export interface ContinuousPipeline {
   updateKernel(config: KernelConfig): void;
   createBindGroup(
     readTexture: GPUTexture,
-    writeTexture: GPUTexture
+    writeTexture: GPUTexture,
   ): GPUBindGroup;
 
   // New method for dispatching compute with automatic FFT selection
@@ -41,7 +50,7 @@ export interface ContinuousPipeline {
     readTexture: GPUTexture,
     writeTexture: GPUTexture,
     workgroupsX: number,
-    workgroupsY: number
+    workgroupsY: number,
   ): void;
 
   // Check if using FFT path
@@ -58,100 +67,108 @@ export function createContinuousPipeline(
   width: number,
   height: number,
   initialKernel: KernelConfig = {
-    shape: 'polynomial',
+    shape: "polynomial",
     radius: 13,
     peaks: [0.5],
-  }
+  },
 ): ContinuousPipeline {
   // Generate and normalize kernel
   const kernelData = normalizeKernel(generateKernel(initialKernel));
   const kernelTexture = createKernelTexture(device, kernelData);
 
   // Create shader modules
-  const shaderModule = createShaderModule(device, continuousCAShader, 'continuous-ca');
-  const growthShaderModule = createShaderModule(device, continuousGrowthShader, 'continuous-growth');
+  const shaderModule = createShaderModule(
+    device,
+    continuousCAShader,
+    "continuous-ca",
+  );
+  const growthShaderModule = createShaderModule(
+    device,
+    continuousGrowthShader,
+    "continuous-growth",
+  );
 
   // Create bind group layout for direct convolution
   const bindGroupLayout = device.createBindGroupLayout({
-    label: 'continuous-ca-bind-group-layout',
+    label: "continuous-ca-bind-group-layout",
     entries: [
       {
         binding: 0,
         visibility: GPUShaderStage.COMPUTE,
-        texture: { sampleType: 'unfilterable-float' },
+        texture: { sampleType: "unfilterable-float" },
       },
       {
         binding: 1,
         visibility: GPUShaderStage.COMPUTE,
-        storageTexture: { access: 'write-only', format: 'r32float' },
+        storageTexture: { access: "write-only", format: "r32float" },
       },
       {
         binding: 2,
         visibility: GPUShaderStage.COMPUTE,
-        buffer: { type: 'uniform' },
+        buffer: { type: "uniform" },
       },
       {
         binding: 3,
         visibility: GPUShaderStage.COMPUTE,
-        texture: { sampleType: 'unfilterable-float' },
+        texture: { sampleType: "unfilterable-float" },
       },
     ],
   });
 
   // Create bind group layout for FFT growth phase
   const growthBindGroupLayout = device.createBindGroupLayout({
-    label: 'continuous-growth-bind-group-layout',
+    label: "continuous-growth-bind-group-layout",
     entries: [
       {
         binding: 0,
         visibility: GPUShaderStage.COMPUTE,
-        texture: { sampleType: 'unfilterable-float' }, // current state
+        texture: { sampleType: "unfilterable-float" }, // current state
       },
       {
         binding: 1,
         visibility: GPUShaderStage.COMPUTE,
-        texture: { sampleType: 'unfilterable-float' }, // convolution result
+        texture: { sampleType: "unfilterable-float" }, // convolution result
       },
       {
         binding: 2,
         visibility: GPUShaderStage.COMPUTE,
-        storageTexture: { access: 'write-only', format: 'r32float' }, // output
+        storageTexture: { access: "write-only", format: "r32float" }, // output
       },
       {
         binding: 3,
         visibility: GPUShaderStage.COMPUTE,
-        buffer: { type: 'uniform' },
+        buffer: { type: "uniform" },
       },
     ],
   });
 
   // Create compute pipelines
   const computePipeline = device.createComputePipeline({
-    label: 'continuous-ca-pipeline',
+    label: "continuous-ca-pipeline",
     layout: device.createPipelineLayout({
       bindGroupLayouts: [bindGroupLayout],
     }),
     compute: {
       module: shaderModule,
-      entryPoint: 'main',
+      entryPoint: "main",
     },
   });
 
   const growthPipeline = device.createComputePipeline({
-    label: 'continuous-growth-pipeline',
+    label: "continuous-growth-pipeline",
     layout: device.createPipelineLayout({
       bindGroupLayouts: [growthBindGroupLayout],
     }),
     compute: {
       module: growthShaderModule,
-      entryPoint: 'main',
+      entryPoint: "main",
     },
   });
 
   // Create uniform buffer for direct path
   // Layout: width, height, kernel_radius, kernel_size, growth_center, growth_width, dt, growth_type
   const uniformBuffer = device.createBuffer({
-    label: 'continuous-ca-uniform-buffer',
+    label: "continuous-ca-uniform-buffer",
     size: 32, // 8 x 4 bytes
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
@@ -159,7 +176,7 @@ export function createContinuousPipeline(
   // Create uniform buffer for growth phase (FFT path)
   // Layout: width, height, growth_center, growth_width, dt, growth_type, padding, padding
   const growthUniformBuffer = device.createBuffer({
-    label: 'continuous-growth-uniform-buffer',
+    label: "continuous-growth-uniform-buffer",
     size: 32, // 8 x 4 bytes
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
@@ -195,10 +212,11 @@ export function createContinuousPipeline(
 
       // Create intermediate texture for convolution result
       convolutionResultTexture = device.createTexture({
-        label: 'convolution-result',
+        label: "convolution-result",
         size: [width, height],
-        format: 'r32float',
-        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING,
+        format: "r32float",
+        usage:
+          GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING,
       });
 
       // Precompute kernel FFT
@@ -216,7 +234,8 @@ export function createContinuousPipeline(
     const flatKernel = new Float32Array(kernelData.size * kernelData.size);
     for (let y = 0; y < kernelData.size; y++) {
       for (let x = 0; x < kernelData.size; x++) {
-        flatKernel[y * kernelData.size + x] = kernelData.weights[y * kernelData.size + x];
+        flatKernel[y * kernelData.size + x] =
+          kernelData.weights[y * kernelData.size + x];
       }
     }
 
@@ -305,19 +324,25 @@ export function createContinuousPipeline(
 
       // Update FFT kernel if using FFT
       if (useFFT && fftPipeline) {
-        const flatKernel = new Float32Array(currentKernelData.size * currentKernelData.size);
+        const flatKernel = new Float32Array(
+          currentKernelData.size * currentKernelData.size,
+        );
         for (let y = 0; y < currentKernelData.size; y++) {
           for (let x = 0; x < currentKernelData.size; x++) {
-            flatKernel[y * currentKernelData.size + x] = currentKernelData.weights[y * currentKernelData.size + x];
+            flatKernel[y * currentKernelData.size + x] =
+              currentKernelData.weights[y * currentKernelData.size + x];
           }
         }
         fftPipeline.setKernel(flatKernel, currentKernelData.size);
       }
     },
 
-    createBindGroup(readTexture: GPUTexture, writeTexture: GPUTexture): GPUBindGroup {
+    createBindGroup(
+      readTexture: GPUTexture,
+      writeTexture: GPUTexture,
+    ): GPUBindGroup {
       return device.createBindGroup({
-        label: 'continuous-ca-bind-group',
+        label: "continuous-ca-bind-group",
         layout: bindGroupLayout,
         entries: [
           { binding: 0, resource: readTexture.createView() },
@@ -333,16 +358,20 @@ export function createContinuousPipeline(
       readTexture: GPUTexture,
       writeTexture: GPUTexture,
       workgroupsX: number,
-      workgroupsY: number
+      workgroupsY: number,
     ) {
       if (useFFT && fftPipeline && convolutionResultTexture) {
         // FFT Path: Two stages
         // Stage 1: FFT convolution (input -> convolution result)
-        fftPipeline.convolve(commandEncoder, readTexture, convolutionResultTexture);
+        fftPipeline.convolve(
+          commandEncoder,
+          readTexture,
+          convolutionResultTexture,
+        );
 
         // Stage 2: Apply growth function (current state + convolution result -> output)
         const growthBindGroup = device.createBindGroup({
-          label: 'continuous-growth-bind-group',
+          label: "continuous-growth-bind-group",
           layout: growthBindGroupLayout,
           entries: [
             { binding: 0, resource: readTexture.createView() },
@@ -390,9 +419,9 @@ export function createContinuousPipeline(
 
 // Preset configurations for continuous CA
 export const CONTINUOUS_PRESETS = {
-  'lenia-orbium': {
+  "lenia-orbium": {
     kernel: {
-      shape: 'polynomial' as const,
+      shape: "polynomial" as const,
       radius: 13,
       peaks: [0.5],
     },
@@ -404,23 +433,23 @@ export const CONTINUOUS_PRESETS = {
     },
   },
 
-  'lenia-geminium': {
+  "lenia-geminium": {
     kernel: {
-      shape: 'polynomial' as const,
+      shape: "polynomial" as const,
       radius: 10,
       peaks: [0.25, 0.75],
     },
     params: {
-      growthCenter: 0.10,
+      growthCenter: 0.1,
       growthWidth: 0.035,
       dt: 0.1,
       growthType: 0,
     },
   },
 
-  'smoothlife': {
+  smoothlife: {
     kernel: {
-      shape: 'ring' as const,
+      shape: "ring" as const,
       radius: 21,
       ringWidth: 0.5,
     },
@@ -432,14 +461,14 @@ export const CONTINUOUS_PRESETS = {
     },
   },
 
-  'gaussian-smooth': {
+  "gaussian-smooth": {
     kernel: {
-      shape: 'gaussian' as const,
+      shape: "gaussian" as const,
       radius: 10,
     },
     params: {
-      growthCenter: 0.5,     // High center for dense seeds
-      growthWidth: 0.15,     // Wide window for stability
+      growthCenter: 0.5, // High center for dense seeds
+      growthWidth: 0.15, // Wide window for stability
       dt: 0.1,
       growthType: 1,
     },

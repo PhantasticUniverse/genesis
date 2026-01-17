@@ -3,22 +3,25 @@
  * Handles multi-species/field simulations
  */
 
-import { createShaderModule } from './context';
-import type { MultiChannelConfig, ChannelInteraction } from '../../core/channels';
-import { MULTICHANNEL_PRESETS } from '../../core/channels';
-import multiChannelShader from './shaders/multi-channel.wgsl?raw';
+import { createShaderModule } from "./context";
+import type {
+  MultiChannelConfig,
+  ChannelInteraction,
+} from "../../core/channels";
+import { MULTICHANNEL_PRESETS } from "../../core/channels";
+import multiChannelShader from "./shaders/multi-channel.wgsl?raw";
 
 // Extended interaction with type field
 interface ExtendedChannelInteraction extends ChannelInteraction {
-  interactionType?: number;  // 0=lenia, 1=predation, 2=symbiosis
+  interactionType?: number; // 0=lenia, 1=predation, 2=symbiosis
 }
 
 export interface EcologyParams {
-  decay: [number, number, number, number];      // Per-channel decay rates
-  diffusion: [number, number, number, number];  // Per-channel diffusion rates
-  pheromoneSource: number;   // Which channel emits pheromones
-  pheromoneTarget: number;   // Which channel receives pheromones
-  pheromoneRate: number;     // Emission rate
+  decay: [number, number, number, number]; // Per-channel decay rates
+  diffusion: [number, number, number, number]; // Per-channel diffusion rates
+  pheromoneSource: number; // Which channel emits pheromones
+  pheromoneTarget: number; // Which channel receives pheromones
+  pheromoneRate: number; // Emission rate
 }
 
 export interface MultiChannelPipeline {
@@ -29,7 +32,10 @@ export interface MultiChannelPipeline {
 
   updateConfig(config: MultiChannelConfig): void;
   updateEcologyParams(params: Partial<EcologyParams>): void;
-  createBindGroup(readTexture: GPUTexture, writeTexture: GPUTexture): GPUBindGroup;
+  createBindGroup(
+    readTexture: GPUTexture,
+    writeTexture: GPUTexture,
+  ): GPUBindGroup;
   destroy(): void;
 }
 
@@ -40,47 +46,51 @@ export function createMultiChannelPipeline(
   device: GPUDevice,
   width: number,
   height: number,
-  initialConfig: MultiChannelConfig = MULTICHANNEL_PRESETS['single']
+  initialConfig: MultiChannelConfig = MULTICHANNEL_PRESETS["single"],
 ): MultiChannelPipeline {
   // Create shader module
-  const shaderModule = createShaderModule(device, multiChannelShader, 'multi-channel');
+  const shaderModule = createShaderModule(
+    device,
+    multiChannelShader,
+    "multi-channel",
+  );
 
   // Create bind group layout
   const bindGroupLayout = device.createBindGroupLayout({
-    label: 'multi-channel-bind-group-layout',
+    label: "multi-channel-bind-group-layout",
     entries: [
       {
         binding: 0,
         visibility: GPUShaderStage.COMPUTE,
-        texture: { sampleType: 'unfilterable-float' },
+        texture: { sampleType: "unfilterable-float" },
       },
       {
         binding: 1,
         visibility: GPUShaderStage.COMPUTE,
-        storageTexture: { access: 'write-only', format: 'rgba32float' },
+        storageTexture: { access: "write-only", format: "rgba32float" },
       },
       {
         binding: 2,
         visibility: GPUShaderStage.COMPUTE,
-        buffer: { type: 'uniform' },
+        buffer: { type: "uniform" },
       },
       {
         binding: 3,
         visibility: GPUShaderStage.COMPUTE,
-        buffer: { type: 'read-only-storage' },
+        buffer: { type: "read-only-storage" },
       },
     ],
   });
 
   // Create compute pipeline
   const computePipeline = device.createComputePipeline({
-    label: 'multi-channel-pipeline',
+    label: "multi-channel-pipeline",
     layout: device.createPipelineLayout({
       bindGroupLayouts: [bindGroupLayout],
     }),
     compute: {
       module: shaderModule,
-      entryPoint: 'main',
+      entryPoint: "main",
     },
   });
 
@@ -91,7 +101,7 @@ export function createMultiChannelPipeline(
   //         pheromone_source, pheromone_target, pheromone_rate, _pad
   // Total: 17 fields × 4 bytes = 68 bytes, rounded up to 80 for alignment
   const uniformBuffer = device.createBuffer({
-    label: 'multi-channel-uniform-buffer',
+    label: "multi-channel-uniform-buffer",
     size: 80, // 17 fields × 4 bytes = 68, padded to 80 for 16-byte alignment
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
@@ -99,7 +109,7 @@ export function createMultiChannelPipeline(
   // Create interaction buffer (max 16 interactions)
   const maxInteractions = 16;
   const interactionBuffer = device.createBuffer({
-    label: 'multi-channel-interaction-buffer',
+    label: "multi-channel-interaction-buffer",
     size: maxInteractions * 32, // 8 floats per interaction
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
   });
@@ -156,7 +166,9 @@ export function createMultiChannelPipeline(
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     // Write interactions
-    const interactionData = new ArrayBuffer(currentConfig.interactions.length * 32);
+    const interactionData = new ArrayBuffer(
+      currentConfig.interactions.length * 32,
+    );
     const interactionF32 = new Float32Array(interactionData);
     const interactionU32 = new Uint32Array(interactionData);
 
@@ -170,7 +182,8 @@ export function createMultiChannelPipeline(
       interactionF32[offset + 3] = interaction.growthCenter;
       interactionF32[offset + 4] = interaction.growthWidth;
       interactionF32[offset + 5] = interaction.weight;
-      interactionU32[offset + 6] = (interaction as ExtendedChannelInteraction).interactionType ?? 0;
+      interactionU32[offset + 6] =
+        (interaction as ExtendedChannelInteraction).interactionType ?? 0;
       interactionF32[offset + 7] = 0; // padding
     }
 
@@ -197,9 +210,12 @@ export function createMultiChannelPipeline(
       writeBuffers();
     },
 
-    createBindGroup(readTexture: GPUTexture, writeTexture: GPUTexture): GPUBindGroup {
+    createBindGroup(
+      readTexture: GPUTexture,
+      writeTexture: GPUTexture,
+    ): GPUBindGroup {
       return device.createBindGroup({
-        label: 'multi-channel-bind-group',
+        label: "multi-channel-bind-group",
         layout: bindGroupLayout,
         entries: [
           { binding: 0, resource: readTexture.createView() },

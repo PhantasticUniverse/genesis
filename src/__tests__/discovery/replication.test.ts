@@ -2,7 +2,7 @@
  * Tests for Self-Replication Detection
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   findConnectedComponents,
   calculatePatternSimilarity,
@@ -13,11 +13,11 @@ import {
   type Component,
   type ReplicationConfig,
   DEFAULT_REPLICATION_CONFIG,
-} from '../../discovery/replication';
+} from "../../discovery/replication";
 
-describe('Replication Detection', () => {
-  describe('findConnectedComponents', () => {
-    it('finds single component', () => {
+describe("Replication Detection", () => {
+  describe("findConnectedComponents", () => {
+    it("finds single component", () => {
       const width = 10;
       const height = 10;
       const state = new Float32Array(width * height);
@@ -34,7 +34,7 @@ describe('Replication Detection', () => {
       expect(components[0].pixels).toHaveLength(9);
     });
 
-    it('finds multiple separate components', () => {
+    it("finds multiple separate components", () => {
       const width = 20;
       const height = 10;
       const state = new Float32Array(width * height);
@@ -51,7 +51,7 @@ describe('Replication Detection', () => {
       expect(components).toHaveLength(2);
     });
 
-    it('connects diagonally adjacent pixels (8-connectivity)', () => {
+    it("connects diagonally adjacent pixels (8-connectivity)", () => {
       const width = 10;
       const height = 10;
       const state = new Float32Array(width * height);
@@ -66,7 +66,7 @@ describe('Replication Detection', () => {
       expect(components[0].pixels).toHaveLength(3);
     });
 
-    it('calculates centroid correctly', () => {
+    it("calculates centroid correctly", () => {
       const width = 10;
       const height = 10;
       const state = new Float32Array(width * height);
@@ -81,7 +81,7 @@ describe('Replication Detection', () => {
       expect(components[0].centroid.y).toBe(5);
     });
 
-    it('calculates mass correctly', () => {
+    it("calculates mass correctly", () => {
       const width = 10;
       const height = 10;
       const state = new Float32Array(width * height);
@@ -93,7 +93,7 @@ describe('Replication Detection', () => {
       expect(components[0].mass).toBeCloseTo(1.0, 5);
     });
 
-    it('calculates bounding box correctly', () => {
+    it("calculates bounding box correctly", () => {
       const width = 20;
       const height = 20;
       const state = new Float32Array(width * height);
@@ -114,7 +114,7 @@ describe('Replication Detection', () => {
       expect(components[0].bounds.height).toBe(3);
     });
 
-    it('extracts pattern correctly', () => {
+    it("extracts pattern correctly", () => {
       const width = 10;
       const height = 10;
       const state = new Float32Array(width * height);
@@ -132,7 +132,7 @@ describe('Replication Detection', () => {
       expect(components[0].pattern[1]).toBeCloseTo(0.6);
     });
 
-    it('respects activation threshold', () => {
+    it("respects activation threshold", () => {
       const width = 10;
       const height = 10;
       const state = new Float32Array(width * height);
@@ -144,54 +144,89 @@ describe('Replication Detection', () => {
       expect(components[0].pixels).toHaveLength(1);
     });
 
-    it('returns empty array for empty state', () => {
+    it("returns empty array for empty state", () => {
       const state = new Float32Array(100);
       const components = findConnectedComponents(state, 10, 10, 0.1);
       expect(components).toHaveLength(0);
     });
   });
 
-  describe('calculatePatternSimilarity', () => {
-    it('returns 1 for identical patterns', () => {
+  describe("calculatePatternSimilarity", () => {
+    it("returns 1 for identical patterns", () => {
       const pattern = new Float32Array([0.5, 0.5, 0.5, 0.5]);
-      const similarity = calculatePatternSimilarity(pattern, 2, 2, pattern, 2, 2);
+      const similarity = calculatePatternSimilarity(
+        pattern,
+        2,
+        2,
+        pattern,
+        2,
+        2,
+      );
       expect(similarity).toBeGreaterThan(0.95);
     });
 
-    it('returns high similarity for similar patterns', () => {
+    it("returns high similarity for similar patterns", () => {
       const pattern1 = new Float32Array([0.5, 0.5, 0.5, 0.5]);
       const pattern2 = new Float32Array([0.6, 0.5, 0.5, 0.4]);
-      const similarity = calculatePatternSimilarity(pattern1, 2, 2, pattern2, 2, 2);
+      const similarity = calculatePatternSimilarity(
+        pattern1,
+        2,
+        2,
+        pattern2,
+        2,
+        2,
+      );
       expect(similarity).toBeGreaterThan(0.7);
     });
 
-    it('returns low similarity for different patterns', () => {
+    it("returns low similarity for different patterns", () => {
       const pattern1 = new Float32Array([1, 0, 0, 0]);
       const pattern2 = new Float32Array([0, 0, 0, 1]);
-      const similarity = calculatePatternSimilarity(pattern1, 2, 2, pattern2, 2, 2);
+      const similarity = calculatePatternSimilarity(
+        pattern1,
+        2,
+        2,
+        pattern2,
+        2,
+        2,
+      );
       expect(similarity).toBeLessThan(0.5);
     });
 
-    it('handles different sized patterns', () => {
+    it("handles different sized patterns", () => {
       const pattern1 = new Float32Array([0.5, 0.5, 0.5, 0.5]);
-      const pattern2 = new Float32Array([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]);
-      const similarity = calculatePatternSimilarity(pattern1, 2, 2, pattern2, 3, 3);
+      const pattern2 = new Float32Array([
+        0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+      ]);
+      const similarity = calculatePatternSimilarity(
+        pattern1,
+        2,
+        2,
+        pattern2,
+        3,
+        3,
+      );
       expect(similarity).toBeGreaterThan(0.7);
     });
 
-    it('returns 0 for very small patterns', () => {
+    it("returns 0 for very small patterns", () => {
       const pattern1 = new Float32Array([0.5]);
       const pattern2 = new Float32Array([0.5]);
-      const similarity = calculatePatternSimilarity(pattern1, 1, 1, pattern2, 1, 1);
+      const similarity = calculatePatternSimilarity(
+        pattern1,
+        1,
+        1,
+        pattern2,
+        1,
+        1,
+      );
       expect(similarity).toBe(0);
     });
   });
 
-  describe('matchComponents', () => {
-    it('matches components by proximity', () => {
-      const prev: Component[] = [
-        createMockComponent(0, 50, 50, 10),
-      ];
+  describe("matchComponents", () => {
+    it("matches components by proximity", () => {
+      const prev: Component[] = [createMockComponent(0, 50, 50, 10)];
       const curr: Component[] = [
         createMockComponent(0, 55, 52, 10), // Close to prev
       ];
@@ -200,10 +235,8 @@ describe('Replication Detection', () => {
       expect(matches.get(0)).toEqual([0]);
     });
 
-    it('detects split (one -> two)', () => {
-      const prev: Component[] = [
-        createMockComponent(0, 50, 50, 20),
-      ];
+    it("detects split (one -> two)", () => {
+      const prev: Component[] = [createMockComponent(0, 50, 50, 20)];
       const curr: Component[] = [
         createMockComponent(0, 40, 50, 10), // Split left
         createMockComponent(1, 60, 50, 10), // Split right
@@ -213,10 +246,8 @@ describe('Replication Detection', () => {
       expect(matches.get(0)?.length).toBe(2);
     });
 
-    it('returns empty match for distant components', () => {
-      const prev: Component[] = [
-        createMockComponent(0, 10, 10, 10),
-      ];
+    it("returns empty match for distant components", () => {
+      const prev: Component[] = [createMockComponent(0, 10, 10, 10)];
       const curr: Component[] = [
         createMockComponent(0, 90, 90, 10), // Far away
       ];
@@ -226,8 +257,8 @@ describe('Replication Detection', () => {
     });
   });
 
-  describe('detectReplication', () => {
-    it('detects valid replication', () => {
+  describe("detectReplication", () => {
+    it("detects valid replication", () => {
       const parent = createMockComponentWithPattern(0, 50, 50, 20);
       const daughter1 = createMockComponentWithPattern(1, 40, 50, 10);
       const daughter2 = createMockComponentWithPattern(2, 60, 50, 10);
@@ -244,13 +275,17 @@ describe('Replication Detection', () => {
       daughter2.patternWidth = 2;
       daughter2.patternHeight = 2;
 
-      const result = detectReplication(parent, [daughter1, daughter2], DEFAULT_REPLICATION_CONFIG);
+      const result = detectReplication(
+        parent,
+        [daughter1, daughter2],
+        DEFAULT_REPLICATION_CONFIG,
+      );
       expect(result.similarity).toBeGreaterThan(0.9);
       expect(result.parentSimilarity).toBeGreaterThan(0.9);
       expect(result.isReplication).toBe(true);
     });
 
-    it('rejects replication with dissimilar daughters', () => {
+    it("rejects replication with dissimilar daughters", () => {
       const parent = createMockComponentWithPattern(0, 50, 50, 20);
       const daughter1 = createMockComponentWithPattern(1, 40, 50, 10);
       const daughter2 = createMockComponentWithPattern(2, 60, 50, 10);
@@ -259,11 +294,15 @@ describe('Replication Detection', () => {
       daughter1.pattern = new Float32Array([1, 0, 0, 0]);
       daughter2.pattern = new Float32Array([0, 0, 0, 1]);
 
-      const result = detectReplication(parent, [daughter1, daughter2], DEFAULT_REPLICATION_CONFIG);
+      const result = detectReplication(
+        parent,
+        [daughter1, daughter2],
+        DEFAULT_REPLICATION_CONFIG,
+      );
       expect(result.isReplication).toBe(false);
     });
 
-    it('rejects replication with large mass change', () => {
+    it("rejects replication with large mass change", () => {
       const parent = createMockComponentWithPattern(0, 50, 50, 100);
       const daughter1 = createMockComponentWithPattern(1, 40, 50, 10); // Very small
       const daughter2 = createMockComponentWithPattern(2, 60, 50, 10);
@@ -284,14 +323,14 @@ describe('Replication Detection', () => {
     });
   });
 
-  describe('createReplicationDetector', () => {
+  describe("createReplicationDetector", () => {
     let detector: ReturnType<typeof createReplicationDetector>;
 
     beforeEach(() => {
       detector = createReplicationDetector(100, 100);
     });
 
-    it('tracks components over time', () => {
+    it("tracks components over time", () => {
       // Set lower minMass for this test
       detector.setConfig({ minMass: 1 });
 
@@ -307,11 +346,11 @@ describe('Replication Detection', () => {
       expect(detector.getComponents()).toHaveLength(1);
     });
 
-    it('starts with no events', () => {
+    it("starts with no events", () => {
       expect(detector.getEvents()).toHaveLength(0);
     });
 
-    it('resets correctly', () => {
+    it("resets correctly", () => {
       const state = new Float32Array(100 * 100);
       state[50 * 100 + 50] = 0.5;
 
@@ -322,45 +361,45 @@ describe('Replication Detection', () => {
       expect(detector.getEvents()).toHaveLength(0);
     });
 
-    it('allows config updates', () => {
+    it("allows config updates", () => {
       detector.setConfig({ minMass: 5 });
       expect(detector.getConfig().minMass).toBe(5);
     });
   });
 
-  describe('calculateReplicationFitness', () => {
-    it('returns 0 for no events', () => {
+  describe("calculateReplicationFitness", () => {
+    it("returns 0 for no events", () => {
       expect(calculateReplicationFitness([])).toBe(0);
     });
 
-    it('returns positive score for replication events', () => {
-      const events = [
-        createMockReplicationEvent(100, 0.8),
-      ];
+    it("returns positive score for replication events", () => {
+      const events = [createMockReplicationEvent(100, 0.8)];
       const fitness = calculateReplicationFitness(events);
       expect(fitness).toBeGreaterThan(0);
     });
 
-    it('increases score for multiple events', () => {
+    it("increases score for multiple events", () => {
       const oneEvent = [createMockReplicationEvent(100, 0.8)];
       const twoEvents = [
         createMockReplicationEvent(100, 0.8),
         createMockReplicationEvent(200, 0.8),
       ];
 
-      expect(calculateReplicationFitness(twoEvents))
-        .toBeGreaterThan(calculateReplicationFitness(oneEvent));
+      expect(calculateReplicationFitness(twoEvents)).toBeGreaterThan(
+        calculateReplicationFitness(oneEvent),
+      );
     });
 
-    it('rewards higher similarity', () => {
+    it("rewards higher similarity", () => {
       const lowSim = [createMockReplicationEvent(100, 0.6)];
       const highSim = [createMockReplicationEvent(100, 0.95)];
 
-      expect(calculateReplicationFitness(highSim))
-        .toBeGreaterThan(calculateReplicationFitness(lowSim));
+      expect(calculateReplicationFitness(highSim)).toBeGreaterThan(
+        calculateReplicationFitness(lowSim),
+      );
     });
 
-    it('rewards consistent replication intervals', () => {
+    it("rewards consistent replication intervals", () => {
       // Regular intervals
       const regular = [
         createMockReplicationEvent(100, 0.8),
@@ -375,13 +414,14 @@ describe('Replication Detection', () => {
         createMockReplicationEvent(400, 0.8),
       ];
 
-      expect(calculateReplicationFitness(regular))
-        .toBeGreaterThan(calculateReplicationFitness(irregular));
+      expect(calculateReplicationFitness(regular)).toBeGreaterThan(
+        calculateReplicationFitness(irregular),
+      );
     });
 
-    it('caps fitness at 1', () => {
+    it("caps fitness at 1", () => {
       const manyEvents = Array.from({ length: 20 }, (_, i) =>
-        createMockReplicationEvent(i * 100, 0.99)
+        createMockReplicationEvent(i * 100, 0.99),
       );
       expect(calculateReplicationFitness(manyEvents)).toBeLessThanOrEqual(1);
     });
@@ -390,20 +430,37 @@ describe('Replication Detection', () => {
 
 // Helper functions
 
-function createMockComponent(id: number, cx: number, cy: number, mass: number): Component {
+function createMockComponent(
+  id: number,
+  cx: number,
+  cy: number,
+  mass: number,
+): Component {
   return {
     id,
     pixels: [],
     centroid: { x: cx, y: cy },
     mass,
-    bounds: { minX: cx - 5, maxX: cx + 5, minY: cy - 5, maxY: cy + 5, width: 11, height: 11 },
+    bounds: {
+      minX: cx - 5,
+      maxX: cx + 5,
+      minY: cy - 5,
+      maxY: cy + 5,
+      width: 11,
+      height: 11,
+    },
     pattern: new Float32Array(4),
     patternWidth: 2,
     patternHeight: 2,
   };
 }
 
-function createMockComponentWithPattern(id: number, cx: number, cy: number, mass: number): Component {
+function createMockComponentWithPattern(
+  id: number,
+  cx: number,
+  cy: number,
+  mass: number,
+): Component {
   const component = createMockComponent(id, cx, cy, mass);
   component.pattern = new Float32Array([0.5, 0.5, 0.5, 0.5]);
   return component;

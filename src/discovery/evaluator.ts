@@ -3,9 +3,9 @@
  * Runs organisms in simulation and calculates fitness metrics
  */
 
-import type { Engine } from '../core/engine';
-import type { LeniaGenome } from './genome';
-import { genomeToParams } from './genome';
+import type { Engine } from "../core/engine";
+import type { LeniaGenome } from "./genome";
+import { genomeToParams } from "./genome";
 import {
   type FitnessMetrics,
   type BehaviorVector,
@@ -19,13 +19,13 @@ import {
   calculateMovementFitness,
   calculateOverallFitness,
   calculateBehaviorVector,
-} from './fitness';
+} from "./fitness";
 
 export interface EvaluationConfig {
-  simulationSteps: number;    // How many steps to run
-  warmupSteps: number;        // Steps before collecting metrics
-  sampleInterval: number;     // Collect metrics every N steps
-  minSurvivalMass: number;    // Minimum mass to be considered alive
+  simulationSteps: number; // How many steps to run
+  warmupSteps: number; // Steps before collecting metrics
+  sampleInterval: number; // Collect metrics every N steps
+  minSurvivalMass: number; // Minimum mass to be considered alive
 }
 
 const DEFAULT_CONFIG: EvaluationConfig = {
@@ -48,7 +48,7 @@ export interface EvaluationResult {
 export async function evaluateGenome(
   engine: Engine,
   genome: LeniaGenome,
-  config: Partial<EvaluationConfig> = {}
+  config: Partial<EvaluationConfig> = {},
 ): Promise<EvaluationResult> {
   const cfg = { ...DEFAULT_CONFIG, ...config };
 
@@ -56,7 +56,7 @@ export async function evaluateGenome(
   const params = genomeToParams(genome);
 
   // Configure engine for continuous mode with genome params
-  engine.setParadigm('continuous');
+  engine.setParadigm("continuous");
   engine.setContinuousParams({
     kernelRadius: params.kernelRadius,
     growthCenter: params.growthCenter,
@@ -66,7 +66,7 @@ export async function evaluateGenome(
   });
 
   // Reset with a seed pattern
-  engine.reset('lenia-seed');
+  engine.reset("lenia-seed");
 
   // Get grid dimensions
   const width = engine.getConfig().width;
@@ -119,7 +119,7 @@ export async function evaluateGenome(
 
     // Allow UI to update occasionally
     if (step % 50 === 0) {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
   }
 
@@ -129,9 +129,10 @@ export async function evaluateGenome(
   // Calculate fitness metrics
   const survival = calculateSurvivalFitness(massHistory, initialMass);
   const stability = calculateStabilityFitness(massHistory);
-  const complexity = entropyHistory.length > 0
-    ? entropyHistory.reduce((a, b) => a + b, 0) / entropyHistory.length
-    : 0;
+  const complexity =
+    entropyHistory.length > 0
+      ? entropyHistory.reduce((a, b) => a + b, 0) / entropyHistory.length
+      : 0;
   const movement = calculateMovementFitness(centroidHistory, width, height);
 
   // Calculate actual symmetry from final state
@@ -148,29 +149,32 @@ export async function evaluateGenome(
   });
 
   // Calculate behavior vector for novelty search
-  const behavior = massHistory.length > 0
-    ? calculateBehaviorVector(
-        massHistory,
-        entropyHistory,
-        centroidHistory,
-        boundingHistory,
-        width,
-        height
-      )
-    : {
-        avgMass: 0,
-        massVariance: 0,
-        avgSpeed: 0,
-        avgEntropy: 0,
-        boundingSize: 0,
-        lifespan: 0,
-      };
+  const behavior =
+    massHistory.length > 0
+      ? calculateBehaviorVector(
+          massHistory,
+          entropyHistory,
+          centroidHistory,
+          boundingHistory,
+          width,
+          height,
+        )
+      : {
+          avgMass: 0,
+          massVariance: 0,
+          avgSpeed: 0,
+          avgEntropy: 0,
+          boundingSize: 0,
+          lifespan: 0,
+        };
 
   return {
     fitness,
     behavior,
     finalState,
-    survived: massHistory.length > 0 && massHistory[massHistory.length - 1] > cfg.minSurvivalMass,
+    survived:
+      massHistory.length > 0 &&
+      massHistory[massHistory.length - 1] > cfg.minSurvivalMass,
   };
 }
 
@@ -182,7 +186,7 @@ export async function evaluatePopulation(
   engine: Engine,
   genomes: LeniaGenome[],
   config: Partial<EvaluationConfig> = {},
-  onProgress?: (completed: number, total: number) => void
+  onProgress?: (completed: number, total: number) => void,
 ): Promise<EvaluationResult[]> {
   const results: EvaluationResult[] = [];
 

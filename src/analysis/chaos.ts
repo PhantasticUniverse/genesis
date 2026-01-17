@@ -12,7 +12,7 @@ export interface LyapunovResult {
   /** Estimated Lyapunov exponent (λ) */
   exponent: number;
   /** Classification based on exponent value */
-  classification: 'stable' | 'periodic' | 'chaotic' | 'hyperchaotic';
+  classification: "stable" | "periodic" | "chaotic" | "hyperchaotic";
   /** Divergence measurements over time */
   divergenceHistory: number[];
   /** Confidence score (0-1) based on measurement quality */
@@ -51,9 +51,12 @@ export const DEFAULT_LYAPUNOV_CONFIG: LyapunovConfig = {
 /**
  * Calculate L2 distance between two states
  */
-export function stateDistance(state1: Float32Array, state2: Float32Array): number {
+export function stateDistance(
+  state1: Float32Array,
+  state2: Float32Array,
+): number {
   if (state1.length !== state2.length) {
-    throw new Error('State arrays must have the same length');
+    throw new Error("State arrays must have the same length");
   }
 
   let sumSquared = 0;
@@ -68,9 +71,12 @@ export function stateDistance(state1: Float32Array, state2: Float32Array): numbe
 /**
  * Calculate L1 (Manhattan) distance between two states
  */
-export function stateDistanceL1(state1: Float32Array, state2: Float32Array): number {
+export function stateDistanceL1(
+  state1: Float32Array,
+  state2: Float32Array,
+): number {
   if (state1.length !== state2.length) {
-    throw new Error('State arrays must have the same length');
+    throw new Error("State arrays must have the same length");
   }
 
   let sum = 0;
@@ -86,7 +92,7 @@ export function stateDistanceL1(state1: Float32Array, state2: Float32Array): num
  */
 export function createPerturbedState(
   state: Float32Array,
-  config: LyapunovConfig = DEFAULT_LYAPUNOV_CONFIG
+  config: LyapunovConfig = DEFAULT_LYAPUNOV_CONFIG,
 ): Float32Array {
   const perturbed = new Float32Array(state);
   const { perturbationMagnitude, perturbationCount } = config;
@@ -125,7 +131,10 @@ export function createPerturbedState(
     if (perturbed[idx] > 1 - perturbationMagnitude && direction > 0) {
       direction = -1;
     }
-    perturbed[idx] = Math.max(0, Math.min(1, perturbed[idx] + direction * perturbationMagnitude));
+    perturbed[idx] = Math.max(
+      0,
+      Math.min(1, perturbed[idx] + direction * perturbationMagnitude),
+    );
   }
 
   return perturbed;
@@ -138,7 +147,7 @@ export function createPerturbedState(
 export function renormalizePerturbation(
   reference: Float32Array,
   perturbed: Float32Array,
-  targetMagnitude: number
+  targetMagnitude: number,
 ): Float32Array {
   const currentDistance = stateDistance(reference, perturbed);
 
@@ -178,7 +187,7 @@ export type EvolutionStep = (state: Float32Array) => Float32Array;
 export function calculateLyapunovExponent(
   initialState: Float32Array,
   stepFunction: EvolutionStep,
-  config: Partial<LyapunovConfig> = {}
+  config: Partial<LyapunovConfig> = {},
 ): LyapunovResult {
   const fullConfig = { ...DEFAULT_LYAPUNOV_CONFIG, ...config };
   const {
@@ -219,7 +228,7 @@ export function calculateLyapunovExponent(
       perturbedState = renormalizePerturbation(
         referenceState,
         perturbedState,
-        perturbationMagnitude
+        perturbationMagnitude,
       );
     }
   }
@@ -246,21 +255,29 @@ export function calculateLyapunovExponent(
 /**
  * Calculate confidence score for the Lyapunov measurement
  */
-function calculateConfidence(divergenceHistory: number[], exponent: number): number {
+function calculateConfidence(
+  divergenceHistory: number[],
+  exponent: number,
+): number {
   if (divergenceHistory.length < 10) return 0;
 
   // Calculate variance of local Lyapunov estimates
   const localExponents: number[] = [];
   for (let i = 1; i < divergenceHistory.length; i++) {
     if (divergenceHistory[i] > 1e-10 && divergenceHistory[i - 1] > 1e-10) {
-      localExponents.push(Math.log(divergenceHistory[i] / divergenceHistory[i - 1]));
+      localExponents.push(
+        Math.log(divergenceHistory[i] / divergenceHistory[i - 1]),
+      );
     }
   }
 
   if (localExponents.length < 5) return 0;
 
-  const mean = localExponents.reduce((a, b) => a + b, 0) / localExponents.length;
-  const variance = localExponents.reduce((acc, val) => acc + (val - mean) ** 2, 0) / localExponents.length;
+  const mean =
+    localExponents.reduce((a, b) => a + b, 0) / localExponents.length;
+  const variance =
+    localExponents.reduce((acc, val) => acc + (val - mean) ** 2, 0) /
+    localExponents.length;
   const stdDev = Math.sqrt(variance);
 
   // Confidence is high when variance is low relative to the exponent magnitude
@@ -273,16 +290,16 @@ function calculateConfidence(divergenceHistory: number[], exponent: number): num
  */
 export function classifyDynamics(
   exponent: number,
-  threshold: number = 0.01
-): 'stable' | 'periodic' | 'chaotic' | 'hyperchaotic' {
+  threshold: number = 0.01,
+): "stable" | "periodic" | "chaotic" | "hyperchaotic" {
   if (exponent < -threshold) {
-    return 'stable';
+    return "stable";
   } else if (Math.abs(exponent) <= threshold) {
-    return 'periodic';
+    return "periodic";
   } else if (exponent > 1) {
-    return 'hyperchaotic';
+    return "hyperchaotic";
   } else {
-    return 'chaotic';
+    return "chaotic";
   }
 }
 
@@ -292,7 +309,7 @@ export function classifyDynamics(
  */
 export function calculateLocalLyapunov(
   divergenceHistory: number[],
-  windowSize: number = 10
+  windowSize: number = 10,
 ): number[] {
   const localExponents: number[] = [];
 
@@ -318,7 +335,7 @@ export function calculateLocalLyapunov(
 export function wolfLyapunovEstimate(
   initialState: Float32Array,
   stepFunction: EvolutionStep,
-  config: Partial<LyapunovConfig> = {}
+  config: Partial<LyapunovConfig> = {},
 ): LyapunovResult {
   const fullConfig = {
     ...DEFAULT_LYAPUNOV_CONFIG,
@@ -357,18 +374,20 @@ export function wolfLyapunovEstimate(
       perturbedState = renormalizePerturbation(
         referenceState,
         perturbedState,
-        perturbationMagnitude
+        perturbationMagnitude,
       );
     }
   }
 
   // Calculate average exponent
-  const exponent = renormCount > 0
-    ? sumLogGrowth / (renormCount * renormalizePeriod)
-    : 0;
+  const exponent =
+    renormCount > 0 ? sumLogGrowth / (renormCount * renormalizePeriod) : 0;
 
   const confidence = calculateConfidence(divergenceHistory, exponent);
-  const classification = classifyDynamics(exponent, fullConfig.stabilityThreshold);
+  const classification = classifyDynamics(
+    exponent,
+    fullConfig.stabilityThreshold,
+  );
 
   return {
     exponent,
@@ -386,8 +405,8 @@ export function wolfLyapunovEstimate(
 export function quickStabilityCheck(
   initialState: Float32Array,
   stepFunction: EvolutionStep,
-  steps: number = 20
-): 'stable' | 'unstable' | 'unknown' {
+  steps: number = 20,
+): "stable" | "unstable" | "unknown" {
   const perturbed = createPerturbedState(initialState, {
     ...DEFAULT_LYAPUNOV_CONFIG,
     perturbationMagnitude: 0.01,
@@ -406,10 +425,10 @@ export function quickStabilityCheck(
   const finalDist = stateDistance(refState, pertState);
 
   if (finalDist < initialDist * 0.5) {
-    return 'stable';
+    return "stable";
   } else if (finalDist > initialDist * 2) {
-    return 'unstable';
+    return "unstable";
   } else {
-    return 'unknown';
+    return "unknown";
   }
 }

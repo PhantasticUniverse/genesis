@@ -3,14 +3,14 @@
  * Tests for GPU texture pooling and lifecycle management
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   TexturePool,
   createTexturePool,
   texturePoolKey,
-} from '../../compute/webgpu/texture-pool';
+} from "../../compute/webgpu/texture-pool";
 
-describe('texture-pool', () => {
+describe("texture-pool", () => {
   let mockDevice: GPUDevice;
 
   beforeEach(async () => {
@@ -18,30 +18,35 @@ describe('texture-pool', () => {
     mockDevice = await adapter!.requestDevice();
   });
 
-  describe('texturePoolKey', () => {
-    it('creates key from dimensions and format', () => {
-      const key = texturePoolKey(256, 256, 'r32float');
-      expect(key).toBe('256x256-r32float');
+  describe("texturePoolKey", () => {
+    it("creates key from dimensions and format", () => {
+      const key = texturePoolKey(256, 256, "r32float");
+      expect(key).toBe("256x256-r32float");
     });
 
-    it('different dimensions produce different keys', () => {
-      const key1 = texturePoolKey(256, 256, 'r32float');
-      const key2 = texturePoolKey(512, 256, 'r32float');
+    it("different dimensions produce different keys", () => {
+      const key1 = texturePoolKey(256, 256, "r32float");
+      const key2 = texturePoolKey(512, 256, "r32float");
       expect(key1).not.toBe(key2);
     });
 
-    it('different formats produce different keys', () => {
-      const key1 = texturePoolKey(256, 256, 'r32float');
-      const key2 = texturePoolKey(256, 256, 'rgba8unorm');
+    it("different formats produce different keys", () => {
+      const key1 = texturePoolKey(256, 256, "r32float");
+      const key2 = texturePoolKey(256, 256, "rgba8unorm");
       expect(key1).not.toBe(key2);
     });
   });
 
-  describe('TexturePool', () => {
-    describe('acquire', () => {
-      it('creates new texture when pool is empty', () => {
+  describe("TexturePool", () => {
+    describe("acquire", () => {
+      it("creates new texture when pool is empty", () => {
         const pool = createTexturePool(mockDevice);
-        const texture = pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING);
+        const texture = pool.acquire(
+          256,
+          256,
+          "r32float",
+          GPUTextureUsage.STORAGE_BINDING,
+        );
 
         expect(texture).toBeDefined();
         expect(pool.getStats().totalCreated).toBe(1);
@@ -50,13 +55,23 @@ describe('texture-pool', () => {
         pool.destroy();
       });
 
-      it('reuses released texture', () => {
+      it("reuses released texture", () => {
         const pool = createTexturePool(mockDevice);
 
-        const texture1 = pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING);
+        const texture1 = pool.acquire(
+          256,
+          256,
+          "r32float",
+          GPUTextureUsage.STORAGE_BINDING,
+        );
         pool.release(texture1);
 
-        const texture2 = pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING);
+        const texture2 = pool.acquire(
+          256,
+          256,
+          "r32float",
+          GPUTextureUsage.STORAGE_BINDING,
+        );
 
         expect(texture2).toBe(texture1);
         expect(pool.getStats().totalCreated).toBe(1);
@@ -65,11 +80,21 @@ describe('texture-pool', () => {
         pool.destroy();
       });
 
-      it('creates new texture when all are in use', () => {
+      it("creates new texture when all are in use", () => {
         const pool = createTexturePool(mockDevice);
 
-        const texture1 = pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING);
-        const texture2 = pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING);
+        const texture1 = pool.acquire(
+          256,
+          256,
+          "r32float",
+          GPUTextureUsage.STORAGE_BINDING,
+        );
+        const texture2 = pool.acquire(
+          256,
+          256,
+          "r32float",
+          GPUTextureUsage.STORAGE_BINDING,
+        );
 
         expect(texture1).not.toBe(texture2);
         expect(pool.getStats().totalCreated).toBe(2);
@@ -77,14 +102,14 @@ describe('texture-pool', () => {
         pool.destroy();
       });
 
-      it('respects maxPerKey limit', () => {
+      it("respects maxPerKey limit", () => {
         const pool = createTexturePool(mockDevice, { maxPerKey: 2 });
 
         // Acquire 3 textures
         const textures = [
-          pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING),
-          pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING),
-          pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING),
+          pool.acquire(256, 256, "r32float", GPUTextureUsage.STORAGE_BINDING),
+          pool.acquire(256, 256, "r32float", GPUTextureUsage.STORAGE_BINDING),
+          pool.acquire(256, 256, "r32float", GPUTextureUsage.STORAGE_BINDING),
         ];
 
         // Only 2 should be in the pool
@@ -94,28 +119,43 @@ describe('texture-pool', () => {
         pool.destroy();
       });
 
-      it('uses separate pools for different formats', () => {
+      it("uses separate pools for different formats", () => {
         const pool = createTexturePool(mockDevice);
 
-        const texture1 = pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING);
+        const texture1 = pool.acquire(
+          256,
+          256,
+          "r32float",
+          GPUTextureUsage.STORAGE_BINDING,
+        );
         pool.release(texture1);
 
-        const texture2 = pool.acquire(256, 256, 'rgba8unorm', GPUTextureUsage.STORAGE_BINDING);
+        const texture2 = pool.acquire(
+          256,
+          256,
+          "rgba8unorm",
+          GPUTextureUsage.STORAGE_BINDING,
+        );
 
         // Should create new texture since format differs
         expect(texture2).not.toBe(texture1);
-        expect(pool.getStats().poolKeys).toContain('256x256-r32float');
-        expect(pool.getStats().poolKeys).toContain('256x256-rgba8unorm');
+        expect(pool.getStats().poolKeys).toContain("256x256-r32float");
+        expect(pool.getStats().poolKeys).toContain("256x256-rgba8unorm");
 
         pool.destroy();
       });
     });
 
-    describe('release', () => {
-      it('marks texture as available', () => {
+    describe("release", () => {
+      it("marks texture as available", () => {
         const pool = createTexturePool(mockDevice);
 
-        const texture = pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING);
+        const texture = pool.acquire(
+          256,
+          256,
+          "r32float",
+          GPUTextureUsage.STORAGE_BINDING,
+        );
         expect(pool.getStats().inUseCount).toBe(1);
 
         pool.release(texture);
@@ -124,13 +164,13 @@ describe('texture-pool', () => {
         pool.destroy();
       });
 
-      it('destroys texture not in pool', () => {
+      it("destroys texture not in pool", () => {
         const pool = createTexturePool(mockDevice);
 
         // Create texture outside pool
         const texture = mockDevice.createTexture({
           size: [256, 256],
-          format: 'r32float',
+          format: "r32float",
           usage: GPUTextureUsage.STORAGE_BINDING,
         });
 
@@ -141,11 +181,16 @@ describe('texture-pool', () => {
       });
     });
 
-    describe('cleanup', () => {
-      it('removes textures unused for staleFrames', () => {
+    describe("cleanup", () => {
+      it("removes textures unused for staleFrames", () => {
         const pool = createTexturePool(mockDevice, { staleFrames: 10 });
 
-        const texture = pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING);
+        const texture = pool.acquire(
+          256,
+          256,
+          "r32float",
+          GPUTextureUsage.STORAGE_BINDING,
+        );
         pool.release(texture);
 
         // Advance 15 frames
@@ -160,10 +205,15 @@ describe('texture-pool', () => {
         pool.destroy();
       });
 
-      it('keeps recently used textures', () => {
+      it("keeps recently used textures", () => {
         const pool = createTexturePool(mockDevice, { staleFrames: 10 });
 
-        const texture = pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING);
+        const texture = pool.acquire(
+          256,
+          256,
+          "r32float",
+          GPUTextureUsage.STORAGE_BINDING,
+        );
         pool.release(texture);
 
         // Advance only 5 frames
@@ -178,10 +228,15 @@ describe('texture-pool', () => {
         pool.destroy();
       });
 
-      it('keeps textures that are in use', () => {
+      it("keeps textures that are in use", () => {
         const pool = createTexturePool(mockDevice, { staleFrames: 10 });
 
-        const texture = pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING);
+        const texture = pool.acquire(
+          256,
+          256,
+          "r32float",
+          GPUTextureUsage.STORAGE_BINDING,
+        );
         // Don't release it
 
         // Advance many frames
@@ -197,13 +252,13 @@ describe('texture-pool', () => {
       });
     });
 
-    describe('getStats', () => {
-      it('returns accurate statistics', () => {
+    describe("getStats", () => {
+      it("returns accurate statistics", () => {
         const pool = createTexturePool(mockDevice);
 
-        pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING);
-        pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING);
-        pool.acquire(512, 512, 'r32float', GPUTextureUsage.STORAGE_BINDING);
+        pool.acquire(256, 256, "r32float", GPUTextureUsage.STORAGE_BINDING);
+        pool.acquire(256, 256, "r32float", GPUTextureUsage.STORAGE_BINDING);
+        pool.acquire(512, 512, "r32float", GPUTextureUsage.STORAGE_BINDING);
 
         const stats = pool.getStats();
         expect(stats.totalCreated).toBe(3);
@@ -215,12 +270,12 @@ describe('texture-pool', () => {
       });
     });
 
-    describe('destroy', () => {
-      it('clears all pools', () => {
+    describe("destroy", () => {
+      it("clears all pools", () => {
         const pool = createTexturePool(mockDevice);
 
-        pool.acquire(256, 256, 'r32float', GPUTextureUsage.STORAGE_BINDING);
-        pool.acquire(512, 512, 'r32float', GPUTextureUsage.STORAGE_BINDING);
+        pool.acquire(256, 256, "r32float", GPUTextureUsage.STORAGE_BINDING);
+        pool.acquire(512, 512, "r32float", GPUTextureUsage.STORAGE_BINDING);
 
         pool.destroy();
 
@@ -231,14 +286,14 @@ describe('texture-pool', () => {
     });
   });
 
-  describe('createTexturePool', () => {
-    it('creates pool with default config', () => {
+  describe("createTexturePool", () => {
+    it("creates pool with default config", () => {
       const pool = createTexturePool(mockDevice);
       expect(pool).toBeInstanceOf(TexturePool);
       pool.destroy();
     });
 
-    it('creates pool with custom config', () => {
+    it("creates pool with custom config", () => {
       const pool = createTexturePool(mockDevice, {
         staleFrames: 100,
         maxPerKey: 10,

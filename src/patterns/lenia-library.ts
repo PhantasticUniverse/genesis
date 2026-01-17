@@ -7,14 +7,20 @@
  * - GENESIS discovery engine
  */
 
-import type { LeniaGenome } from '../discovery/genome';
+import type { LeniaGenome } from "../discovery/genome";
 
 export interface LeniaOrganism {
   name: string;
   description: string;
-  category: 'glider' | 'oscillator' | 'static' | 'chaotic' | 'swimmer' | 'other';
+  category:
+    | "glider"
+    | "oscillator"
+    | "static"
+    | "chaotic"
+    | "swimmer"
+    | "other";
   genome: LeniaGenome;
-  speed?: number;  // Approximate cells per step (for gliders)
+  speed?: number; // Approximate cells per step (for gliders)
   period?: number; // Oscillation period (for oscillators)
 }
 
@@ -23,9 +29,10 @@ export interface LeniaOrganism {
  */
 export const CLASSIC_ORGANISMS: LeniaOrganism[] = [
   {
-    name: 'Orbium',
-    description: 'The iconic Lenia glider - a smooth oval shape that moves steadily',
-    category: 'glider',
+    name: "Orbium",
+    description:
+      "The iconic Lenia glider - a smooth oval shape that moves steadily",
+    category: "glider",
     genome: {
       R: 13,
       T: 10,
@@ -38,9 +45,9 @@ export const CLASSIC_ORGANISMS: LeniaOrganism[] = [
     speed: 0.3,
   },
   {
-    name: 'Orbium Ring',
-    description: 'A ring-shaped variant of Orbium with stable movement',
-    category: 'glider',
+    name: "Orbium Ring",
+    description: "A ring-shaped variant of Orbium with stable movement",
+    category: "glider",
     genome: {
       R: 15,
       T: 12,
@@ -53,9 +60,9 @@ export const CLASSIC_ORGANISMS: LeniaOrganism[] = [
     speed: 0.25,
   },
   {
-    name: 'Geminium',
-    description: 'A twin-lobed organism that tumbles as it moves',
-    category: 'glider',
+    name: "Geminium",
+    description: "A twin-lobed organism that tumbles as it moves",
+    category: "glider",
     genome: {
       R: 12,
       T: 10,
@@ -68,9 +75,9 @@ export const CLASSIC_ORGANISMS: LeniaOrganism[] = [
     speed: 0.15,
   },
   {
-    name: 'Scintillum',
-    description: 'A sparkling, rapidly oscillating pattern',
-    category: 'oscillator',
+    name: "Scintillum",
+    description: "A sparkling, rapidly oscillating pattern",
+    category: "oscillator",
     genome: {
       R: 10,
       T: 8,
@@ -83,9 +90,9 @@ export const CLASSIC_ORGANISMS: LeniaOrganism[] = [
     period: 12,
   },
   {
-    name: 'Paterson',
-    description: 'A static, stable pattern with beautiful structure',
-    category: 'static',
+    name: "Paterson",
+    description: "A static, stable pattern with beautiful structure",
+    category: "static",
     genome: {
       R: 20,
       T: 15,
@@ -104,9 +111,9 @@ export const CLASSIC_ORGANISMS: LeniaOrganism[] = [
  */
 export const SMOOTHLIFE_ORGANISMS: LeniaOrganism[] = [
   {
-    name: 'SmoothGlider',
-    description: 'Classic SmoothLife glider pattern',
-    category: 'glider',
+    name: "SmoothGlider",
+    description: "Classic SmoothLife glider pattern",
+    category: "glider",
     genome: {
       R: 21,
       T: 10,
@@ -119,9 +126,9 @@ export const SMOOTHLIFE_ORGANISMS: LeniaOrganism[] = [
     speed: 0.4,
   },
   {
-    name: 'SmoothBlob',
-    description: 'A stable, smooth blob that breathes',
-    category: 'oscillator',
+    name: "SmoothBlob",
+    description: "A stable, smooth blob that breathes",
+    category: "oscillator",
     genome: {
       R: 17,
       T: 8,
@@ -140,9 +147,9 @@ export const SMOOTHLIFE_ORGANISMS: LeniaOrganism[] = [
  */
 export const DISCOVERED_ORGANISMS: LeniaOrganism[] = [
   {
-    name: 'Nova',
-    description: 'A rapidly spinning star shape',
-    category: 'oscillator',
+    name: "Nova",
+    description: "A rapidly spinning star shape",
+    category: "oscillator",
     genome: {
       R: 14,
       T: 12,
@@ -155,9 +162,9 @@ export const DISCOVERED_ORGANISMS: LeniaOrganism[] = [
     period: 8,
   },
   {
-    name: 'Cruiser',
-    description: 'A fast-moving elongated shape',
-    category: 'glider',
+    name: "Cruiser",
+    description: "A fast-moving elongated shape",
+    category: "glider",
     genome: {
       R: 16,
       T: 14,
@@ -170,9 +177,9 @@ export const DISCOVERED_ORGANISMS: LeniaOrganism[] = [
     speed: 0.5,
   },
   {
-    name: 'Pulsar',
-    description: 'A pulsating circular pattern',
-    category: 'oscillator',
+    name: "Pulsar",
+    description: "A pulsating circular pattern",
+    category: "oscillator",
     genome: {
       R: 11,
       T: 6,
@@ -185,9 +192,9 @@ export const DISCOVERED_ORGANISMS: LeniaOrganism[] = [
     period: 16,
   },
   {
-    name: 'Drifter',
-    description: 'A slow, meandering pattern',
-    category: 'swimmer',
+    name: "Drifter",
+    description: "A slow, meandering pattern",
+    category: "swimmer",
     genome: {
       R: 18,
       T: 10,
@@ -200,9 +207,9 @@ export const DISCOVERED_ORGANISMS: LeniaOrganism[] = [
     speed: 0.1,
   },
   {
-    name: 'Helix',
-    description: 'A spiral pattern that rotates as it moves',
-    category: 'glider',
+    name: "Helix",
+    description: "A spiral pattern that rotates as it moves",
+    category: "glider",
     genome: {
       R: 15,
       T: 11,
@@ -221,9 +228,9 @@ export const DISCOVERED_ORGANISMS: LeniaOrganism[] = [
  */
 export const CHAOTIC_ORGANISMS: LeniaOrganism[] = [
   {
-    name: 'Primordial Soup',
-    description: 'Chaotic, ever-changing patterns with local stability',
-    category: 'chaotic',
+    name: "Primordial Soup",
+    description: "Chaotic, ever-changing patterns with local stability",
+    category: "chaotic",
     genome: {
       R: 8,
       T: 5,
@@ -235,9 +242,9 @@ export const CHAOTIC_ORGANISMS: LeniaOrganism[] = [
     },
   },
   {
-    name: 'Galaxy',
-    description: 'Large-scale swirling patterns',
-    category: 'chaotic',
+    name: "Galaxy",
+    description: "Large-scale swirling patterns",
+    category: "chaotic",
     genome: {
       R: 25,
       T: 20,
@@ -249,9 +256,9 @@ export const CHAOTIC_ORGANISMS: LeniaOrganism[] = [
     },
   },
   {
-    name: 'Mitosis',
-    description: 'Patterns that split and recombine',
-    category: 'chaotic',
+    name: "Mitosis",
+    description: "Patterns that split and recombine",
+    category: "chaotic",
     genome: {
       R: 12,
       T: 8,
@@ -279,15 +286,17 @@ export const ALL_ORGANISMS: LeniaOrganism[] = [
  */
 export function getOrganism(name: string): LeniaOrganism | undefined {
   return ALL_ORGANISMS.find(
-    org => org.name.toLowerCase() === name.toLowerCase()
+    (org) => org.name.toLowerCase() === name.toLowerCase(),
   );
 }
 
 /**
  * Get organisms by category
  */
-export function getOrganismsByCategory(category: LeniaOrganism['category']): LeniaOrganism[] {
-  return ALL_ORGANISMS.filter(org => org.category === category);
+export function getOrganismsByCategory(
+  category: LeniaOrganism["category"],
+): LeniaOrganism[] {
+  return ALL_ORGANISMS.filter((org) => org.category === category);
 }
 
 /**
@@ -296,9 +305,9 @@ export function getOrganismsByCategory(category: LeniaOrganism['category']): Len
 export function searchOrganisms(query: string): LeniaOrganism[] {
   const lowerQuery = query.toLowerCase();
   return ALL_ORGANISMS.filter(
-    org =>
+    (org) =>
       org.name.toLowerCase().includes(lowerQuery) ||
-      org.description.toLowerCase().includes(lowerQuery)
+      org.description.toLowerCase().includes(lowerQuery),
   );
 }
 
@@ -311,6 +320,22 @@ export function organismToParams(organism: LeniaOrganism) {
     growthCenter: organism.genome.m,
     growthWidth: organism.genome.s,
     dt: 1 / organism.genome.T,
-    growthType: organism.genome.gn === 1 ? 'polynomial' as const : 'exponential' as const,
+    growthType:
+      organism.genome.gn === 1
+        ? ("polynomial" as const)
+        : ("exponential" as const),
   };
 }
+
+// Re-export reference organism utilities
+export {
+  REFERENCE_ORGANISMS,
+  getOrganismByCode,
+  getOrganismsByFamily,
+  ORGANISM_FAMILIES,
+} from "./reference-organisms";
+export {
+  importReferenceOrganism,
+  decodeReferenceRLE,
+} from "./organism-importer";
+export type { ReferenceOrganism } from "./organism-importer";

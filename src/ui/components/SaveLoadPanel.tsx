@@ -3,9 +3,9 @@
  * UI for saving and loading organisms
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import type { Engine } from '../../core/engine';
-import type { LeniaGenome } from '../../discovery/genome';
+import { useState, useCallback, useRef, useEffect } from "react";
+import type { Engine } from "../../core/engine";
+import type { LeniaGenome } from "../../discovery/genome";
 import {
   saveOrganism,
   getSavedOrganisms,
@@ -15,8 +15,8 @@ import {
   downloadJSON,
   readFileAsText,
   type SavedOrganism,
-} from '../../persistence/storage';
-import { genomeToParams } from '../../discovery/genome';
+} from "../../persistence/storage";
+import { genomeToParams } from "../../discovery/genome";
 
 interface SaveLoadPanelProps {
   engine: Engine | null;
@@ -27,9 +27,13 @@ interface SaveLoadPanelProps {
 // Maximum file size for imports (1MB)
 const MAX_FILE_SIZE = 1024 * 1024;
 
-export function SaveLoadPanel({ engine, currentGenome, onLoadGenome }: SaveLoadPanelProps) {
+export function SaveLoadPanel({
+  engine,
+  currentGenome,
+  onLoadGenome,
+}: SaveLoadPanelProps) {
   const [savedOrganisms, setSavedOrganisms] = useState<SavedOrganism[]>([]);
-  const [saveName, setSaveName] = useState('');
+  const [saveName, setSaveName] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSaveForm, setShowSaveForm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -43,37 +47,40 @@ export function SaveLoadPanel({ engine, currentGenome, onLoadGenome }: SaveLoadP
     if (!currentGenome || !saveName.trim()) return;
 
     const organism = saveOrganism(currentGenome, saveName.trim());
-    setSavedOrganisms(prev => [...prev, organism]);
-    setSaveName('');
+    setSavedOrganisms((prev) => [...prev, organism]);
+    setSaveName("");
     setShowSaveForm(false);
   }, [currentGenome, saveName]);
 
-  const handleLoad = useCallback((organism: SavedOrganism) => {
-    if (!engine) return;
+  const handleLoad = useCallback(
+    (organism: SavedOrganism) => {
+      if (!engine) return;
 
-    engine.setParadigm('continuous');
-    const params = genomeToParams(organism.genome);
-    engine.setContinuousParams({
-      kernelRadius: params.kernelRadius,
-      growthCenter: params.growthCenter,
-      growthWidth: params.growthWidth,
-      dt: params.dt,
-      growthType: params.growthType,
-    });
-    engine.reset('lenia-seed');
+      engine.setParadigm("continuous");
+      const params = genomeToParams(organism.genome);
+      engine.setContinuousParams({
+        kernelRadius: params.kernelRadius,
+        growthCenter: params.growthCenter,
+        growthWidth: params.growthWidth,
+        dt: params.dt,
+        growthType: params.growthType,
+      });
+      engine.reset("lenia-seed");
 
-    onLoadGenome?.(organism.genome);
-  }, [engine, onLoadGenome]);
+      onLoadGenome?.(organism.genome);
+    },
+    [engine, onLoadGenome],
+  );
 
   const handleDelete = useCallback((id: string) => {
     if (deleteOrganism(id)) {
-      setSavedOrganisms(prev => prev.filter(o => o.id !== id));
+      setSavedOrganisms((prev) => prev.filter((o) => o.id !== id));
     }
   }, []);
 
   const handleExport = useCallback((organism: SavedOrganism) => {
     const json = exportGenomeJSON(organism.genome);
-    downloadJSON(json, `${organism.name.replace(/\s+/g, '_')}.json`);
+    downloadJSON(json, `${organism.name.replace(/\s+/g, "_")}.json`);
   }, []);
 
   const handleExportCurrent = useCallback(() => {
@@ -86,46 +93,51 @@ export function SaveLoadPanel({ engine, currentGenome, onLoadGenome }: SaveLoadP
     fileInputRef.current?.click();
   }, []);
 
-  const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleFileChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
 
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      console.error(`File too large (${(file.size / 1024 / 1024).toFixed(2)}MB). Maximum size is 1MB.`);
+      // Validate file size
+      if (file.size > MAX_FILE_SIZE) {
+        console.error(
+          `File too large (${(file.size / 1024 / 1024).toFixed(2)}MB). Maximum size is 1MB.`,
+        );
+        // Reset input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
+
+      try {
+        const text = await readFileAsText(file);
+        const genome = importGenomeJSON(text);
+
+        if (genome && engine) {
+          engine.setParadigm("continuous");
+          const params = genomeToParams(genome);
+          engine.setContinuousParams({
+            kernelRadius: params.kernelRadius,
+            growthCenter: params.growthCenter,
+            growthWidth: params.growthWidth,
+            dt: params.dt,
+            growthType: params.growthType,
+          });
+          engine.reset("lenia-seed");
+          onLoadGenome?.(genome);
+        }
+      } catch (e) {
+        console.error("Failed to import file:", e);
+      }
+
       // Reset input
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
-      return;
-    }
-
-    try {
-      const text = await readFileAsText(file);
-      const genome = importGenomeJSON(text);
-
-      if (genome && engine) {
-        engine.setParadigm('continuous');
-        const params = genomeToParams(genome);
-        engine.setContinuousParams({
-          kernelRadius: params.kernelRadius,
-          growthCenter: params.growthCenter,
-          growthWidth: params.growthWidth,
-          dt: params.dt,
-          growthType: params.growthType,
-        });
-        engine.reset('lenia-seed');
-        onLoadGenome?.(genome);
-      }
-    } catch (e) {
-      console.error('Failed to import file:', e);
-    }
-
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, [engine, onLoadGenome]);
+    },
+    [engine, onLoadGenome],
+  );
 
   return (
     <div className="mt-4 p-4 bg-zinc-900 rounded-lg border border-zinc-800">
@@ -135,7 +147,7 @@ export function SaveLoadPanel({ engine, currentGenome, onLoadGenome }: SaveLoadP
       >
         <h3 className="font-medium text-zinc-300">Organism Library</h3>
         <span className="text-xs text-zinc-500">
-          {savedOrganisms.length} saved • {isExpanded ? '−' : '+'}
+          {savedOrganisms.length} saved • {isExpanded ? "−" : "+"}
         </span>
       </div>
 
@@ -204,7 +216,9 @@ export function SaveLoadPanel({ engine, currentGenome, onLoadGenome }: SaveLoadP
                   className="flex items-center justify-between p-2 bg-zinc-800 rounded hover:bg-zinc-750"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-zinc-300 truncate">{organism.name}</div>
+                    <div className="text-sm text-zinc-300 truncate">
+                      {organism.name}
+                    </div>
                     <div className="text-xs text-zinc-500">
                       R={organism.genome.R} μ={organism.genome.m.toFixed(3)}
                     </div>
@@ -234,7 +248,8 @@ export function SaveLoadPanel({ engine, currentGenome, onLoadGenome }: SaveLoadP
             </div>
           ) : (
             <div className="text-sm text-zinc-500 text-center py-4">
-              No saved organisms yet. Discover or configure an organism and save it here.
+              No saved organisms yet. Discover or configure an organism and save
+              it here.
             </div>
           )}
         </div>

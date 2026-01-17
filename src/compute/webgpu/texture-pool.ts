@@ -36,7 +36,7 @@ const DEFAULT_CONFIG: TexturePoolConfig = {
 export function texturePoolKey(
   width: number,
   height: number,
-  format: GPUTextureFormat
+  format: GPUTextureFormat,
 ): string {
   return `${width}x${height}-${format}`;
 }
@@ -65,7 +65,7 @@ export class TexturePool {
     height: number,
     format: GPUTextureFormat,
     usage: GPUTextureUsageFlags,
-    label?: string
+    label?: string,
   ): GPUTexture {
     const key = texturePoolKey(width, height, format);
     let pool = this.pools.get(key);
@@ -113,7 +113,9 @@ export class TexturePool {
     this.totalCreated++;
 
     if (this.config.debug) {
-      console.log(`[TexturePool] Created texture: ${key} (total: ${this.totalCreated})`);
+      console.log(
+        `[TexturePool] Created texture: ${key} (total: ${this.totalCreated})`,
+      );
     }
 
     return texture;
@@ -198,7 +200,7 @@ export class TexturePool {
 
     for (const pool of this.pools.values()) {
       pooledCount += pool.length;
-      inUseCount += pool.filter(p => p.inUse).length;
+      inUseCount += pool.filter((p) => p.inUse).length;
     }
 
     return {
@@ -222,7 +224,7 @@ export class TexturePool {
     this.pools.clear();
 
     if (this.config.debug) {
-      console.log('[TexturePool] Destroyed all textures');
+      console.log("[TexturePool] Destroyed all textures");
     }
   }
 }
@@ -232,7 +234,7 @@ export class TexturePool {
  */
 export function createTexturePool(
   device: GPUDevice,
-  config?: Partial<TexturePoolConfig>
+  config?: Partial<TexturePoolConfig>,
 ): TexturePool {
   return new TexturePool(device, config);
 }

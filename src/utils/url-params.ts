@@ -3,9 +3,9 @@
  * Share simulation state via URL parameters
  */
 
-import type { CAParadigm } from '../core/types';
-import type { ColormapName } from '../core/engine';
-import type { LeniaGenome } from '../discovery/genome';
+import type { CAParadigm } from "../core/types";
+import type { ColormapName } from "../core/engine";
+import type { LeniaGenome } from "../discovery/genome";
 
 export interface ShareableState {
   // Simulation mode
@@ -33,17 +33,17 @@ export function parseURLParams(): Partial<ShareableState> {
   const state: Partial<ShareableState> = {};
 
   // Parse paradigm
-  const paradigm = params.get('mode');
-  if (paradigm === 'discrete' || paradigm === 'continuous') {
+  const paradigm = params.get("mode");
+  if (paradigm === "discrete" || paradigm === "continuous") {
     state.paradigm = paradigm;
   }
 
   // Parse Lenia genome
-  const R = params.get('R');
-  const T = params.get('T');
-  const m = params.get('m');
-  const s = params.get('s');
-  const b = params.get('b');
+  const R = params.get("R");
+  const T = params.get("T");
+  const m = params.get("m");
+  const s = params.get("s");
+  const b = params.get("b");
 
   if (R || T || m || s || b) {
     state.genome = {
@@ -51,28 +51,28 @@ export function parseURLParams(): Partial<ShareableState> {
       T: T ? parseInt(T, 10) : 10,
       m: m ? parseFloat(m) : 0.15,
       s: s ? parseFloat(s) : 0.015,
-      b: b ? b.split(',').map(Number) : [1],
+      b: b ? b.split(",").map(Number) : [1],
       kn: 1,
       gn: 1,
     };
   }
 
   // Parse discrete rule
-  const birth = params.get('birth');
-  const survival = params.get('survival');
+  const birth = params.get("birth");
+  const survival = params.get("survival");
   if (birth || survival) {
-    state.birth = birth ? birth.split('').map(Number) : [3];
-    state.survival = survival ? survival.split('').map(Number) : [2, 3];
+    state.birth = birth ? birth.split("").map(Number) : [3];
+    state.survival = survival ? survival.split("").map(Number) : [2, 3];
   }
 
   // Parse colormap
-  const colormap = params.get('colormap');
+  const colormap = params.get("colormap");
   if (colormap) {
     state.colormap = colormap as ColormapName;
   }
 
   // Parse pattern
-  const pattern = params.get('pattern');
+  const pattern = params.get("pattern");
   if (pattern) {
     state.pattern = pattern;
   }
@@ -85,38 +85,41 @@ export function parseURLParams(): Partial<ShareableState> {
  */
 export function generateShareURL(state: ShareableState): string {
   const url = new URL(window.location.href);
-  url.search = '';
+  url.search = "";
 
   // Add paradigm
-  url.searchParams.set('mode', state.paradigm);
+  url.searchParams.set("mode", state.paradigm);
 
   // Add Lenia genome if continuous
-  if (state.paradigm === 'continuous' && state.genome) {
-    url.searchParams.set('R', state.genome.R.toString());
-    url.searchParams.set('T', state.genome.T.toString());
-    url.searchParams.set('m', state.genome.m.toFixed(3));
-    url.searchParams.set('s', state.genome.s.toFixed(4));
-    url.searchParams.set('b', state.genome.b.map(v => v.toFixed(2)).join(','));
+  if (state.paradigm === "continuous" && state.genome) {
+    url.searchParams.set("R", state.genome.R.toString());
+    url.searchParams.set("T", state.genome.T.toString());
+    url.searchParams.set("m", state.genome.m.toFixed(3));
+    url.searchParams.set("s", state.genome.s.toFixed(4));
+    url.searchParams.set(
+      "b",
+      state.genome.b.map((v) => v.toFixed(2)).join(","),
+    );
   }
 
   // Add discrete rule if discrete
-  if (state.paradigm === 'discrete' && (state.birth || state.survival)) {
+  if (state.paradigm === "discrete" && (state.birth || state.survival)) {
     if (state.birth) {
-      url.searchParams.set('birth', state.birth.join(''));
+      url.searchParams.set("birth", state.birth.join(""));
     }
     if (state.survival) {
-      url.searchParams.set('survival', state.survival.join(''));
+      url.searchParams.set("survival", state.survival.join(""));
     }
   }
 
   // Add colormap
   if (state.colormap) {
-    url.searchParams.set('colormap', state.colormap);
+    url.searchParams.set("colormap", state.colormap);
   }
 
   // Add pattern if present
   if (state.pattern) {
-    url.searchParams.set('pattern', state.pattern);
+    url.searchParams.set("pattern", state.pattern);
   }
 
   return url.toString();
@@ -130,42 +133,45 @@ export function updateURLParams(state: Partial<ShareableState>): void {
 
   // Update paradigm
   if (state.paradigm) {
-    url.searchParams.set('mode', state.paradigm);
+    url.searchParams.set("mode", state.paradigm);
   }
 
   // Update Lenia genome
   if (state.genome) {
-    url.searchParams.set('R', state.genome.R.toString());
-    url.searchParams.set('T', state.genome.T.toString());
-    url.searchParams.set('m', state.genome.m.toFixed(3));
-    url.searchParams.set('s', state.genome.s.toFixed(4));
-    url.searchParams.set('b', state.genome.b.map(v => v.toFixed(2)).join(','));
+    url.searchParams.set("R", state.genome.R.toString());
+    url.searchParams.set("T", state.genome.T.toString());
+    url.searchParams.set("m", state.genome.m.toFixed(3));
+    url.searchParams.set("s", state.genome.s.toFixed(4));
+    url.searchParams.set(
+      "b",
+      state.genome.b.map((v) => v.toFixed(2)).join(","),
+    );
   }
 
   // Update discrete rule
   if (state.birth !== undefined) {
-    url.searchParams.set('birth', state.birth.join(''));
+    url.searchParams.set("birth", state.birth.join(""));
   }
   if (state.survival !== undefined) {
-    url.searchParams.set('survival', state.survival.join(''));
+    url.searchParams.set("survival", state.survival.join(""));
   }
 
   // Update colormap
   if (state.colormap) {
-    url.searchParams.set('colormap', state.colormap);
+    url.searchParams.set("colormap", state.colormap);
   }
 
   // Update pattern
   if (state.pattern !== undefined) {
     if (state.pattern) {
-      url.searchParams.set('pattern', state.pattern);
+      url.searchParams.set("pattern", state.pattern);
     } else {
-      url.searchParams.delete('pattern');
+      url.searchParams.delete("pattern");
     }
   }
 
   // Update URL without reload
-  window.history.replaceState({}, '', url.toString());
+  window.history.replaceState({}, "", url.toString());
 }
 
 /**
@@ -178,14 +184,14 @@ export async function copyShareURL(state: ShareableState): Promise<boolean> {
     return true;
   } catch {
     // Fallback for older browsers
-    const textArea = document.createElement('textarea');
+    const textArea = document.createElement("textarea");
     textArea.value = url;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
     document.body.appendChild(textArea);
     textArea.select();
     try {
-      document.execCommand('copy');
+      document.execCommand("copy");
       return true;
     } catch {
       return false;
@@ -201,13 +207,20 @@ export async function copyShareURL(state: ShareableState): Promise<boolean> {
 export function generateShortLink(state: ShareableState): string {
   // Create a compact representation
   const data = {
-    p: state.paradigm === 'continuous' ? 'c' : 'd',
+    p: state.paradigm === "continuous" ? "c" : "d",
     g: state.genome
-      ? [state.genome.R, state.genome.T, state.genome.m, state.genome.s, ...state.genome.b]
+      ? [
+          state.genome.R,
+          state.genome.T,
+          state.genome.m,
+          state.genome.s,
+          ...state.genome.b,
+        ]
       : null,
-    r: state.birth && state.survival
-      ? [state.birth.join(''), state.survival.join('')]
-      : null,
+    r:
+      state.birth && state.survival
+        ? [state.birth.join(""), state.survival.join("")]
+        : null,
     m: state.colormap,
   };
 
@@ -216,8 +229,8 @@ export function generateShortLink(state: ShareableState): string {
 
   // Create URL with hash
   const url = new URL(window.location.href);
-  url.search = '';
-  url.searchParams.set('s', encoded);
+  url.search = "";
+  url.searchParams.set("s", encoded);
 
   return url.toString();
 }
@@ -227,7 +240,7 @@ export function generateShortLink(state: ShareableState): string {
  */
 export function parseShortLink(): Partial<ShareableState> | null {
   const params = new URLSearchParams(window.location.search);
-  const encoded = params.get('s');
+  const encoded = params.get("s");
 
   if (!encoded) return null;
 
@@ -235,7 +248,7 @@ export function parseShortLink(): Partial<ShareableState> | null {
     const data = JSON.parse(atob(encoded));
     const state: Partial<ShareableState> = {};
 
-    state.paradigm = data.p === 'c' ? 'continuous' : 'discrete';
+    state.paradigm = data.p === "c" ? "continuous" : "discrete";
 
     if (data.g && Array.isArray(data.g)) {
       state.genome = {
@@ -250,8 +263,8 @@ export function parseShortLink(): Partial<ShareableState> | null {
     }
 
     if (data.r && Array.isArray(data.r)) {
-      state.birth = data.r[0].split('').map(Number);
-      state.survival = data.r[1].split('').map(Number);
+      state.birth = data.r[0].split("").map(Number);
+      state.survival = data.r[1].split("").map(Number);
     }
 
     if (data.m) {

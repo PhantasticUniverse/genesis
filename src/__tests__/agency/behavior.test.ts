@@ -3,7 +3,7 @@
  * Tests for trajectory collection and behavior vector extraction
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 import {
   createTrajectoryCollector,
   updateTrajectories,
@@ -14,8 +14,8 @@ import {
   type TrajectoryPoint,
   type TrajectoryCollector,
   type BehaviorVector,
-} from '../../agency/behavior';
-import type { TrackerState } from '../../agency/creature-tracker';
+} from "../../agency/behavior";
+import type { TrackerState } from "../../agency/creature-tracker";
 
 // Helper to create mock tracker state
 function mockTrackerState(
@@ -27,7 +27,7 @@ function mockTrackerState(
     velocityX: number;
     velocityY: number;
   }>,
-  frame: number
+  frame: number,
 ): TrackerState {
   const creaturesMap = new Map();
   for (const c of creatures) {
@@ -51,7 +51,13 @@ function mockTrackerState(
 
 // Helper to create a simple trajectory
 function createTrajectory(
-  points: Array<{ x: number; y: number; mass?: number; vx?: number; vy?: number }>
+  points: Array<{
+    x: number;
+    y: number;
+    mass?: number;
+    vx?: number;
+    vy?: number;
+  }>,
 ): TrajectoryPoint[] {
   return points.map((p, i) => ({
     frame: i,
@@ -63,9 +69,9 @@ function createTrajectory(
   }));
 }
 
-describe('behavior', () => {
-  describe('createTrajectoryCollector', () => {
-    it('creates empty collector with correct dimensions', () => {
+describe("behavior", () => {
+  describe("createTrajectoryCollector", () => {
+    it("creates empty collector with correct dimensions", () => {
       const collector = createTrajectoryCollector(256, 256, 500);
 
       expect(collector.gridWidth).toBe(256);
@@ -74,19 +80,29 @@ describe('behavior', () => {
       expect(collector.trajectories.size).toBe(0);
     });
 
-    it('uses default maxLength when not specified', () => {
+    it("uses default maxLength when not specified", () => {
       const collector = createTrajectoryCollector(128, 128);
 
       expect(collector.maxLength).toBe(1000);
     });
   });
 
-  describe('updateTrajectories', () => {
-    it('adds trajectory points for new creatures', () => {
+  describe("updateTrajectories", () => {
+    it("adds trajectory points for new creatures", () => {
       const collector = createTrajectoryCollector(256, 256);
-      const tracker = mockTrackerState([
-        { id: 1, centroidX: 100, centroidY: 100, mass: 50, velocityX: 1, velocityY: 0 },
-      ], 0);
+      const tracker = mockTrackerState(
+        [
+          {
+            id: 1,
+            centroidX: 100,
+            centroidY: 100,
+            mass: 50,
+            velocityX: 1,
+            velocityY: 0,
+          },
+        ],
+        0,
+      );
 
       updateTrajectories(collector, tracker);
 
@@ -94,40 +110,70 @@ describe('behavior', () => {
       expect(collector.trajectories.get(1)!.length).toBe(1);
     });
 
-    it('appends to existing trajectories', () => {
+    it("appends to existing trajectories", () => {
       const collector = createTrajectoryCollector(256, 256);
 
       for (let frame = 0; frame < 5; frame++) {
-        const tracker = mockTrackerState([
-          { id: 1, centroidX: 100 + frame, centroidY: 100, mass: 50, velocityX: 1, velocityY: 0 },
-        ], frame);
+        const tracker = mockTrackerState(
+          [
+            {
+              id: 1,
+              centroidX: 100 + frame,
+              centroidY: 100,
+              mass: 50,
+              velocityX: 1,
+              velocityY: 0,
+            },
+          ],
+          frame,
+        );
         updateTrajectories(collector, tracker);
       }
 
       expect(collector.trajectories.get(1)!.length).toBe(5);
     });
 
-    it('trims trajectories exceeding maxLength', () => {
+    it("trims trajectories exceeding maxLength", () => {
       const collector = createTrajectoryCollector(256, 256, 3);
 
       for (let frame = 0; frame < 5; frame++) {
-        const tracker = mockTrackerState([
-          { id: 1, centroidX: 100 + frame, centroidY: 100, mass: 50, velocityX: 1, velocityY: 0 },
-        ], frame);
+        const tracker = mockTrackerState(
+          [
+            {
+              id: 1,
+              centroidX: 100 + frame,
+              centroidY: 100,
+              mass: 50,
+              velocityX: 1,
+              velocityY: 0,
+            },
+          ],
+          frame,
+        );
         updateTrajectories(collector, tracker);
       }
 
       expect(collector.trajectories.get(1)!.length).toBe(3);
     });
 
-    it('keeps trajectory for recently dead creatures', () => {
+    it("keeps trajectory for recently dead creatures", () => {
       const collector = createTrajectoryCollector(256, 256);
 
       // Add creature for several frames
       for (let frame = 0; frame < 5; frame++) {
-        const tracker = mockTrackerState([
-          { id: 1, centroidX: 100, centroidY: 100, mass: 50, velocityX: 0, velocityY: 0 },
-        ], frame);
+        const tracker = mockTrackerState(
+          [
+            {
+              id: 1,
+              centroidX: 100,
+              centroidY: 100,
+              mass: 50,
+              velocityX: 0,
+              velocityY: 0,
+            },
+          ],
+          frame,
+        );
         updateTrajectories(collector, tracker);
       }
 
@@ -139,13 +185,23 @@ describe('behavior', () => {
       expect(collector.trajectories.has(1)).toBe(true);
     });
 
-    it('removes old dead creature trajectories', () => {
+    it("removes old dead creature trajectories", () => {
       const collector = createTrajectoryCollector(256, 256);
 
       // Add creature
-      const tracker1 = mockTrackerState([
-        { id: 1, centroidX: 100, centroidY: 100, mass: 50, velocityX: 0, velocityY: 0 },
-      ], 0);
+      const tracker1 = mockTrackerState(
+        [
+          {
+            id: 1,
+            centroidX: 100,
+            centroidY: 100,
+            mass: 50,
+            velocityX: 0,
+            velocityY: 0,
+          },
+        ],
+        0,
+      );
       updateTrajectories(collector, tracker1);
 
       // Many frames pass with creature gone
@@ -157,8 +213,8 @@ describe('behavior', () => {
     });
   });
 
-  describe('extractBehaviorVector', () => {
-    it('returns null for trajectory with less than 2 points', () => {
+  describe("extractBehaviorVector", () => {
+    it("returns null for trajectory with less than 2 points", () => {
       const singlePoint = createTrajectory([{ x: 100, y: 100 }]);
       expect(extractBehaviorVector(singlePoint, 256, 256)).toBeNull();
 
@@ -166,7 +222,7 @@ describe('behavior', () => {
       expect(extractBehaviorVector(empty, 256, 256)).toBeNull();
     });
 
-    it('calculates normalized final position', () => {
+    it("calculates normalized final position", () => {
       const trajectory = createTrajectory([
         { x: 0, y: 0 },
         { x: 128, y: 128 },
@@ -178,7 +234,7 @@ describe('behavior', () => {
       expect(behavior.finalY).toBeCloseTo(0.5, 3);
     });
 
-    it('calculates average position', () => {
+    it("calculates average position", () => {
       const trajectory = createTrajectory([
         { x: 0, y: 0 },
         { x: 64, y: 64 },
@@ -192,7 +248,7 @@ describe('behavior', () => {
       expect(behavior.avgY).toBeCloseTo(0.25, 3);
     });
 
-    it('calculates total distance and displacement', () => {
+    it("calculates total distance and displacement", () => {
       const trajectory = createTrajectory([
         { x: 0, y: 0 },
         { x: 100, y: 0 },
@@ -208,7 +264,7 @@ describe('behavior', () => {
       expect(behavior.totalDistance).toBeGreaterThan(behavior.displacement);
     });
 
-    it('calculates path efficiency', () => {
+    it("calculates path efficiency", () => {
       // Straight line should have efficiency near 1
       const straightLine = createTrajectory([
         { x: 0, y: 0 },
@@ -230,7 +286,7 @@ describe('behavior', () => {
       expect(backtrackBehavior.pathEfficiency).toBeLessThan(0.5);
     });
 
-    it('calculates speed metrics', () => {
+    it("calculates speed metrics", () => {
       const trajectory = createTrajectory([
         { x: 0, y: 0, vx: 1, vy: 0 },
         { x: 10, y: 0, vx: 2, vy: 0 },
@@ -243,7 +299,7 @@ describe('behavior', () => {
       expect(behavior.maxSpeed).toBeGreaterThan(behavior.avgSpeed);
     });
 
-    it('calculates mass metrics', () => {
+    it("calculates mass metrics", () => {
       const trajectory = createTrajectory([
         { x: 0, y: 0, mass: 100 },
         { x: 10, y: 0, mass: 120 },
@@ -256,9 +312,9 @@ describe('behavior', () => {
       expect(behavior.massVariance).toBeGreaterThan(0);
     });
 
-    it('calculates survival time', () => {
+    it("calculates survival time", () => {
       const trajectory = createTrajectory(
-        Array.from({ length: 50 }, (_, i) => ({ x: i, y: 0 }))
+        Array.from({ length: 50 }, (_, i) => ({ x: i, y: 0 })),
       );
 
       const behavior = extractBehaviorVector(trajectory, 256, 256)!;
@@ -266,7 +322,7 @@ describe('behavior', () => {
       expect(behavior.survivalTime).toBe(50);
     });
 
-    it('calculates heading for moving creatures', () => {
+    it("calculates heading for moving creatures", () => {
       // Moving right
       const rightward = createTrajectory([
         { x: 0, y: 128 },
@@ -290,7 +346,7 @@ describe('behavior', () => {
       expect(downBehavior.avgHeading).toBeCloseTo(0.75, 1);
     });
 
-    it('calculates heading variance', () => {
+    it("calculates heading variance", () => {
       // Consistent direction should have low variance
       const consistent = createTrajectory([
         { x: 0, y: 0 },
@@ -311,12 +367,14 @@ describe('behavior', () => {
       ]);
 
       const zigzagBehavior = extractBehaviorVector(zigzag, 256, 256)!;
-      expect(zigzagBehavior.headingVariance).toBeGreaterThan(consistentBehavior.headingVariance);
+      expect(zigzagBehavior.headingVariance).toBeGreaterThan(
+        consistentBehavior.headingVariance,
+      );
     });
   });
 
-  describe('behaviorDistance', () => {
-    it('returns 0 for identical behaviors', () => {
+  describe("behaviorDistance", () => {
+    it("returns 0 for identical behaviors", () => {
       const behavior: BehaviorVector = {
         finalX: 0.5,
         finalY: 0.5,
@@ -337,7 +395,7 @@ describe('behavior', () => {
       expect(behaviorDistance(behavior, behavior)).toBe(0);
     });
 
-    it('returns positive distance for different behaviors', () => {
+    it("returns positive distance for different behaviors", () => {
       const a: BehaviorVector = {
         finalX: 0,
         finalY: 0,
@@ -375,7 +433,7 @@ describe('behavior', () => {
       expect(behaviorDistance(a, b)).toBeGreaterThan(0);
     });
 
-    it('is symmetric', () => {
+    it("is symmetric", () => {
       const a: BehaviorVector = {
         finalX: 0.2,
         finalY: 0.3,
@@ -413,7 +471,7 @@ describe('behavior', () => {
       expect(behaviorDistance(a, b)).toBeCloseTo(behaviorDistance(b, a), 10);
     });
 
-    it('weights position features heavily', () => {
+    it("weights position features heavily", () => {
       // Two behaviors differing only in position
       const base: BehaviorVector = {
         finalX: 0,
@@ -437,13 +495,13 @@ describe('behavior', () => {
 
       // Position difference should create larger distance (higher weight)
       expect(behaviorDistance(base, diffPosition)).toBeGreaterThan(
-        behaviorDistance(base, diffMass)
+        behaviorDistance(base, diffMass),
       );
     });
   });
 
-  describe('evaluateGoalFitness', () => {
-    it('returns infinity distance for empty trajectory', () => {
+  describe("evaluateGoalFitness", () => {
+    it("returns infinity distance for empty trajectory", () => {
       const result = evaluateGoalFitness([], 100, 100, 10);
 
       expect(result.goalReached).toBe(false);
@@ -451,7 +509,7 @@ describe('behavior', () => {
       expect(result.timeToGoal).toBeNull();
     });
 
-    it('detects goal reached', () => {
+    it("detects goal reached", () => {
       const trajectory = createTrajectory([
         { x: 0, y: 0 },
         { x: 50, y: 50 },
@@ -464,7 +522,7 @@ describe('behavior', () => {
       expect(result.timeToGoal).toBe(2); // Frame index when goal reached
     });
 
-    it('calculates distance to goal', () => {
+    it("calculates distance to goal", () => {
       const trajectory = createTrajectory([
         { x: 0, y: 0 },
         { x: 50, y: 0 },
@@ -475,7 +533,7 @@ describe('behavior', () => {
       expect(result.distanceToGoal).toBeCloseTo(50, 1);
     });
 
-    it('counts obstacle collisions', () => {
+    it("counts obstacle collisions", () => {
       const trajectory = createTrajectory([
         { x: 5, y: 5 },
         { x: 15, y: 5 },
@@ -493,13 +551,13 @@ describe('behavior', () => {
         10,
         obstacleField,
         100,
-        100
+        100,
       );
 
       expect(result.obstacleCollisions).toBe(1);
     });
 
-    it('calculates path efficiency', () => {
+    it("calculates path efficiency", () => {
       // Direct path
       const direct = createTrajectory([
         { x: 0, y: 0 },
@@ -518,12 +576,14 @@ describe('behavior', () => {
       ]);
 
       const indirectResult = evaluateGoalFitness(indirect, 100, 100, 10);
-      expect(indirectResult.pathEfficiency).toBeLessThan(directResult.pathEfficiency);
+      expect(indirectResult.pathEfficiency).toBeLessThan(
+        directResult.pathEfficiency,
+      );
     });
   });
 
-  describe('calculateFitnessScore', () => {
-    it('gives high score for reaching goal', () => {
+  describe("calculateFitnessScore", () => {
+    it("gives high score for reaching goal", () => {
       const goalReached = {
         goalReached: true,
         distanceToGoal: 0,
@@ -537,7 +597,7 @@ describe('behavior', () => {
       expect(score).toBeGreaterThan(10); // Base goal weight is 10
     });
 
-    it('gives partial credit for getting close', () => {
+    it("gives partial credit for getting close", () => {
       const closeToGoal = {
         goalReached: false,
         distanceToGoal: 50,
@@ -555,11 +615,11 @@ describe('behavior', () => {
       };
 
       expect(calculateFitnessScore(closeToGoal, null)).toBeGreaterThan(
-        calculateFitnessScore(farFromGoal, null)
+        calculateFitnessScore(farFromGoal, null),
       );
     });
 
-    it('penalizes obstacle collisions', () => {
+    it("penalizes obstacle collisions", () => {
       const noCollisions = {
         goalReached: false,
         distanceToGoal: 100,
@@ -577,11 +637,11 @@ describe('behavior', () => {
       };
 
       expect(calculateFitnessScore(noCollisions, null)).toBeGreaterThan(
-        calculateFitnessScore(manyCollisions, null)
+        calculateFitnessScore(manyCollisions, null),
       );
     });
 
-    it('rewards survival time', () => {
+    it("rewards survival time", () => {
       const shortSurvival: BehaviorVector = {
         finalX: 0,
         finalY: 0,
@@ -610,11 +670,11 @@ describe('behavior', () => {
       };
 
       expect(calculateFitnessScore(goalFitness, longSurvival)).toBeGreaterThan(
-        calculateFitnessScore(goalFitness, shortSurvival)
+        calculateFitnessScore(goalFitness, shortSurvival),
       );
     });
 
-    it('respects custom weights', () => {
+    it("respects custom weights", () => {
       const goalFitness = {
         goalReached: true,
         distanceToGoal: 0,
@@ -640,7 +700,7 @@ describe('behavior', () => {
       expect(highGoalWeight).toBeGreaterThan(lowGoalWeight);
     });
 
-    it('never returns negative score', () => {
+    it("never returns negative score", () => {
       const worstCase = {
         goalReached: false,
         distanceToGoal: 1000,

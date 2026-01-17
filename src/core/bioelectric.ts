@@ -10,11 +10,11 @@
 
 /** Bioelectric channel types */
 export type BioelectricChannelType =
-  | 'voltage'      // Membrane potential (Vm)
-  | 'sodium'       // Na+ ion concentration
-  | 'potassium'    // K+ ion concentration
-  | 'calcium'      // Ca2+ ion concentration
-  | 'morphogen';   // Generic morphogen/signaling molecule
+  | "voltage" // Membrane potential (Vm)
+  | "sodium" // Na+ ion concentration
+  | "potassium" // K+ ion concentration
+  | "calcium" // Ca2+ ion concentration
+  | "morphogen"; // Generic morphogen/signaling molecule
 
 /** Configuration for a bioelectric channel */
 export interface BioelectricChannelConfig {
@@ -55,41 +55,44 @@ export interface BioelectricConfig {
 }
 
 /** Default channel configurations by type */
-export const DEFAULT_CHANNEL_CONFIGS: Record<BioelectricChannelType, Omit<BioelectricChannelConfig, 'name' | 'color'>> = {
+export const DEFAULT_CHANNEL_CONFIGS: Record<
+  BioelectricChannelType,
+  Omit<BioelectricChannelConfig, "name" | "color">
+> = {
   voltage: {
-    type: 'voltage',
-    restingValue: -0.07,  // -70mV normalized to ~-0.07
+    type: "voltage",
+    restingValue: -0.07, // -70mV normalized to ~-0.07
     decayRate: 0.02,
     diffusionRate: 0.02,
     gapJunctionConductance: 0.15,
   },
   sodium: {
-    type: 'sodium',
-    restingValue: 0.14,   // ~140mM outside / normalized
+    type: "sodium",
+    restingValue: 0.14, // ~140mM outside / normalized
     decayRate: 0.01,
     diffusionRate: 0.03,
     gapJunctionConductance: 0.1,
   },
   potassium: {
-    type: 'potassium',
-    restingValue: 0.5,    // ~5mM outside, 140mM inside
+    type: "potassium",
+    restingValue: 0.5, // ~5mM outside, 140mM inside
     decayRate: 0.01,
     diffusionRate: 0.02,
     gapJunctionConductance: 0.1,
   },
   calcium: {
-    type: 'calcium',
-    restingValue: 0.001,  // Very low resting Ca2+
-    decayRate: 0.05,      // Ca2+ actively pumped out
+    type: "calcium",
+    restingValue: 0.001, // Very low resting Ca2+
+    decayRate: 0.05, // Ca2+ actively pumped out
     diffusionRate: 0.01,
     gapJunctionConductance: 0.05,
   },
   morphogen: {
-    type: 'morphogen',
+    type: "morphogen",
     restingValue: 0,
     decayRate: 0.005,
     diffusionRate: 0.08,
-    gapJunctionConductance: 0,  // Morphogens don't use gap junctions
+    gapJunctionConductance: 0, // Morphogens don't use gap junctions
   },
 };
 
@@ -99,7 +102,7 @@ export const DEFAULT_BIOELECTRIC_CONFIG: BioelectricConfig = {
   channels: [
     {
       ...DEFAULT_CHANNEL_CONFIGS.voltage,
-      name: 'Membrane Potential',
+      name: "Membrane Potential",
       color: [100, 200, 255],
     },
   ],
@@ -123,11 +126,13 @@ export interface BioelectricState {
 /**
  * Create initial bioelectric state
  */
-export function createBioelectricState(config: Partial<BioelectricConfig> = {}): BioelectricState {
+export function createBioelectricState(
+  config: Partial<BioelectricConfig> = {},
+): BioelectricState {
   const fullConfig = { ...DEFAULT_BIOELECTRIC_CONFIG, ...config };
   const { width, height, channels: channelConfigs } = fullConfig;
 
-  const channels = channelConfigs.map(channelConfig => {
+  const channels = channelConfigs.map((channelConfig) => {
     const data = new Float32Array(width * height);
     // Initialize to resting value
     data.fill(channelConfig.restingValue);
@@ -150,7 +155,7 @@ export function applyStimulus(
   centerX: number,
   centerY: number,
   radius: number,
-  magnitude: number
+  magnitude: number,
 ): void {
   const { width, height } = state.config;
   const channel = state.channels[channelIndex];
@@ -190,7 +195,7 @@ function laplacian(
   y: number,
   width: number,
   height: number,
-  wrap: boolean
+  wrap: boolean,
 ): number {
   const getVal = (px: number, py: number): number => {
     if (wrap) {
@@ -221,10 +226,17 @@ function laplacian(
  * dVm/dt = -g_leak * (Vm - V_rest) + g_gap * Laplacian(Vm) + D * Laplacian(Vm)
  */
 export function stepBioelectric(state: BioelectricState): void {
-  const { width, height, channels: channelConfigs, dt, wrapBoundaries, leakConductance } = state.config;
+  const {
+    width,
+    height,
+    channels: channelConfigs,
+    dt,
+    wrapBoundaries,
+    leakConductance,
+  } = state.config;
 
   // Create temporary arrays for updates
-  const updates = state.channels.map(ch => new Float32Array(ch.length));
+  const updates = state.channels.map((ch) => new Float32Array(ch.length));
 
   for (let c = 0; c < state.channels.length; c++) {
     const channel = state.channels[c];
@@ -237,7 +249,8 @@ export function stepBioelectric(state: BioelectricState): void {
         const value = channel[idx];
 
         // Leak current (decay toward resting value)
-        const leak = -leakConductance * config.decayRate * (value - config.restingValue);
+        const leak =
+          -leakConductance * config.decayRate * (value - config.restingValue);
 
         // Diffusion (Laplacian)
         const lap = laplacian(channel, x, y, width, height, wrapBoundaries);
@@ -278,9 +291,9 @@ export function stepBioelectricN(state: BioelectricState, n: number): void {
 export function createVoltageWave(
   state: BioelectricState,
   channelIndex: number,
-  direction: 'horizontal' | 'vertical' | 'radial',
+  direction: "horizontal" | "vertical" | "radial",
   wavelength: number = 50,
-  amplitude: number = 0.5
+  amplitude: number = 0.5,
 ): void {
   const { width, height } = state.config;
   const channel = state.channels[channelIndex];
@@ -295,13 +308,13 @@ export function createVoltageWave(
 
       let phase: number;
       switch (direction) {
-        case 'horizontal':
+        case "horizontal":
           phase = (x / wavelength) * 2 * Math.PI;
           break;
-        case 'vertical':
+        case "vertical":
           phase = (y / wavelength) * 2 * Math.PI;
           break;
-        case 'radial':
+        case "radial":
           const r = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
           phase = (r / wavelength) * 2 * Math.PI;
           break;
@@ -318,9 +331,9 @@ export function createVoltageWave(
 export function createGradient(
   state: BioelectricState,
   channelIndex: number,
-  direction: 'left-right' | 'top-bottom' | 'radial',
+  direction: "left-right" | "top-bottom" | "radial",
   minValue: number = 0,
-  maxValue: number = 1
+  maxValue: number = 1,
 ): void {
   const { width, height } = state.config;
   const channel = state.channels[channelIndex];
@@ -336,13 +349,13 @@ export function createGradient(
 
       let t: number;
       switch (direction) {
-        case 'left-right':
+        case "left-right":
           t = x / (width - 1);
           break;
-        case 'top-bottom':
+        case "top-bottom":
           t = y / (height - 1);
           break;
-        case 'radial':
+        case "radial":
           const r = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
           t = 1 - r / maxR;
           break;
@@ -389,18 +402,20 @@ export function getChannelStats(channel: Float32Array): {
  */
 export function bioelectricToRGB(
   state: BioelectricState,
-  normalize: boolean = true
+  normalize: boolean = true,
 ): Uint8ClampedArray {
   const { width, height, channels: channelConfigs } = state.config;
   const rgba = new Uint8ClampedArray(width * height * 4);
 
   // Get normalization ranges if needed
   const ranges = normalize
-    ? state.channels.map(ch => getChannelStats(ch))
+    ? state.channels.map((ch) => getChannelStats(ch))
     : state.channels.map(() => ({ min: -1, max: 1, mean: 0, std: 1 }));
 
   for (let i = 0; i < width * height; i++) {
-    let r = 0, g = 0, b = 0;
+    let r = 0,
+      g = 0,
+      b = 0;
 
     for (let c = 0; c < state.channels.length; c++) {
       const value = state.channels[c][i];
@@ -433,66 +448,66 @@ export function bioelectricToRGB(
 /** Preset bioelectric configurations */
 export const BIOELECTRIC_PRESETS: Record<string, Partial<BioelectricConfig>> = {
   /** Simple voltage diffusion */
-  'voltage-only': {
+  "voltage-only": {
     channels: [
       {
         ...DEFAULT_CHANNEL_CONFIGS.voltage,
-        name: 'Membrane Potential',
+        name: "Membrane Potential",
         color: [100, 200, 255],
       },
     ],
   },
 
   /** Voltage with calcium signaling */
-  'voltage-calcium': {
+  "voltage-calcium": {
     channels: [
       {
         ...DEFAULT_CHANNEL_CONFIGS.voltage,
-        name: 'Vm',
+        name: "Vm",
         color: [100, 150, 255],
       },
       {
         ...DEFAULT_CHANNEL_CONFIGS.calcium,
-        name: 'Ca2+',
+        name: "Ca2+",
         color: [255, 200, 50],
       },
     ],
   },
 
   /** Full ion channel model */
-  'ion-channels': {
+  "ion-channels": {
     channels: [
       {
         ...DEFAULT_CHANNEL_CONFIGS.voltage,
-        name: 'Vm',
+        name: "Vm",
         color: [100, 150, 255],
       },
       {
         ...DEFAULT_CHANNEL_CONFIGS.sodium,
-        name: 'Na+',
+        name: "Na+",
         color: [255, 100, 100],
       },
       {
         ...DEFAULT_CHANNEL_CONFIGS.potassium,
-        name: 'K+',
+        name: "K+",
         color: [100, 255, 100],
       },
     ],
   },
 
   /** Morphogen gradient formation */
-  'morphogen-gradient': {
+  "morphogen-gradient": {
     channels: [
       {
         ...DEFAULT_CHANNEL_CONFIGS.morphogen,
-        name: 'Morphogen A',
+        name: "Morphogen A",
         color: [255, 150, 50],
         diffusionRate: 0.1,
         decayRate: 0.01,
       },
       {
         ...DEFAULT_CHANNEL_CONFIGS.morphogen,
-        name: 'Morphogen B',
+        name: "Morphogen B",
         color: [50, 150, 255],
         diffusionRate: 0.05,
         decayRate: 0.02,
@@ -501,11 +516,11 @@ export const BIOELECTRIC_PRESETS: Record<string, Partial<BioelectricConfig>> = {
   },
 
   /** Reaction-diffusion-like (Turing patterns) */
-  'turing-pattern': {
+  "turing-pattern": {
     channels: [
       {
         ...DEFAULT_CHANNEL_CONFIGS.morphogen,
-        name: 'Activator',
+        name: "Activator",
         color: [255, 200, 100],
         diffusionRate: 0.05,
         decayRate: 0.01,
@@ -513,9 +528,9 @@ export const BIOELECTRIC_PRESETS: Record<string, Partial<BioelectricConfig>> = {
       },
       {
         ...DEFAULT_CHANNEL_CONFIGS.morphogen,
-        name: 'Inhibitor',
+        name: "Inhibitor",
         color: [100, 100, 255],
-        diffusionRate: 0.2,  // Inhibitor diffuses faster
+        diffusionRate: 0.2, // Inhibitor diffuses faster
         decayRate: 0.02,
         restingValue: 0.5,
       },

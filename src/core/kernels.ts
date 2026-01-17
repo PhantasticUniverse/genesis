@@ -3,21 +3,21 @@
  * Generates convolution kernels for Lenia, SmoothLife, and custom rules
  */
 
-export type KernelShape = 'gaussian' | 'ring' | 'polynomial' | 'custom';
+export type KernelShape = "gaussian" | "ring" | "polynomial" | "custom";
 
 export interface KernelConfig {
   shape: KernelShape;
-  radius: number;          // Kernel radius in cells
-  peaks?: number[];        // For polynomial kernels (Lenia beta values)
-  ringWidth?: number;      // For ring kernels (SmoothLife)
+  radius: number; // Kernel radius in cells
+  peaks?: number[]; // For polynomial kernels (Lenia beta values)
+  ringWidth?: number; // For ring kernels (SmoothLife)
   customWeights?: Float32Array; // For custom kernels
 }
 
 export interface KernelData {
   weights: Float32Array;
-  size: number;           // Width/height of kernel (2*radius + 1)
+  size: number; // Width/height of kernel (2*radius + 1)
   radius: number;
-  sum: number;            // Sum of all weights (for normalization)
+  sum: number; // Sum of all weights (for normalization)
 }
 
 /**
@@ -49,7 +49,11 @@ function polynomialBump(x: number, peaks: number[]): number {
  * Ring kernel function (SmoothLife style)
  * Creates a ring-shaped kernel with smooth falloff
  */
-function ringKernel(r: number, innerRadius: number, outerRadius: number): number {
+function ringKernel(
+  r: number,
+  innerRadius: number,
+  outerRadius: number,
+): number {
   if (r < innerRadius || r > outerRadius) return 0;
 
   const mid = (innerRadius + outerRadius) / 2;
@@ -81,24 +85,24 @@ export function generateKernel(config: KernelConfig): KernelData {
       let weight = 0;
 
       switch (shape) {
-        case 'gaussian':
+        case "gaussian":
           // Gaussian kernel centered at 0.5 radius
           weight = gaussian(r, 0.5, 0.15);
           break;
 
-        case 'ring':
+        case "ring":
           // Ring kernel (SmoothLife inner/outer neighborhoods)
           const ringWidth = config.ringWidth ?? 0.5;
           weight = ringKernel(r, 1 - ringWidth, 1);
           break;
 
-        case 'polynomial':
+        case "polynomial":
           // Lenia-style polynomial bump kernel
           const peaks = config.peaks ?? [0.5];
           weight = polynomialBump(r, peaks);
           break;
 
-        case 'custom':
+        case "custom":
           // Use provided weights
           if (config.customWeights) {
             weight = config.customWeights[y * size + x];
@@ -141,11 +145,14 @@ export function normalizeKernel(kernel: KernelData): KernelData {
 /**
  * Create a GPU texture from kernel data
  */
-export function createKernelTexture(device: GPUDevice, kernel: KernelData): GPUTexture {
+export function createKernelTexture(
+  device: GPUDevice,
+  kernel: KernelData,
+): GPUTexture {
   const texture = device.createTexture({
-    label: 'kernel-texture',
+    label: "kernel-texture",
     size: [kernel.size, kernel.size],
-    format: 'r32float',
+    format: "r32float",
     usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
   });
 
@@ -153,7 +160,7 @@ export function createKernelTexture(device: GPUDevice, kernel: KernelData): GPUT
     { texture },
     kernel.weights,
     { bytesPerRow: kernel.size * 4 },
-    { width: kernel.size, height: kernel.size }
+    { width: kernel.size, height: kernel.size },
   );
 
   return texture;
@@ -163,7 +170,10 @@ export function createKernelTexture(device: GPUDevice, kernel: KernelData): GPUT
  * Generate a simple Gaussian kernel as Float32Array
  * Convenience function for quick kernel creation
  */
-export function generateGaussianKernel(radius: number, sigma?: number): Float32Array {
+export function generateGaussianKernel(
+  radius: number,
+  sigma?: number,
+): Float32Array {
   const size = 2 * radius + 1;
   const s = sigma ?? radius / 3;
   const weights = new Float32Array(size * size);
@@ -191,29 +201,29 @@ export function generateGaussianKernel(radius: number, sigma?: number): Float32A
 // Preset kernel configurations for common CA types
 export const KERNEL_PRESETS = {
   // Lenia Orbium (classic glider-like organism)
-  'lenia-orbium': {
-    shape: 'polynomial' as KernelShape,
+  "lenia-orbium": {
+    shape: "polynomial" as KernelShape,
     radius: 13,
     peaks: [0.5],
   },
 
   // Lenia Geminium (replicating pattern)
-  'lenia-geminium': {
-    shape: 'polynomial' as KernelShape,
+  "lenia-geminium": {
+    shape: "polynomial" as KernelShape,
     radius: 10,
     peaks: [0.25, 0.75],
   },
 
   // SmoothLife ring kernel
-  'smoothlife': {
-    shape: 'ring' as KernelShape,
+  smoothlife: {
+    shape: "ring" as KernelShape,
     radius: 12,
     ringWidth: 0.3,
   },
 
   // Simple Gaussian (for testing)
-  'gaussian': {
-    shape: 'gaussian' as KernelShape,
+  gaussian: {
+    shape: "gaussian" as KernelShape,
     radius: 8,
   },
 } as const;

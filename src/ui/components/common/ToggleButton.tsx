@@ -24,26 +24,22 @@ export function ToggleButton({
   value,
   onChange,
   disabled = false,
-  activeColor = 'bg-cyan-600',
+  activeColor = "bg-cyan-600",
 }: ToggleButtonProps) {
   return (
     <div className="flex items-center justify-between">
       <div>
         <label className="text-sm text-zinc-400">{label}</label>
-        {description && (
-          <p className="text-xs text-zinc-600">{description}</p>
-        )}
+        {description && <p className="text-xs text-zinc-600">{description}</p>}
       </div>
       <button
         onClick={() => onChange(!value)}
         disabled={disabled}
         className={`px-3 py-1 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-          value
-            ? `${activeColor} text-white`
-            : 'bg-zinc-700 text-zinc-400'
+          value ? `${activeColor} text-white` : "bg-zinc-700 text-zinc-400"
         }`}
       >
-        {value ? 'ON' : 'OFF'}
+        {value ? "ON" : "OFF"}
       </button>
     </div>
   );

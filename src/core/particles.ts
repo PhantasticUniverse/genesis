@@ -97,7 +97,9 @@ export const DEFAULT_FIELD_COUPLING: FieldCouplingConfig = {
  * Create default interaction matrix
  * By default: same types attract weakly, different types repel
  */
-export function createDefaultInteractionMatrix(numTypes: number): InteractionRule[][] {
+export function createDefaultInteractionMatrix(
+  numTypes: number,
+): InteractionRule[][] {
   const matrix: InteractionRule[][] = [];
 
   for (let i = 0; i < numTypes; i++) {
@@ -129,7 +131,7 @@ export function createDefaultInteractionMatrix(numTypes: number): InteractionRul
  */
 export function createParticleSystem(
   config: Partial<ParticleSystemConfig> = {},
-  fieldCoupling: Partial<FieldCouplingConfig> = {}
+  fieldCoupling: Partial<FieldCouplingConfig> = {},
 ): ParticleSystemState {
   const fullConfig = { ...DEFAULT_PARTICLE_CONFIG, ...config };
   const fullCoupling = { ...DEFAULT_FIELD_COUPLING, ...fieldCoupling };
@@ -152,7 +154,7 @@ export function addParticle(
   type: number = 0,
   vx: number = 0,
   vy: number = 0,
-  mass: number = 1
+  mass: number = 1,
 ): Particle | null {
   if (state.particles.length >= state.config.maxParticles) {
     return null;
@@ -176,8 +178,11 @@ export function addParticle(
 /**
  * Remove a particle by ID
  */
-export function removeParticle(state: ParticleSystemState, id: number): boolean {
-  const particle = state.particles.find(p => p.id === id);
+export function removeParticle(
+  state: ParticleSystemState,
+  id: number,
+): boolean {
+  const particle = state.particles.find((p) => p.id === id);
   if (particle) {
     particle.active = false;
     return true;
@@ -189,7 +194,7 @@ export function removeParticle(state: ParticleSystemState, id: number): boolean 
  * Get active particles
  */
 export function getActiveParticles(state: ParticleSystemState): Particle[] {
-  return state.particles.filter(p => p.active);
+  return state.particles.filter((p) => p.active);
 }
 
 /**
@@ -199,7 +204,7 @@ export function calculateForce(
   p1: Particle,
   p2: Particle,
   rule: InteractionRule,
-  config: ParticleSystemConfig
+  config: ParticleSystemConfig,
 ): { fx: number; fy: number } {
   let dx = p2.x - p1.x;
   let dy = p2.y - p1.y;
@@ -234,7 +239,8 @@ export function calculateForce(
     // Attraction or repulsion based on rule
     // Positive strength = attraction (force toward other particle)
     // Negative strength = repulsion (force away from other particle)
-    forceMagnitude = rule.strength * (relativeDistance - 1) / relativeDistance;
+    forceMagnitude =
+      (rule.strength * (relativeDistance - 1)) / relativeDistance;
   }
 
   // Clamp force magnitude
@@ -251,10 +257,10 @@ export function calculateForce(
  */
 export function updateParticleSystem(
   state: ParticleSystemState,
-  fieldGradient?: { gx: Float32Array; gy: Float32Array }
+  fieldGradient?: { gx: Float32Array; gy: Float32Array },
 ): void {
   const { particles, interactionMatrix, config, fieldCoupling } = state;
-  const activeParticles = particles.filter(p => p.active);
+  const activeParticles = particles.filter((p) => p.active);
 
   // Calculate forces for each particle
   const forces = activeParticles.map(() => ({ fx: 0, fy: 0 }));
@@ -302,8 +308,8 @@ export function updateParticleSystem(
     p.vy += (forces[i].fy / p.mass) * config.dt;
 
     // Apply friction
-    p.vx *= (1 - config.friction);
-    p.vy *= (1 - config.friction);
+    p.vx *= 1 - config.friction;
+    p.vy *= 1 - config.friction;
 
     // Clamp velocity
     const maxSpeed = 10;
@@ -323,10 +329,22 @@ export function updateParticleSystem(
       p.y = ((p.y % config.gridHeight) + config.gridHeight) % config.gridHeight;
     } else {
       // Bounce off walls
-      if (p.x < 0) { p.x = 0; p.vx = -p.vx * 0.5; }
-      if (p.x >= config.gridWidth) { p.x = config.gridWidth - 1; p.vx = -p.vx * 0.5; }
-      if (p.y < 0) { p.y = 0; p.vy = -p.vy * 0.5; }
-      if (p.y >= config.gridHeight) { p.y = config.gridHeight - 1; p.vy = -p.vy * 0.5; }
+      if (p.x < 0) {
+        p.x = 0;
+        p.vx = -p.vx * 0.5;
+      }
+      if (p.x >= config.gridWidth) {
+        p.x = config.gridWidth - 1;
+        p.vx = -p.vx * 0.5;
+      }
+      if (p.y < 0) {
+        p.y = 0;
+        p.vy = -p.vy * 0.5;
+      }
+      if (p.y >= config.gridHeight) {
+        p.y = config.gridHeight - 1;
+        p.vy = -p.vy * 0.5;
+      }
     }
   }
 }
@@ -336,7 +354,7 @@ export function updateParticleSystem(
  */
 export function depositToField(
   state: ParticleSystemState,
-  field: Float32Array
+  field: Float32Array,
 ): void {
   const { particles, config, fieldCoupling } = state;
   const { gridWidth, gridHeight } = config;
@@ -344,7 +362,7 @@ export function depositToField(
 
   if (!fieldCoupling.depositEnabled) return;
 
-  const activeParticles = particles.filter(p => p.active);
+  const activeParticles = particles.filter((p) => p.active);
   const r = Math.ceil(depositRadius);
 
   for (const p of activeParticles) {
@@ -382,7 +400,7 @@ export function depositToField(
 export function calculateFieldGradient(
   field: Float32Array,
   width: number,
-  height: number
+  height: number,
 ): { gx: Float32Array; gy: Float32Array } {
   const gx = new Float32Array(width * height);
   const gy = new Float32Array(width * height);
@@ -392,9 +410,9 @@ export function calculateFieldGradient(
       const idx = y * width + x;
 
       // Sobel-like gradient
-      const xm = ((x - 1) + width) % width;
+      const xm = (x - 1 + width) % width;
       const xp = (x + 1) % width;
-      const ym = ((y - 1) + height) % height;
+      const ym = (y - 1 + height) % height;
       const yp = (y + 1) % height;
 
       gx[idx] = (field[y * width + xp] - field[y * width + xm]) / 2;
@@ -416,13 +434,16 @@ export function spawnRandomParticles(
     centerY?: number;
     spread?: number;
     typeDistribution?: number[];
-  } = {}
+  } = {},
 ): void {
   const { config } = state;
   const cx = options.centerX ?? config.gridWidth / 2;
   const cy = options.centerY ?? config.gridHeight / 2;
-  const spread = options.spread ?? Math.min(config.gridWidth, config.gridHeight) / 4;
-  const typeDist = options.typeDistribution ?? Array(config.numTypes).fill(1 / config.numTypes);
+  const spread =
+    options.spread ?? Math.min(config.gridWidth, config.gridHeight) / 4;
+  const typeDist =
+    options.typeDistribution ??
+    Array(config.numTypes).fill(1 / config.numTypes);
 
   for (let i = 0; i < count; i++) {
     // Random position with Gaussian distribution from center
@@ -456,7 +477,7 @@ export function spawnRandomParticles(
  */
 export const INTERACTION_PRESETS = {
   /** All particles attract each other */
-  'attractive': (numTypes: number): InteractionRule[][] => {
+  attractive: (numTypes: number): InteractionRule[][] => {
     const matrix: InteractionRule[][] = [];
     for (let i = 0; i < numTypes; i++) {
       matrix[i] = [];
@@ -472,7 +493,7 @@ export const INTERACTION_PRESETS = {
   },
 
   /** Particles of same type cluster, different types repel */
-  'clustering': (numTypes: number): InteractionRule[][] => {
+  clustering: (numTypes: number): InteractionRule[][] => {
     const matrix: InteractionRule[][] = [];
     for (let i = 0; i < numTypes; i++) {
       matrix[i] = [];
@@ -496,7 +517,7 @@ export const INTERACTION_PRESETS = {
   },
 
   /** Chain-like: A->B->C->A attraction */
-  'chain': (numTypes: number): InteractionRule[][] => {
+  chain: (numTypes: number): InteractionRule[][] => {
     const matrix: InteractionRule[][] = [];
     for (let i = 0; i < numTypes; i++) {
       matrix[i] = [];
@@ -530,7 +551,7 @@ export const INTERACTION_PRESETS = {
   },
 
   /** Random interactions for emergence */
-  'random': (numTypes: number): InteractionRule[][] => {
+  random: (numTypes: number): InteractionRule[][] => {
     const matrix: InteractionRule[][] = [];
     for (let i = 0; i < numTypes; i++) {
       matrix[i] = [];
@@ -548,12 +569,12 @@ export const INTERACTION_PRESETS = {
 
 /** Particle type colors for rendering */
 export const PARTICLE_COLORS: [number, number, number][] = [
-  [255, 100, 100],  // Type 0: Red
-  [100, 255, 100],  // Type 1: Green
-  [100, 100, 255],  // Type 2: Blue
-  [255, 255, 100],  // Type 3: Yellow
-  [255, 100, 255],  // Type 4: Magenta
-  [100, 255, 255],  // Type 5: Cyan
-  [255, 180, 100],  // Type 6: Orange
-  [180, 100, 255],  // Type 7: Purple
+  [255, 100, 100], // Type 0: Red
+  [100, 255, 100], // Type 1: Green
+  [100, 100, 255], // Type 2: Blue
+  [255, 255, 100], // Type 3: Yellow
+  [255, 100, 255], // Type 4: Magenta
+  [100, 255, 255], // Type 5: Cyan
+  [255, 180, 100], // Type 6: Orange
+  [180, 100, 255], // Type 7: Purple
 ];

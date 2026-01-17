@@ -3,7 +3,7 @@
  * Tests for Lenia genome generation, mutation, crossover, and encoding
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from "vitest";
 import {
   randomGenome,
   cloneGenome,
@@ -14,11 +14,11 @@ import {
   decodeGenome,
   GENOME_RANGES,
   type LeniaGenome,
-} from '../../discovery/genome';
+} from "../../discovery/genome";
 
-describe('genome functions', () => {
-  describe('randomGenome', () => {
-    it('generates genome within valid ranges', () => {
+describe("genome functions", () => {
+  describe("randomGenome", () => {
+    it("generates genome within valid ranges", () => {
       // Test multiple times for randomness
       for (let i = 0; i < 10; i++) {
         const genome = randomGenome();
@@ -43,7 +43,7 @@ describe('genome functions', () => {
       }
     });
 
-    it('generates 1-3 peaks', () => {
+    it("generates 1-3 peaks", () => {
       const peakCounts = new Set<number>();
 
       // Generate many genomes to check peak count variety
@@ -58,7 +58,7 @@ describe('genome functions', () => {
       expect(peakCounts.size).toBeGreaterThanOrEqual(2);
     });
 
-    it('sorts peaks in ascending order', () => {
+    it("sorts peaks in ascending order", () => {
       for (let i = 0; i < 10; i++) {
         const genome = randomGenome();
         for (let j = 1; j < genome.b.length; j++) {
@@ -67,7 +67,7 @@ describe('genome functions', () => {
       }
     });
 
-    it('generates peaks within valid range', () => {
+    it("generates peaks within valid range", () => {
       for (let i = 0; i < 10; i++) {
         const genome = randomGenome();
         for (const peak of genome.b) {
@@ -77,7 +77,7 @@ describe('genome functions', () => {
       }
     });
 
-    it('generates integer values for R and T', () => {
+    it("generates integer values for R and T", () => {
       for (let i = 0; i < 10; i++) {
         const genome = randomGenome();
         expect(Number.isInteger(genome.R)).toBe(true);
@@ -86,8 +86,8 @@ describe('genome functions', () => {
     });
   });
 
-  describe('cloneGenome', () => {
-    it('creates deep copy', () => {
+  describe("cloneGenome", () => {
+    it("creates deep copy", () => {
       const original: LeniaGenome = {
         R: 15,
         T: 10,
@@ -108,7 +108,7 @@ describe('genome functions', () => {
       expect(clone.b).not.toBe(original.b);
     });
 
-    it('modifications to clone do not affect original', () => {
+    it("modifications to clone do not affect original", () => {
       const original: LeniaGenome = {
         R: 15,
         T: 10,
@@ -128,8 +128,8 @@ describe('genome functions', () => {
     });
   });
 
-  describe('mutateGenome', () => {
-    it('returns genome within valid ranges', () => {
+  describe("mutateGenome", () => {
+    it("returns genome within valid ranges", () => {
       const genome: LeniaGenome = {
         R: 15,
         T: 10,
@@ -158,7 +158,7 @@ describe('genome functions', () => {
       }
     });
 
-    it('does not mutate original genome', () => {
+    it("does not mutate original genome", () => {
       const original: LeniaGenome = {
         R: 15,
         T: 10,
@@ -176,7 +176,7 @@ describe('genome functions', () => {
       expect(original.m).toBe(0.12);
     });
 
-    it('keeps peaks sorted after mutation', () => {
+    it("keeps peaks sorted after mutation", () => {
       const genome: LeniaGenome = {
         R: 15,
         T: 10,
@@ -195,7 +195,7 @@ describe('genome functions', () => {
       }
     });
 
-    it('maintains at least one peak', () => {
+    it("maintains at least one peak", () => {
       const genome: LeniaGenome = {
         R: 15,
         T: 10,
@@ -212,7 +212,7 @@ describe('genome functions', () => {
       }
     });
 
-    it('respects mutation rate of 0', () => {
+    it("respects mutation rate of 0", () => {
       const genome: LeniaGenome = {
         R: 15,
         T: 10,
@@ -235,8 +235,8 @@ describe('genome functions', () => {
     });
   });
 
-  describe('crossoverGenomes', () => {
-    it('produces child within valid ranges', () => {
+  describe("crossoverGenomes", () => {
+    it("produces child within valid ranges", () => {
       const parent1: LeniaGenome = {
         R: 10,
         T: 8,
@@ -274,7 +274,7 @@ describe('genome functions', () => {
       }
     });
 
-    it('inherits kn and gn from one parent', () => {
+    it("inherits kn and gn from one parent", () => {
       const parent1: LeniaGenome = {
         R: 15,
         T: 10,
@@ -302,7 +302,7 @@ describe('genome functions', () => {
       }
     });
 
-    it('averages number of peaks', () => {
+    it("averages number of peaks", () => {
       const parent1: LeniaGenome = {
         R: 15,
         T: 10,
@@ -328,7 +328,7 @@ describe('genome functions', () => {
       expect(child.b.length).toBe(2);
     });
 
-    it('keeps child peaks sorted', () => {
+    it("keeps child peaks sorted", () => {
       const parent1: LeniaGenome = {
         R: 15,
         T: 10,
@@ -358,8 +358,8 @@ describe('genome functions', () => {
     });
   });
 
-  describe('genomeToParams', () => {
-    it('converts genome to engine parameters correctly', () => {
+  describe("genomeToParams", () => {
+    it("converts genome to engine parameters correctly", () => {
       const genome: LeniaGenome = {
         R: 13,
         T: 10,
@@ -380,7 +380,7 @@ describe('genome functions', () => {
       expect(params.peaks).toEqual([0.3, 0.6]);
     });
 
-    it('calculates dt correctly for different T values', () => {
+    it("calculates dt correctly for different T values", () => {
       const genome1: LeniaGenome = {
         R: 13,
         T: 5,
@@ -406,8 +406,8 @@ describe('genome functions', () => {
     });
   });
 
-  describe('encodeGenome / decodeGenome', () => {
-    it('round-trips genome correctly', () => {
+  describe("encodeGenome / decodeGenome", () => {
+    it("round-trips genome correctly", () => {
       const original: LeniaGenome = {
         R: 15,
         T: 10,
@@ -435,7 +435,7 @@ describe('genome functions', () => {
       }
     });
 
-    it('produces valid base64 string', () => {
+    it("produces valid base64 string", () => {
       const genome = randomGenome();
       const encoded = encodeGenome(genome);
 
@@ -443,7 +443,7 @@ describe('genome functions', () => {
       expect(() => atob(encoded)).not.toThrow();
     });
 
-    it('handles single peak', () => {
+    it("handles single peak", () => {
       const genome: LeniaGenome = {
         R: 13,
         T: 10,
@@ -459,7 +459,7 @@ describe('genome functions', () => {
       expect(decoded.b[0]).toBeCloseTo(0.5, 3);
     });
 
-    it('handles multiple peaks', () => {
+    it("handles multiple peaks", () => {
       const genome: LeniaGenome = {
         R: 13,
         T: 10,
@@ -474,7 +474,7 @@ describe('genome functions', () => {
       expect(decoded.b.length).toBe(4);
     });
 
-    it('handles edge case values', () => {
+    it("handles edge case values", () => {
       const genome: LeniaGenome = {
         R: GENOME_RANGES.R.min,
         T: GENOME_RANGES.T.max,

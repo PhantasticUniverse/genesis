@@ -3,7 +3,7 @@
  * Tests for continuous CA growth functions
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 import {
   polynomialGrowth,
   gaussianGrowth,
@@ -13,21 +13,21 @@ import {
   calculateGrowth,
   GROWTH_PRESETS,
   type GrowthConfig,
-} from '../../core/growth';
+} from "../../core/growth";
 
-describe('growth functions', () => {
-  describe('polynomialGrowth', () => {
-    it('returns 1 at center (mu)', () => {
+describe("growth functions", () => {
+  describe("polynomialGrowth", () => {
+    it("returns 1 at center (mu)", () => {
       const result = polynomialGrowth(0.15, 0.15, 0.015);
       expect(result).toBeCloseTo(1, 5);
     });
 
-    it('returns -1 far from center', () => {
+    it("returns -1 far from center", () => {
       const result = polynomialGrowth(0, 0.15, 0.015);
       expect(result).toBe(-1);
     });
 
-    it('returns -1 when |x| >= 1', () => {
+    it("returns -1 when |x| >= 1", () => {
       const mu = 0.15;
       const sigma = 0.015;
       // At distance 3*sigma from center, function returns -1
@@ -35,7 +35,7 @@ describe('growth functions', () => {
       expect(polynomialGrowth(mu - 3 * sigma, mu, sigma)).toBe(-1);
     });
 
-    it('is symmetric around center', () => {
+    it("is symmetric around center", () => {
       const mu = 0.15;
       const sigma = 0.015;
       const offset = 0.02;
@@ -46,7 +46,7 @@ describe('growth functions', () => {
       expect(left).toBeCloseTo(right, 10);
     });
 
-    it('returns values in [-1, 1] range', () => {
+    it("returns values in [-1, 1] range", () => {
       for (let n = 0; n <= 1; n += 0.1) {
         const result = polynomialGrowth(n, 0.15, 0.015);
         expect(result).toBeGreaterThanOrEqual(-1);
@@ -54,7 +54,7 @@ describe('growth functions', () => {
       }
     });
 
-    it('has smooth transition from positive to negative', () => {
+    it("has smooth transition from positive to negative", () => {
       const mu = 0.15;
       const sigma = 0.015;
       const values: number[] = [];
@@ -71,18 +71,18 @@ describe('growth functions', () => {
     });
   });
 
-  describe('gaussianGrowth', () => {
-    it('returns 1 at center (mu)', () => {
+  describe("gaussianGrowth", () => {
+    it("returns 1 at center (mu)", () => {
       const result = gaussianGrowth(0.15, 0.15, 0.017);
       expect(result).toBeCloseTo(1, 5);
     });
 
-    it('approaches -1 far from center', () => {
+    it("approaches -1 far from center", () => {
       const result = gaussianGrowth(0, 0.15, 0.017);
       expect(result).toBeCloseTo(-1, 1);
     });
 
-    it('is symmetric around center', () => {
+    it("is symmetric around center", () => {
       const mu = 0.15;
       const sigma = 0.017;
       const offset = 0.05;
@@ -93,7 +93,7 @@ describe('growth functions', () => {
       expect(left).toBeCloseTo(right, 10);
     });
 
-    it('returns values in [-1, 1] range', () => {
+    it("returns values in [-1, 1] range", () => {
       for (let n = 0; n <= 1; n += 0.1) {
         const result = gaussianGrowth(n, 0.15, 0.017);
         expect(result).toBeGreaterThanOrEqual(-1);
@@ -101,7 +101,7 @@ describe('growth functions', () => {
       }
     });
 
-    it('has wider spread with larger sigma', () => {
+    it("has wider spread with larger sigma", () => {
       const mu = 0.15;
       const narrowSigma = 0.01;
       const wideSigma = 0.05;
@@ -115,79 +115,142 @@ describe('growth functions', () => {
     });
   });
 
-  describe('stepGrowth', () => {
+  describe("stepGrowth", () => {
     const birthLow = 0.15;
     const birthHigh = 0.25;
     const deathLow = 0.12;
     const deathHigh = 0.42;
 
-    it('returns 1 (birth) for dead cell in birth range', () => {
-      const result = stepGrowth(0.2, 0, birthLow, birthHigh, deathLow, deathHigh);
+    it("returns 1 (birth) for dead cell in birth range", () => {
+      const result = stepGrowth(
+        0.2,
+        0,
+        birthLow,
+        birthHigh,
+        deathLow,
+        deathHigh,
+      );
       expect(result).toBe(1);
     });
 
-    it('returns -1 (stay dead) for dead cell outside birth range', () => {
-      const result = stepGrowth(0.1, 0, birthLow, birthHigh, deathLow, deathHigh);
+    it("returns -1 (stay dead) for dead cell outside birth range", () => {
+      const result = stepGrowth(
+        0.1,
+        0,
+        birthLow,
+        birthHigh,
+        deathLow,
+        deathHigh,
+      );
       expect(result).toBe(-1);
     });
 
-    it('returns 1 (survive) for alive cell in survival range', () => {
-      const result = stepGrowth(0.3, 1, birthLow, birthHigh, deathLow, deathHigh);
+    it("returns 1 (survive) for alive cell in survival range", () => {
+      const result = stepGrowth(
+        0.3,
+        1,
+        birthLow,
+        birthHigh,
+        deathLow,
+        deathHigh,
+      );
       expect(result).toBe(1);
     });
 
-    it('returns -1 (die) for alive cell outside survival range', () => {
-      const result = stepGrowth(0.5, 1, birthLow, birthHigh, deathLow, deathHigh);
+    it("returns -1 (die) for alive cell outside survival range", () => {
+      const result = stepGrowth(
+        0.5,
+        1,
+        birthLow,
+        birthHigh,
+        deathLow,
+        deathHigh,
+      );
       expect(result).toBe(-1);
     });
 
-    it('uses current state threshold of 0.5', () => {
+    it("uses current state threshold of 0.5", () => {
       // Barely alive (0.6) should use survival rules
-      expect(stepGrowth(0.3, 0.6, birthLow, birthHigh, deathLow, deathHigh)).toBe(1);
+      expect(
+        stepGrowth(0.3, 0.6, birthLow, birthHigh, deathLow, deathHigh),
+      ).toBe(1);
       // Barely dead (0.4) should use birth rules
-      expect(stepGrowth(0.2, 0.4, birthLow, birthHigh, deathLow, deathHigh)).toBe(1);
+      expect(
+        stepGrowth(0.2, 0.4, birthLow, birthHigh, deathLow, deathHigh),
+      ).toBe(1);
     });
 
-    it('handles boundary values', () => {
+    it("handles boundary values", () => {
       // At exact boundaries
-      expect(stepGrowth(birthLow, 0, birthLow, birthHigh, deathLow, deathHigh)).toBe(1);
-      expect(stepGrowth(birthHigh, 0, birthLow, birthHigh, deathLow, deathHigh)).toBe(1);
-      expect(stepGrowth(deathLow, 1, birthLow, birthHigh, deathLow, deathHigh)).toBe(1);
-      expect(stepGrowth(deathHigh, 1, birthLow, birthHigh, deathLow, deathHigh)).toBe(1);
+      expect(
+        stepGrowth(birthLow, 0, birthLow, birthHigh, deathLow, deathHigh),
+      ).toBe(1);
+      expect(
+        stepGrowth(birthHigh, 0, birthLow, birthHigh, deathLow, deathHigh),
+      ).toBe(1);
+      expect(
+        stepGrowth(deathLow, 1, birthLow, birthHigh, deathLow, deathHigh),
+      ).toBe(1);
+      expect(
+        stepGrowth(deathHigh, 1, birthLow, birthHigh, deathLow, deathHigh),
+      ).toBe(1);
     });
   });
 
-  describe('smoothStepGrowth', () => {
+  describe("smoothStepGrowth", () => {
     const birthLow = 0.15;
     const birthHigh = 0.25;
     const deathLow = 0.12;
     const deathHigh = 0.42;
 
-    it('returns positive value for dead cell in birth range', () => {
-      const result = smoothStepGrowth(0.2, 0, birthLow, birthHigh, deathLow, deathHigh);
+    it("returns positive value for dead cell in birth range", () => {
+      const result = smoothStepGrowth(
+        0.2,
+        0,
+        birthLow,
+        birthHigh,
+        deathLow,
+        deathHigh,
+      );
       expect(result).toBeGreaterThan(0);
     });
 
-    it('returns positive value for alive cell in survival range', () => {
-      const result = smoothStepGrowth(0.3, 1, birthLow, birthHigh, deathLow, deathHigh);
+    it("returns positive value for alive cell in survival range", () => {
+      const result = smoothStepGrowth(
+        0.3,
+        1,
+        birthLow,
+        birthHigh,
+        deathLow,
+        deathHigh,
+      );
       expect(result).toBeGreaterThan(0);
     });
 
-    it('returns values in [-1, 1] range', () => {
+    it("returns values in [-1, 1] range", () => {
       for (let n = 0; n <= 0.6; n += 0.1) {
         for (const state of [0, 0.5, 1]) {
-          const result = smoothStepGrowth(n, state, birthLow, birthHigh, deathLow, deathHigh);
+          const result = smoothStepGrowth(
+            n,
+            state,
+            birthLow,
+            birthHigh,
+            deathLow,
+            deathHigh,
+          );
           expect(result).toBeGreaterThanOrEqual(-1);
           expect(result).toBeLessThanOrEqual(1);
         }
       }
     });
 
-    it('has smooth transitions (not hard steps)', () => {
+    it("has smooth transitions (not hard steps)", () => {
       // Values should change gradually
       const values: number[] = [];
       for (let n = 0.1; n <= 0.3; n += 0.01) {
-        values.push(smoothStepGrowth(n, 0, birthLow, birthHigh, deathLow, deathHigh));
+        values.push(
+          smoothStepGrowth(n, 0, birthLow, birthHigh, deathLow, deathHigh),
+        );
       }
 
       // Check that consecutive values don't jump too much
@@ -196,11 +259,32 @@ describe('growth functions', () => {
       }
     });
 
-    it('interpolates between birth and survival based on state', () => {
+    it("interpolates between birth and survival based on state", () => {
       const n = 0.2;
-      const dead = smoothStepGrowth(n, 0, birthLow, birthHigh, deathLow, deathHigh);
-      const alive = smoothStepGrowth(n, 1, birthLow, birthHigh, deathLow, deathHigh);
-      const partial = smoothStepGrowth(n, 0.5, birthLow, birthHigh, deathLow, deathHigh);
+      const dead = smoothStepGrowth(
+        n,
+        0,
+        birthLow,
+        birthHigh,
+        deathLow,
+        deathHigh,
+      );
+      const alive = smoothStepGrowth(
+        n,
+        1,
+        birthLow,
+        birthHigh,
+        deathLow,
+        deathHigh,
+      );
+      const partial = smoothStepGrowth(
+        n,
+        0.5,
+        birthLow,
+        birthHigh,
+        deathLow,
+        deathHigh,
+      );
 
       // Partial should be between dead and alive values
       const min = Math.min(dead, alive);
@@ -210,44 +294,44 @@ describe('growth functions', () => {
     });
   });
 
-  describe('applyGrowth', () => {
-    it('increases state with positive growth', () => {
+  describe("applyGrowth", () => {
+    it("increases state with positive growth", () => {
       const result = applyGrowth(0.5, 1, 0.1);
       expect(result).toBeCloseTo(0.6, 5);
     });
 
-    it('decreases state with negative growth', () => {
+    it("decreases state with negative growth", () => {
       const result = applyGrowth(0.5, -1, 0.1);
       expect(result).toBeCloseTo(0.4, 5);
     });
 
-    it('clamps to minimum of 0', () => {
+    it("clamps to minimum of 0", () => {
       const result = applyGrowth(0.1, -1, 0.5);
       expect(result).toBe(0);
     });
 
-    it('clamps to maximum of 1', () => {
+    it("clamps to maximum of 1", () => {
       const result = applyGrowth(0.9, 1, 0.5);
       expect(result).toBe(1);
     });
 
-    it('respects dt (time step)', () => {
+    it("respects dt (time step)", () => {
       const smallDt = applyGrowth(0.5, 1, 0.01);
       const largeDt = applyGrowth(0.5, 1, 0.1);
 
       expect(smallDt).toBeLessThan(largeDt);
     });
 
-    it('handles zero growth', () => {
+    it("handles zero growth", () => {
       const result = applyGrowth(0.5, 0, 0.1);
       expect(result).toBe(0.5);
     });
   });
 
-  describe('calculateGrowth', () => {
-    it('uses polynomial growth function', () => {
+  describe("calculateGrowth", () => {
+    it("uses polynomial growth function", () => {
       const config: GrowthConfig = {
-        function: 'polynomial',
+        function: "polynomial",
         center: 0.15,
         width: 0.015,
       };
@@ -256,9 +340,9 @@ describe('growth functions', () => {
       expect(result).toBeCloseTo(1, 5);
     });
 
-    it('uses gaussian growth function', () => {
+    it("uses gaussian growth function", () => {
       const config: GrowthConfig = {
-        function: 'gaussian',
+        function: "gaussian",
         center: 0.15,
         width: 0.017,
       };
@@ -267,9 +351,9 @@ describe('growth functions', () => {
       expect(result).toBeCloseTo(1, 5);
     });
 
-    it('uses step growth function', () => {
+    it("uses step growth function", () => {
       const config: GrowthConfig = {
-        function: 'step',
+        function: "step",
         center: 0.15,
         width: 0.015,
         birthLow: 0.15,
@@ -282,9 +366,9 @@ describe('growth functions', () => {
       expect(calculateGrowth(0.2, 0, config)).toBe(1);
     });
 
-    it('uses smooth-step growth function', () => {
+    it("uses smooth-step growth function", () => {
       const config: GrowthConfig = {
-        function: 'smooth-step',
+        function: "smooth-step",
         center: 0.15,
         width: 0.015,
         birthLow: 0.15,
@@ -297,9 +381,9 @@ describe('growth functions', () => {
       expect(result).toBeGreaterThan(0);
     });
 
-    it('uses default values for step functions', () => {
+    it("uses default values for step functions", () => {
       const config: GrowthConfig = {
-        function: 'step',
+        function: "step",
         center: 0.15,
         width: 0.015,
       };
@@ -308,9 +392,9 @@ describe('growth functions', () => {
       expect(calculateGrowth(0.2, 0, config)).toBe(1);
     });
 
-    it('returns 0 for unknown function type', () => {
+    it("returns 0 for unknown function type", () => {
       const config = {
-        function: 'unknown' as never,
+        function: "unknown" as never,
         center: 0.15,
         width: 0.015,
       };
@@ -320,33 +404,33 @@ describe('growth functions', () => {
     });
   });
 
-  describe('GROWTH_PRESETS', () => {
-    it('has lenia-default preset', () => {
-      expect(GROWTH_PRESETS['lenia-default']).toBeDefined();
-      expect(GROWTH_PRESETS['lenia-default'].function).toBe('polynomial');
-      expect(GROWTH_PRESETS['lenia-default'].center).toBe(0.15);
-      expect(GROWTH_PRESETS['lenia-default'].width).toBe(0.015);
+  describe("GROWTH_PRESETS", () => {
+    it("has lenia-default preset", () => {
+      expect(GROWTH_PRESETS["lenia-default"]).toBeDefined();
+      expect(GROWTH_PRESETS["lenia-default"].function).toBe("polynomial");
+      expect(GROWTH_PRESETS["lenia-default"].center).toBe(0.15);
+      expect(GROWTH_PRESETS["lenia-default"].width).toBe(0.015);
     });
 
-    it('has lenia-wide preset', () => {
-      expect(GROWTH_PRESETS['lenia-wide']).toBeDefined();
-      expect(GROWTH_PRESETS['lenia-wide'].width).toBeGreaterThan(
-        GROWTH_PRESETS['lenia-default'].width
+    it("has lenia-wide preset", () => {
+      expect(GROWTH_PRESETS["lenia-wide"]).toBeDefined();
+      expect(GROWTH_PRESETS["lenia-wide"].width).toBeGreaterThan(
+        GROWTH_PRESETS["lenia-default"].width,
       );
     });
 
-    it('has smoothlife preset', () => {
-      expect(GROWTH_PRESETS['smoothlife']).toBeDefined();
-      expect(GROWTH_PRESETS['smoothlife'].function).toBe('smooth-step');
-      expect(GROWTH_PRESETS['smoothlife'].birthLow).toBeDefined();
+    it("has smoothlife preset", () => {
+      expect(GROWTH_PRESETS["smoothlife"]).toBeDefined();
+      expect(GROWTH_PRESETS["smoothlife"].function).toBe("smooth-step");
+      expect(GROWTH_PRESETS["smoothlife"].birthLow).toBeDefined();
     });
 
-    it('has gaussian-stable preset', () => {
-      expect(GROWTH_PRESETS['gaussian-stable']).toBeDefined();
-      expect(GROWTH_PRESETS['gaussian-stable'].function).toBe('gaussian');
+    it("has gaussian-stable preset", () => {
+      expect(GROWTH_PRESETS["gaussian-stable"]).toBeDefined();
+      expect(GROWTH_PRESETS["gaussian-stable"].function).toBe("gaussian");
     });
 
-    it('all presets produce valid growth values', () => {
+    it("all presets produce valid growth values", () => {
       for (const [name, preset] of Object.entries(GROWTH_PRESETS)) {
         const result = calculateGrowth(preset.center, 0.5, preset);
         expect(result).toBeGreaterThanOrEqual(-1);

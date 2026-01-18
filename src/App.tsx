@@ -3,7 +3,7 @@
  * Bioluminescent Observatory Theme
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Canvas } from "./ui/components/Canvas";
 import { Controls } from "./ui/components/Controls";
 import { DiscoveryPanel } from "./ui/components/DiscoveryPanel";
@@ -14,6 +14,9 @@ import { ConservationPanel } from "./ui/components/ConservationPanel";
 import { SaveLoadPanel } from "./ui/components/SaveLoadPanel";
 import { EcologyPanel } from "./ui/components/EcologyPanel";
 import { Lenia3DPanel } from "./ui/components/Lenia3DPanel";
+import { PresetBrowser } from "./ui/components/PresetBrowser";
+import { usePresetStore } from "./ui/stores/preset-store";
+import type { PresetData } from "./patterns/registry/preset-types";
 import {
   WebGPUCompatibilityModal,
   useWebGPUCheck,
@@ -149,6 +152,116 @@ function App() {
   const handleLoadGenome = useCallback((genome: LeniaGenome) => {
     setCurrentGenome(genome);
   }, []);
+
+  // Get preset store for addToRecent
+  const { addToRecent } = usePresetStore();
+
+  // Check if engine supports WebGPU features (not CPU fallback)
+  const isWebGPUEngine = useMemo(() => {
+    return engine && "enableSensorimotor" in engine;
+  }, [engine]);
+
+  // Handle loading presets from PresetBrowser
+  const handleLoadPreset = useCallback(
+    (preset: PresetData) => {
+      if (!engine) return;
+
+      if (preset.config.type === "sensorimotor") {
+        // Sensorimotor only works with WebGPU engine
+        if (!isWebGPUEngine) {
+          console.warn(
+            "Sensorimotor mode requires WebGPU - not available in CPU mode",
+          );
+          return;
+        }
+        const gpuEngine = engine as typeof engine & {
+          enableSensorimotor: () => void;
+          setSensorimotorParams: (params: unknown) => void;
+          setObstacles: (pattern: unknown) => void;
+          setTargetGradient: (
+            x: number,
+            y: number,
+            radius?: number,
+            strength?: number,
+          ) => void;
+        };
+        gpuEngine.enableSensorimotor();
+        if (preset.config.params) {
+          gpuEngine.setSensorimotorParams(preset.config.params);
+        }
+        if (preset.config.obstacles?.pattern) {
+          gpuEngine.setObstacles(preset.config.obstacles.pattern);
+        }
+        if (preset.config.gradient) {
+          gpuEngine.setTargetGradient(
+            preset.config.gradient.x,
+            preset.config.gradient.y,
+            preset.config.gradient.radius,
+            preset.config.gradient.strength,
+          );
+        }
+        engine.reset("lenia-seed");
+      } else if (preset.config.type === "continuous") {
+        engine.setParadigm("continuous");
+        if (preset.config.params) {
+          engine.setContinuousParams(preset.config.params);
+        }
+        engine.reset("lenia-seed");
+      } else if (preset.config.type === "discrete") {
+        engine.setParadigm("discrete");
+        if (preset.config.rule) {
+          engine.setRule(preset.config.rule);
+        }
+        engine.reset();
+      } else if (preset.config.type === "multikernel") {
+        // Multi-kernel only works with WebGPU engine
+        if (!isWebGPUEngine) {
+          console.warn(
+            "Multi-kernel mode requires WebGPU - not available in CPU mode",
+          );
+          return;
+        }
+        const gpuEngine = engine as typeof engine & {
+          enableMultiKernel: (config: unknown) => void;
+        };
+        if (preset.config.config) {
+          gpuEngine.enableMultiKernel(preset.config.config);
+        }
+        engine.reset("lenia-seed");
+      }
+
+      addToRecent(preset.metadata.id);
+    },
+    [engine, isWebGPUEngine, addToRecent],
+  );
+
+  // Check if sensorimotor mode is active (only available on WebGPU engine)
+  const isSensorimotorActive = useMemo(() => {
+    if (!engine || !("isSensorimotorEnabled" in engine)) return false;
+    return engine.isSensorimotorEnabled();
+  }, [engine]);
+
+  // Handle canvas click for setting target gradient in sensorimotor mode
+  const handleCanvasClick = useCallback(
+    (normalizedX: number, normalizedY: number) => {
+      if (!engine || !isSensorimotorActive || !isWebGPUEngine) return;
+
+      const gpuEngine = engine as typeof engine & {
+        setTargetGradient: (
+          x: number,
+          y: number,
+          radius?: number,
+          strength?: number,
+        ) => void;
+      };
+      const gridConfig = engine.getGridConfig();
+      const gridX = Math.floor(normalizedX * gridConfig.width);
+      const gridY = Math.floor(normalizedY * gridConfig.height);
+
+      gpuEngine.setTargetGradient(gridX, gridY, 50, 1.0);
+    },
+    [engine, isSensorimotorActive, isWebGPUEngine],
+  );
 
   // Handle mode switch - stop current engine and switch
   const handleModeSwitch = useCallback(
@@ -318,6 +431,9 @@ function App() {
               height={DEFAULT_GRID_CONFIG.height}
               className={`w-full max-w-[512px] aspect-square ${mode !== "2d" ? "hidden" : ""}`}
               isRunning={mode === "2d" && !!engine?.running}
+              onCanvasClick={
+                isSensorimotorActive ? handleCanvasClick : undefined
+              }
             />
             {/* 3D Canvas */}
             <Canvas
@@ -336,6 +452,11 @@ function App() {
               <>
                 <PanelErrorBoundary panelName="Controls">
                   <Controls engine={engine} />
+                </PanelErrorBoundary>
+
+                {/* Preset Browser */}
+                <PanelErrorBoundary panelName="Preset Browser">
+                  <PresetBrowser onLoadPreset={handleLoadPreset} />
                 </PanelErrorBoundary>
 
                 {/* Info Panel */}

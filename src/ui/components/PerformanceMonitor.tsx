@@ -3,7 +3,7 @@
  * Bioluminescent HUD-style display with real-time metrics
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { useSimulationStore } from "../stores/simulation-store";
 import { ExpandablePanel, StatGrid } from "./common";
 
@@ -52,7 +52,13 @@ function getFpsColorHex(fps: number): string {
 /**
  * Mini FPS graph with gradient fill
  */
-function FpsGraph({ history, max = 60 }: { history: number[]; max?: number }) {
+const FpsGraph = memo(function FpsGraph({
+  history,
+  max = 60,
+}: {
+  history: number[];
+  max?: number;
+}) {
   if (history.length === 0) return null;
 
   const width = 100;
@@ -107,7 +113,7 @@ function FpsGraph({ history, max = 60 }: { history: number[]; max?: number }) {
       />
     </svg>
   );
-}
+});
 
 /**
  * Performance bar visualization
@@ -165,12 +171,21 @@ export function PerformanceMonitor({
   });
 
   // Update metrics from engine or store
+  // Optimized: Use 500ms interval to reduce CPU usage (was 100ms)
+  const isRunning = engine?.running ?? storeState.running;
+
   useEffect(() => {
     const interval = setInterval(() => {
       const currentFps = engine?.fps ?? storeState.fps;
       const currentStep = engine?.step ?? storeState.step;
+      const running = engine?.running ?? storeState.running;
 
       setMetrics((prev) => {
+        // Skip update if nothing changed (paused state optimization)
+        if (!running && prev.fps === currentFps && prev.step === currentStep) {
+          return prev;
+        }
+
         const newHistory = [...prev.fpsHistory, currentFps].slice(-100);
 
         // Calculate statistics
@@ -191,12 +206,10 @@ export function PerformanceMonitor({
           fpsHistory: newHistory,
         };
       });
-    }, 100);
+    }, 500);
 
     return () => clearInterval(interval);
-  }, [engine, storeState.fps, storeState.step]);
-
-  const isRunning = engine?.running ?? storeState.running;
+  }, [engine, storeState.fps, storeState.step, storeState.running]);
 
   if (floating) {
     // HUD-style floating overlay

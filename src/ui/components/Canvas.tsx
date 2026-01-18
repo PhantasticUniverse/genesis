@@ -3,17 +3,40 @@
  * WebGPU canvas with bioluminescent portal styling
  */
 
-import { forwardRef } from "react";
+import { forwardRef, useCallback } from "react";
 
 interface CanvasProps {
   width?: number;
   height?: number;
   className?: string;
   isRunning?: boolean;
+  onCanvasClick?: (normalizedX: number, normalizedY: number) => void;
 }
 
 export const Canvas = forwardRef<HTMLCanvasElement, CanvasProps>(
-  ({ width = 512, height = 512, className = "", isRunning = false }, ref) => {
+  (
+    {
+      width = 512,
+      height = 512,
+      className = "",
+      isRunning = false,
+      onCanvasClick,
+    },
+    ref,
+  ) => {
+    const handleClick = useCallback(
+      (e: React.MouseEvent<HTMLCanvasElement>) => {
+        if (!onCanvasClick) return;
+
+        const canvas = e.currentTarget;
+        const rect = canvas.getBoundingClientRect();
+        const normalizedX = (e.clientX - rect.left) / rect.width;
+        const normalizedY = (e.clientY - rect.top) / rect.height;
+        onCanvasClick(normalizedX, normalizedY);
+      },
+      [onCanvasClick],
+    );
+
     return (
       <div
         className={`observatory-portal ${isRunning ? "running" : ""} ${className}`}
@@ -31,10 +54,11 @@ export const Canvas = forwardRef<HTMLCanvasElement, CanvasProps>(
             ref={ref}
             width={width}
             height={height}
-            className="block"
+            className={`block ${onCanvasClick ? "cursor-crosshair" : ""}`}
             style={{
               imageRendering: "pixelated",
             }}
+            onClick={handleClick}
           />
 
           {/* Scan Line Effect (only when running) */}

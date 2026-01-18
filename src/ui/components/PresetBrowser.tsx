@@ -3,7 +3,7 @@
  * Full-featured browser for exploring and loading presets across all simulation modes
  */
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, memo } from "react";
 import { usePresetStore } from "../stores/preset-store";
 import { presetRegistry } from "../../patterns/registry/preset-registry";
 import type {
@@ -229,7 +229,7 @@ interface PresetCardProps {
   onLoad: () => void;
 }
 
-function PresetCard({
+const PresetCard = memo(function PresetCard({
   preset,
   isSelected,
   isFavorite,
@@ -287,23 +287,23 @@ function PresetCard({
 
         {/* Verified badge */}
         {metadata.verified && (
-          <div className="absolute top-2 left-2 bg-bio-green/20 text-bio-green text-[10px] px-1.5 py-0.5 rounded-full border border-bio-green/30">
+          <div className="absolute top-2 left-2 z-10 bg-bio-green/20 text-bio-green text-[10px] px-1.5 py-0.5 rounded-full border border-bio-green/30">
             ✓ Verified
           </div>
         )}
 
-        {/* Favorite button */}
+        {/* Favorite button - always slightly visible */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             onToggleFavorite();
           }}
           className={`
-            absolute top-2 right-2 p-1.5 rounded-full transition-all
+            absolute top-2 right-2 z-20 p-1.5 rounded-full transition-all
             ${
               isFavorite
-                ? "bg-bio-amber/30 text-bio-amber"
-                : "bg-genesis-depth/80 text-zinc-500 opacity-0 group-hover:opacity-100 hover:text-bio-amber"
+                ? "opacity-100 bg-bio-amber/30 text-bio-amber"
+                : "opacity-40 group-hover:opacity-100 bg-genesis-depth/80 text-zinc-500 hover:text-bio-amber"
             }
           `}
         >
@@ -322,14 +322,14 @@ function PresetCard({
           </svg>
         </button>
 
-        {/* Quick load button */}
+        {/* Quick load button - always slightly visible */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             onLoad();
           }}
-          className="absolute bottom-2 right-2 p-2 rounded-lg bg-bio-cyan/20 text-bio-cyan
-            opacity-0 group-hover:opacity-100 transition-all hover:bg-bio-cyan/30"
+          className="absolute bottom-2 right-2 z-20 p-2 rounded-lg bg-bio-cyan/20 text-bio-cyan
+            opacity-40 group-hover:opacity-100 transition-all hover:bg-bio-cyan/30"
         >
           <svg
             className="w-4 h-4"
@@ -353,14 +353,17 @@ function PresetCard({
         </button>
 
         {/* Mode badge */}
-        <div className="absolute bottom-2 left-2 text-[10px] px-1.5 py-0.5 rounded bg-genesis-depth/80 text-zinc-400">
+        <div className="absolute bottom-2 left-2 z-10 text-[10px] px-1.5 py-0.5 rounded bg-genesis-depth/80 text-zinc-400">
           {getModeDisplayName(metadata.mode)}
         </div>
       </div>
 
       {/* Info section */}
       <div className="p-2">
-        <h4 className="text-xs font-medium text-zinc-200 truncate">
+        <h4
+          className="text-xs font-medium text-zinc-200 truncate"
+          title={metadata.name}
+        >
           {metadata.name}
         </h4>
         <div className="flex items-center justify-between mt-1">
@@ -387,7 +390,7 @@ function PresetCard({
       </div>
     </div>
   );
-}
+});
 
 interface PresetDetailPanelProps {
   preset: PresetData;
@@ -632,7 +635,7 @@ export function PresetBrowser({
       {/* Preset grid */}
       <div className="mt-3">
         {filteredPresets.length === 0 ? (
-          <div className="text-center py-8 text-zinc-500 text-sm">
+          <div className="text-center py-8 text-zinc-400 text-sm">
             No presets found
             {searchQuery && (
               <button
@@ -644,7 +647,7 @@ export function PresetBrowser({
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
+          <div className="scrollable-grid grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
             {filteredPresets.map((preset) => (
               <PresetCard
                 key={preset.metadata.id}

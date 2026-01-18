@@ -557,6 +557,15 @@ body {
   pointer-events: none;
   z-index: 0;
   animation: floatDrift 25s ease-in-out infinite;
+  will-change: transform;
+  contain: strict;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .ambient-orb {
+    animation: none;
+  }
 }
 
 .ambient-orb.cyan {
@@ -619,6 +628,28 @@ body {
 }
 
 /* =========================================
+   Focus States (Accessibility)
+   ========================================= */
+
+.btn-glow:focus-visible,
+.glass-panel button:focus-visible {
+  outline: 2px solid var(--bio-cyan);
+  outline-offset: 2px;
+}
+
+.genesis-select:focus-visible {
+  outline: 2px solid var(--bio-cyan);
+  outline-offset: 2px;
+}
+
+/* Interactive elements within cards */
+.glass-panel [role="button"]:focus-visible,
+.glass-panel a:focus-visible {
+  outline: 2px solid var(--bio-cyan);
+  outline-offset: 2px;
+}
+
+/* =========================================
    Glass Panel Styles
    ========================================= */
 
@@ -630,6 +661,7 @@ body {
   border-radius: 12px;
   position: relative;
   overflow: hidden;
+  isolation: isolate; /* Create stacking context to prevent z-index conflicts */
 }
 
 .glass-panel::before {
@@ -645,6 +677,28 @@ body {
     rgba(0, 245, 255, 0.3) 50%,
     transparent 100%
   );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure content inside glass-panel is above the decorative pseudo-element */
+.glass-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Scrollable containers within glass-panel need proper stacking context */
+.glass-panel .overflow-y-auto,
+.glass-panel .overflow-auto {
+  isolation: isolate;
+  z-index: 2;
+}
+
+/* Scrollable grid class for preset browsers and similar components */
+.scrollable-grid {
+  position: relative;
+  z-index: 10;
+  isolation: isolate;
 }
 
 /* =========================================
@@ -769,7 +823,7 @@ select.genesis-select:focus {
   font-size: 0.625rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.7); /* Improved contrast for WCAG AA */
   margin-bottom: 0.25rem;
 }
 
@@ -900,7 +954,10 @@ select.genesis-select:focus {
 }
 
 .panel-content > div {
-  overflow: hidden;
+  /* Use clip instead of hidden - clips visually but doesn't create scroll container
+     that interferes with nested scrollable elements */
+  overflow: clip;
+  min-height: 0; /* Allow grid row collapse to work properly */
 }
 
 .expand-icon {

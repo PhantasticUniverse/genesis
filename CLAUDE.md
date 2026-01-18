@@ -115,6 +115,24 @@ CSS custom properties define the bioluminescent color system:
 - `gradientShift` - Title gradient movement
 - `letterReveal` - Staggered title animation
 
+### Accessibility (WCAG AA)
+
+All interactive components follow accessibility best practices:
+
+- **ARIA Attributes:** `ExpandablePanel` uses `aria-expanded` and `aria-controls`
+- **Range Inputs:** `RangeSlider` includes `aria-label`, `aria-valuemin/max/now`
+- **Focus States:** Visible `:focus-visible` outlines with cyan accent
+- **Color Contrast:** Minimum 4.5:1 contrast ratio for text
+- **Reduced Motion:** `prefers-reduced-motion` disables ambient animations
+
+### Performance Optimizations
+
+- **React.memo:** `FpsGraph`, `PresetCard` components memoized
+- **Polling Intervals:** PerformanceMonitor uses 500ms interval (reduced from 100ms)
+- **CSS Containment:** Ambient orbs use `contain: strict` and `will-change: transform`
+- **Conditional Polling:** ConservationPanel only polls mass when panel is expanded
+- **State Skip:** PerformanceMonitor skips updates when paused and unchanged
+
 ## Key Parameters (Stable Lenia)
 
 ```typescript
@@ -348,6 +366,7 @@ engine.addObstacleRect(100, 100, 50, 200);
 ```
 
 **Channel Layout (RGBA textures):**
+
 - Main: R=creature, G=obstacle, B=gradient, A=motor
 - Aux: R=proximity, G=pheromone, B/A=reserved
 
@@ -392,3 +411,4 @@ const server = createGenesisMCPServer();
 - Sensorimotor obstacles: Visual rendering subtle
 - WebGPU types: Show compile errors but work at runtime
 - WebGPU initialization: Times out after 5s if GPU unavailable (shows compatibility modal)
+- Conservation features: Only available in WebGPU mode (CPU fallback shows informative message)

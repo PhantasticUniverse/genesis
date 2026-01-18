@@ -42,6 +42,31 @@ import type {
   GrowthParams,
 } from "./modes/multikernel-mode";
 import { CONTINUOUS_PRESETS } from "../../compute/webgpu/continuous-pipeline";
+import {
+  type Creature,
+  type TrackerState,
+  createTrackerState,
+  updateTracker,
+  getLargestCreature,
+} from "../../agency/creature-tracker";
+
+/**
+ * Tracking configuration
+ */
+export interface TrackingConfig {
+  threshold: number;
+  minMass: number;
+  updateInterval: number;
+}
+
+/**
+ * Callback type for creature updates
+ */
+export type CreatureUpdateCallback = (
+  creatures: Creature[],
+  largest: Creature | null,
+  tracker: TrackerState,
+) => void;
 
 /**
  * Engine configuration
@@ -125,6 +150,11 @@ export interface EngineV2 {
   pollState(): Float32Array | null;
   isReadbackPending(): boolean;
 
+  // Creature tracking
+  enableTracking(config: TrackingConfig): void;
+  disableTracking(): void;
+  onCreatureUpdate(callback: CreatureUpdateCallback | null): void;
+
   // Getters
   getConfig(): GridConfig;
   getGridConfig(): GridConfig;
@@ -159,6 +189,12 @@ export async function createEngineV2(config: EngineConfig): Promise<EngineV2> {
   let lastTime = performance.now();
   let frameCount = 0;
   let animationFrameId: number | null = null;
+
+  // Tracking state
+  let trackingConfig: TrackingConfig | null = null;
+  let trackingCallback: CreatureUpdateCallback | null = null;
+  let trackerState: TrackerState = createTrackerState();
+  let framesSinceTrackingUpdate = 0;
 
   // Map paradigm to mode
   function paradigmToMode(paradigm: CAParadigm): SimulationMode {
@@ -219,6 +255,30 @@ export async function createEngineV2(config: EngineConfig): Promise<EngineV2> {
     }
 
     stepCount++;
+
+    // Creature tracking update
+    if (trackingConfig && trackingCallback) {
+      framesSinceTrackingUpdate++;
+      if (framesSinceTrackingUpdate >= trackingConfig.updateInterval) {
+        framesSinceTrackingUpdate = 0;
+        // Use async readback
+        ctx.requestStateReadback();
+        const state = ctx.pollState();
+        if (state) {
+          trackerState = updateTracker(
+            trackerState,
+            state,
+            gridConfig.width,
+            gridConfig.height,
+            trackingConfig.threshold,
+            trackingConfig.minMass,
+          );
+          const creatures = Array.from(trackerState.creatures.values());
+          const largest = getLargestCreature(trackerState);
+          trackingCallback(creatures, largest, trackerState);
+        }
+      }
+    }
 
     // Render
     currentModeHandler.render(ctx);
@@ -528,6 +588,24 @@ export async function createEngineV2(config: EngineConfig): Promise<EngineV2> {
       return ctx.isReadbackPending();
     },
 
+    // Creature tracking
+    enableTracking(config: TrackingConfig) {
+      trackingConfig = config;
+      trackerState = createTrackerState();
+      framesSinceTrackingUpdate = 0;
+    },
+
+    disableTracking() {
+      trackingConfig = null;
+      trackingCallback = null;
+      trackerState = createTrackerState();
+      framesSinceTrackingUpdate = 0;
+    },
+
+    onCreatureUpdate(callback: CreatureUpdateCallback | null) {
+      trackingCallback = callback;
+    },
+
     // Getters
     getConfig() {
       return gridConfig;
@@ -564,4 +642,5 @@ export async function createEngineV2(config: EngineConfig): Promise<EngineV2> {
 
 // Re-export types
 export type { EngineState, SimulationMode, ColormapName };
+export type { Creature, TrackerState };
 export { COLORMAP_IDS };

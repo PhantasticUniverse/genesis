@@ -305,12 +305,8 @@ export function logisticEquilibrium(params: LotkaVolterraParams): {
  * Returns whether coexistence equilibrium is stable
  */
 export function isCoexistenceStable(params: LotkaVolterraParams): boolean {
-  const {
-    preyCapacity,
-    predationRate,
-    predatorEfficiency,
-    predatorDeathRate,
-  } = params;
+  const { preyCapacity, predationRate, predatorEfficiency, predatorDeathRate } =
+    params;
 
   // Coexistence prey equilibrium
   const preyEq = predatorDeathRate / (predatorEfficiency * predationRate);

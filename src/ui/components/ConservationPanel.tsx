@@ -17,9 +17,9 @@ export function ConservationPanel({ engine }: ConservationPanelProps) {
   const [config, setConfig] = useState<ConservationConfig | null>(null);
   const [mass, setMass] = useState<number | null>(null);
 
-  // Load initial config when engine is available
+  // Load initial config when engine is available (only for WebGPU engine)
   useEffect(() => {
-    if (engine) {
+    if (engine && "getConservationConfig" in engine) {
       setConfig(engine.getConservationConfig());
     }
   }, [engine]);
@@ -63,8 +63,11 @@ export function ConservationPanel({ engine }: ConservationPanelProps) {
 
   if (!engine) return null;
 
+  // Check if conservation features are available (WebGPU only)
+  const hasConservation = "getConservationConfig" in engine;
+
   return (
-    <div className="mt-4 p-4 bg-zinc-900 rounded-lg border border-zinc-800">
+    <div className="glass-panel p-4">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between text-left"
@@ -73,7 +76,14 @@ export function ConservationPanel({ engine }: ConservationPanelProps) {
         <span className="text-zinc-500">{isExpanded ? "−" : "+"}</span>
       </button>
 
-      {isExpanded && config && (
+      {isExpanded && !hasConservation && (
+        <div className="mt-4 p-3 bg-genesis-surface rounded text-xs text-zinc-400">
+          <strong className="text-bio-amber">CPU Mode:</strong> Conservation features
+          require WebGPU. Please use a WebGPU-compatible browser for full functionality.
+        </div>
+      )}
+
+      {isExpanded && hasConservation && config && (
         <div className="mt-4 space-y-4">
           {/* Description */}
           <p className="text-xs text-zinc-500">

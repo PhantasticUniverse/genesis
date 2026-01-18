@@ -90,6 +90,10 @@ export function RangeSlider({
           value={value}
           onChange={(e) => onChange(parseFloat(e.target.value))}
           disabled={disabled}
+          aria-label={label}
+          aria-valuemin={min}
+          aria-valuemax={max}
+          aria-valuenow={value}
           className="genesis-slider w-full"
           style={{
             background: `linear-gradient(to right, ${accentColorDim} 0%, ${accentColor} ${fillPercent}%, var(--genesis-surface) ${fillPercent}%, var(--genesis-surface) 100%)`,

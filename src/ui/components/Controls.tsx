@@ -143,7 +143,8 @@ export function Controls({ engine }: ControlsProps) {
         <button
           onClick={() => stepOnce()}
           disabled={running}
-          className="btn-glow px-4 py-2.5 rounded-lg font-medium bg-genesis-surface text-white border border-[rgba(0,245,255,0.2)] hover:border-bio-cyan disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300"
+          className="btn-glow px-4 py-2.5 rounded-lg font-medium bg-genesis-surface text-white border border-[rgba(0,245,255,0.2)] hover:border-bio-cyan disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+          title={running ? "Pause simulation to step" : "Advance one step"}
         >
           Step
         </button>

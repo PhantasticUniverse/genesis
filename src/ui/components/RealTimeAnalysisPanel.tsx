@@ -407,7 +407,8 @@ function BehaviorRadar({ metrics, size = 100 }: BehaviorRadarProps) {
 
     // Draw axes
     BEHAVIOR_DIMENSIONS.forEach((dim, i) => {
-      const angle = (i * Math.PI * 2) / BEHAVIOR_DIMENSIONS.length - Math.PI / 2;
+      const angle =
+        (i * Math.PI * 2) / BEHAVIOR_DIMENSIONS.length - Math.PI / 2;
       const x = centerX + Math.cos(angle) * radius;
       const y = centerY + Math.sin(angle) * radius;
 
@@ -433,7 +434,8 @@ function BehaviorRadar({ metrics, size = 100 }: BehaviorRadarProps) {
     ctx.beginPath();
     BEHAVIOR_DIMENSIONS.forEach((dim, i) => {
       const value = metrics[dim.key] ?? 0;
-      const angle = (i * Math.PI * 2) / BEHAVIOR_DIMENSIONS.length - Math.PI / 2;
+      const angle =
+        (i * Math.PI * 2) / BEHAVIOR_DIMENSIONS.length - Math.PI / 2;
       const r = radius * Math.max(0.05, Math.min(1, value));
       const x = centerX + Math.cos(angle) * r;
       const y = centerY + Math.sin(angle) * r;
@@ -468,7 +470,8 @@ function BehaviorRadar({ metrics, size = 100 }: BehaviorRadarProps) {
     // Draw data points
     BEHAVIOR_DIMENSIONS.forEach((dim, i) => {
       const value = metrics[dim.key] ?? 0;
-      const angle = (i * Math.PI * 2) / BEHAVIOR_DIMENSIONS.length - Math.PI / 2;
+      const angle =
+        (i * Math.PI * 2) / BEHAVIOR_DIMENSIONS.length - Math.PI / 2;
       const r = radius * Math.max(0.05, Math.min(1, value));
       const x = centerX + Math.cos(angle) * r;
       const y = centerY + Math.sin(angle) * r;
@@ -571,9 +574,9 @@ export function RealTimeAnalysisPanel({
     chaos: metrics.chaos
       ? Math.min(1, Math.max(0, (metrics.chaos.exponent + 1) / 2))
       : 0,
-    complexity: metrics.complexity,
-    activity: metrics.activity,
-    entropy: Math.min(1, metrics.entropy / 8),
+    complexity: metrics.complexity ?? 0,
+    activity: metrics.activity ?? 0,
+    entropy: Math.min(1, (metrics.entropy ?? 0) / 8),
   };
 
   if (collapsed) {
@@ -663,7 +666,7 @@ export function RealTimeAnalysisPanel({
       {/* Top row: Symmetry gauge and Chaos meter */}
       <div className="flex justify-around items-start">
         <SymmetryGauge symmetry={metrics.symmetry} size={90} />
-        <EntropyIndicator entropy={metrics.entropy} />
+        <EntropyIndicator entropy={metrics.entropy ?? 0} />
         <ChaosMeter chaos={metrics.chaos} width={110} />
       </div>
 
@@ -671,7 +674,7 @@ export function RealTimeAnalysisPanel({
       <div className="border-t border-white/10 pt-4">
         <MassSparkline
           history={massHistory}
-          current={metrics.mass}
+          current={metrics.mass ?? 0}
           width={260}
           height={50}
         />
@@ -695,13 +698,13 @@ export function RealTimeAnalysisPanel({
             className="text-magenta-400 font-mono text-sm"
             style={{ color: "#ff00ff" }}
           >
-            {metrics.complexity.toFixed(2)}
+            {(metrics.complexity ?? 0).toFixed(2)}
           </span>
           <span>Complexity</span>
         </div>
         <div className="flex flex-col items-center">
           <span className="text-green-400 font-mono text-sm">
-            {(metrics.activity * 100).toFixed(0)}%
+            {((metrics.activity ?? 0) * 100).toFixed(0)}%
           </span>
           <span>Activity</span>
         </div>

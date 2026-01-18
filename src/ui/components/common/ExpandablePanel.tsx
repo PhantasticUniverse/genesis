@@ -3,7 +3,7 @@
  * Reusable collapsible panel with bioluminescent theme
  */
 
-import { useState, type ReactNode } from "react";
+import { useState, useId, type ReactNode } from "react";
 
 export interface ExpandablePanelProps {
   /** Panel title */
@@ -38,6 +38,8 @@ export function ExpandablePanel({
   accent = "cyan",
 }: ExpandablePanelProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const panelId = useId();
+  const contentId = `panel-content-${panelId}`;
 
   // Get accent-specific classes
   const accentBorderClass = {
@@ -60,6 +62,8 @@ export function ExpandablePanel({
     >
       <button
         onClick={() => setIsExpanded(!isExpanded)}
+        aria-expanded={isExpanded}
+        aria-controls={contentId}
         className="group w-full flex items-center justify-between text-left transition-colors"
       >
         <div className="flex items-center gap-3">
@@ -92,7 +96,10 @@ export function ExpandablePanel({
         </svg>
       </button>
 
-      <div className={`panel-content ${isExpanded ? "expanded" : ""}`}>
+      <div
+        id={contentId}
+        className={`panel-content ${isExpanded ? "expanded" : ""}`}
+      >
         <div>
           <div className="pt-4">{children}</div>
         </div>

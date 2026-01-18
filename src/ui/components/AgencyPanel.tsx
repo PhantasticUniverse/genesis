@@ -77,10 +77,14 @@ export function AgencyPanel({ engine }: AgencyPanelProps) {
       );
     };
 
-    (engine as { onCreatureUpdate: (cb: typeof callback | null) => void }).onCreatureUpdate(callback);
+    (
+      engine as { onCreatureUpdate: (cb: typeof callback | null) => void }
+    ).onCreatureUpdate(callback);
 
     return () => {
-      (engine as { onCreatureUpdate: (cb: null) => void }).onCreatureUpdate(null);
+      (engine as { onCreatureUpdate: (cb: null) => void }).onCreatureUpdate(
+        null,
+      );
     };
   }, [engine, isAgencyMode]);
 
@@ -90,7 +94,15 @@ export function AgencyPanel({ engine }: AgencyPanelProps) {
     // Enable creature tracking (optional - only if available)
     const engineAny = engine as unknown as Record<string, unknown>;
     if (typeof engineAny.enableTracking === "function") {
-      (engine as { enableTracking: (config: { threshold: number; minMass: number; updateInterval: number }) => void }).enableTracking({
+      (
+        engine as {
+          enableTracking: (config: {
+            threshold: number;
+            minMass: number;
+            updateInterval: number;
+          }) => void;
+        }
+      ).enableTracking({
         threshold: 0.05,
         minMass: 10,
         updateInterval: 5, // Update every 5 frames

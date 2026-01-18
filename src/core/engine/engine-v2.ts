@@ -32,7 +32,9 @@ import {
   DiscreteModeHandler,
   ContinuousModeHandler,
   MultiKernelModeHandler,
+  SensorimotorModeHandler,
 } from "./modes";
+import type { SensorimotorParams } from "./modes/sensorimotor-mode";
 import type { ContinuousCAParams, BoundaryMode } from "./modes/continuous-mode";
 import type {
   MultiKernelConfig,
@@ -94,6 +96,24 @@ export interface EngineV2 {
   updateMultiKernelGrowth(index: number, params: Partial<GrowthParams>): void;
   addMultiKernel(params?: SingleKernelParams, growth?: GrowthParams): void;
   removeMultiKernel(index: number): void;
+
+  // Sensorimotor mode
+  enableSensorimotor(): void;
+  disableSensorimotor(): void;
+  isSensorimotorEnabled(): boolean;
+  setSensorimotorParams(params: Partial<SensorimotorParams>): void;
+  getSensorimotorParams(): SensorimotorParams | null;
+  setObstacles(pattern: Float32Array | number[][]): void;
+  addObstacleRect(x: number, y: number, width: number, height: number): void;
+  clearObstacles(): void;
+  setTargetGradient(
+    x: number,
+    y: number,
+    radius?: number,
+    strength?: number,
+  ): void;
+  clearGradient(): void;
+  setShowObstacles(show: boolean): void;
 
   // Rendering
   setColormap(colormap: ColormapName): void;
@@ -412,6 +432,70 @@ export async function createEngineV2(config: EngineConfig): Promise<EngineV2> {
     removeMultiKernel(index: number) {
       if (currentModeHandler instanceof MultiKernelModeHandler) {
         currentModeHandler.removeKernel(index);
+      }
+    },
+
+    // Sensorimotor mode methods
+    enableSensorimotor() {
+      void this.setMode("sensorimotor");
+    },
+
+    disableSensorimotor() {
+      if (stateManager.getMode() === "sensorimotor") {
+        void this.setMode("continuous");
+      }
+    },
+
+    isSensorimotorEnabled() {
+      return stateManager.getMode() === "sensorimotor";
+    },
+
+    setSensorimotorParams(params: Partial<SensorimotorParams>) {
+      if (currentModeHandler instanceof SensorimotorModeHandler) {
+        currentModeHandler.setParams(params);
+      }
+    },
+
+    getSensorimotorParams() {
+      if (currentModeHandler instanceof SensorimotorModeHandler) {
+        return currentModeHandler.getParams();
+      }
+      return null;
+    },
+
+    setObstacles(pattern: Float32Array | number[][]) {
+      if (currentModeHandler instanceof SensorimotorModeHandler) {
+        currentModeHandler.setObstacles(pattern);
+      }
+    },
+
+    addObstacleRect(x: number, y: number, width: number, height: number) {
+      if (currentModeHandler instanceof SensorimotorModeHandler) {
+        currentModeHandler.addObstacleRect(x, y, width, height);
+      }
+    },
+
+    clearObstacles() {
+      if (currentModeHandler instanceof SensorimotorModeHandler) {
+        currentModeHandler.clearObstacles();
+      }
+    },
+
+    setTargetGradient(x: number, y: number, radius = 50, strength = 1.0) {
+      if (currentModeHandler instanceof SensorimotorModeHandler) {
+        currentModeHandler.setTargetGradient(x, y, radius, strength);
+      }
+    },
+
+    clearGradient() {
+      if (currentModeHandler instanceof SensorimotorModeHandler) {
+        currentModeHandler.clearGradient();
+      }
+    },
+
+    setShowObstacles(show: boolean) {
+      if (currentModeHandler instanceof SensorimotorModeHandler) {
+        currentModeHandler.setShowObstacles(show);
       }
     },
 

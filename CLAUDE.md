@@ -43,7 +43,8 @@ src/
 │       ├── preset-types.ts  # Type definitions for all modes
 │       ├── preset-registry.ts# Central registry management
 │       ├── encoding.ts      # RLE, Base64, pattern generators
-│       └── builtin-presets.ts# 22+ builtin presets
+│       ├── builtin-presets.ts# 28+ builtin presets
+│       └── sensorimotor-presets.ts # Agency-enabled presets
 ├── ui/
 │   ├── components/          # React panels (Bioluminescent theme)
 │   └── stores/              # Zustand state management
@@ -157,6 +158,13 @@ engine.enableMultiChannel(config) / disableMultiChannel()
 engine.enableMultiKernel(config) / disableMultiKernel()
 engine.getMass(): Promise<number>
 engine.setBoundaryMode('periodic' | 'clamped' | 'reflected' | 'zero')
+
+// Sensorimotor mode (agency)
+engine.enableSensorimotor() / disableSensorimotor()
+engine.setSensorimotorParams(params) / getSensorimotorParams()
+engine.setObstacles(pattern) / clearObstacles()
+engine.setTargetGradient(x, y, radius?, strength?)
+engine.addObstacleRect(x, y, width, height)
 ```
 
 ## Seeded RNG
@@ -231,7 +239,7 @@ genesis multikernel --kernels 2 --preset dual-orbium
 
 ## Testing
 
-1215 tests covering: core, discovery, agency, compute, analysis, persistence, render, cli, mcp
+1239 tests covering: core, discovery, agency, compute, analysis, persistence, render, cli, mcp
 
 ```bash
 bun run test              # Run all tests
@@ -274,7 +282,7 @@ registry.importPresets(file); // Import from .gpreset file
 registry.exportPresets(ids); // Export to shareable format
 ```
 
-**Modes:** `discrete` | `continuous` | `multikernel` | `3d` | `particle` | `ecology`
+**Modes:** `discrete` | `continuous` | `multikernel` | `3d` | `particle` | `ecology` | `sensorimotor`
 
 ## Experiment Database
 
@@ -312,6 +320,38 @@ const health = tracker.computeHealth();
 ```
 
 **Presets:** `predator-prey` | `food-chain` | `competition` | `mutualism` | `resource-gradient` | `seasonal`
+
+## Sensorimotor Mode (Agency)
+
+Lenia organisms with agency - sensing gradients, avoiding obstacles, and directed movement:
+
+```typescript
+import { SensorimotorModeHandler } from "./core/engine/modes/sensorimotor-mode";
+import type { SensorimotorParams } from "./compute/webgpu/sensorimotor-pipeline";
+
+// Enable sensorimotor mode
+engine.enableSensorimotor();
+
+// Set parameters
+engine.setSensorimotorParams({
+  kernelRadius: 15,
+  obstacleRepulsion: 2.0,
+  motorInfluence: 0.3,
+  pheromoneEmission: 0.05,
+});
+
+// Set target gradient (creature moves toward it)
+engine.setTargetGradient(256, 256, 50, 1.0);
+
+// Add obstacles
+engine.addObstacleRect(100, 100, 50, 200);
+```
+
+**Channel Layout (RGBA textures):**
+- Main: R=creature, G=obstacle, B=gradient, A=motor
+- Aux: R=proximity, G=pheromone, B/A=reserved
+
+**Presets:** `sm-chemotaxis-basic` | `sm-maze-navigation` | `sm-swarm-following` | `sm-wall-bouncer` | `sm-predator-evasion` | `sm-gentle-explorer`
 
 ## MCP Server (AI Interaction)
 

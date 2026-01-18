@@ -20,7 +20,8 @@ export type PresetMode =
   | "multikernel" // Multi-kernel Lenia
   | "3d" // 3D Lenia
   | "particle" // Particle-Lenia hybrid
-  | "ecology"; // Multi-channel ecosystem
+  | "ecology" // Multi-channel ecosystem
+  | "sensorimotor"; // Agency-enabled Lenia
 
 export type PresetCategory =
   | "glider" // Moving patterns
@@ -214,6 +215,35 @@ export interface EcologyPresetConfig {
 }
 
 /**
+ * Sensorimotor preset (agency-enabled Lenia)
+ */
+export interface SensorimotorPresetConfig {
+  type: "sensorimotor";
+  params: {
+    kernelRadius: number;
+    dt: number;
+    growthCenter: number;
+    growthWidth: number;
+    obstacleRepulsion: number;
+    motorInfluence: number;
+    gradientDiffusion: number;
+    gradientDecay: number;
+    proximityRadius: number;
+    pheromoneEmission: number;
+    pheromoneDiffusion: number;
+    pheromoneDecay: number;
+  };
+  obstacles?: {
+    type: "none" | "walls" | "maze" | "scattered" | "custom";
+    density?: number;
+  };
+  gradient?: {
+    enabled: boolean;
+    initialTarget?: { x: number; y: number };
+  };
+}
+
+/**
  * Union type for all preset configs
  */
 export type PresetConfig =
@@ -222,7 +252,8 @@ export type PresetConfig =
   | MultiKernelPresetConfig
   | Preset3DConfig
   | ParticlePresetConfig
-  | EcologyPresetConfig;
+  | EcologyPresetConfig
+  | SensorimotorPresetConfig;
 
 // ============================================================================
 // Pattern Encoding
@@ -468,6 +499,15 @@ export function validatePresetConfig(config: PresetConfig): ValidationResult {
       }
       break;
 
+    case "sensorimotor":
+      if (!config.params) {
+        errors.push("Sensorimotor preset missing parameters");
+      }
+      if (config.params?.kernelRadius < 5 || config.params?.kernelRadius > 30) {
+        warnings.push("Kernel radius outside recommended range (5-30)");
+      }
+      break;
+
     default:
       errors.push(`Unknown preset type: ${(config as PresetConfig).type}`);
   }
@@ -490,6 +530,7 @@ export function getModeDisplayName(mode: PresetMode): string {
     "3d": "3D Lenia",
     particle: "Particle-Lenia",
     ecology: "Ecosystem",
+    sensorimotor: "Sensorimotor Lenia",
   };
   return names[mode];
 }

@@ -103,6 +103,7 @@ export const usePresetStore = create<PresetStoreState>()(
         "3d": 0,
         particle: 0,
         ecology: 0,
+        sensorimotor: 0,
       },
 
       // Browse actions
@@ -227,6 +228,8 @@ export const usePresetStore = create<PresetStoreState>()(
           "3d": presetRegistry.queryPresets({ mode: "3d" }).length,
           particle: presetRegistry.queryPresets({ mode: "particle" }).length,
           ecology: presetRegistry.queryPresets({ mode: "ecology" }).length,
+          sensorimotor: presetRegistry.queryPresets({ mode: "sensorimotor" })
+            .length,
         };
 
         set({ filteredPresets, modeCounts });

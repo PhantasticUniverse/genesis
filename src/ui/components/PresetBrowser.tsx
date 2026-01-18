@@ -37,6 +37,7 @@ function ModeTabs({ selectedMode, modeCounts, onModeChange }: ModeTabsProps) {
     "3d",
     "particle",
     "ecology",
+    "sensorimotor",
   ];
 
   const modeLabels: Record<PresetMode | "all", string> = {
@@ -47,6 +48,7 @@ function ModeTabs({ selectedMode, modeCounts, onModeChange }: ModeTabsProps) {
     "3d": "3D",
     particle: "Particle",
     ecology: "Ecology",
+    sensorimotor: "Agency",
   };
 
   return (

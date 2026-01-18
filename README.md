@@ -7,28 +7,34 @@ A next-generation cellular automata platform powered by WebGPU, featuring a biol
 ## Features
 
 ### Simulation Modes
+
 - **Discrete CA** - Game of Life and 18 life-like rules (B/S notation)
 - **Continuous CA** - Lenia and SmoothLife with smooth dynamics
 - **Multi-Kernel Lenia** - 1-4 weighted kernels with composite growth functions
+- **Sensorimotor Lenia** - Agency-enabled organisms with chemotaxis, obstacle avoidance, and pheromone trails
 - **Ecosystem Simulation** - Lotka-Volterra predator-prey dynamics, food chains, mutualism
 
 ### Discovery & Evolution
+
 - **Pattern Discovery** - Genetic algorithm with novelty search and MAP-Elites
 - **Phylogenetic Tracking** - Full genealogy trees with lineage visualization
-- **Preset Registry** - 20+ builtin presets across all modes with import/export
+- **Preset Registry** - 28+ builtin presets across all modes with import/export
 
 ### Analysis Tools
+
 - **Real-Time Analysis** - Symmetry gauge, chaos meter, mass sparkline, behavior radar
 - **Mass Conservation** - GPU parallel reduction for accurate mass tracking
 - **Creature Tracking** - Hungarian algorithm matching for organism identification
 
 ### Research Infrastructure
+
 - **Experiment Database** - IndexedDB tracking with runs, snapshots, genealogy
 - **Adaptive Quality** - Auto-adjusts grid size (128-4096) based on performance
 - **CLI Tools** - Full feature parity for automation and batch processing
 - **MCP Server** - AI interaction via Model Context Protocol
 
 ### Agency & Training
+
 - **Sensorimotor Agency** - Creature tracking with obstacle avoidance and target navigation
 - **Neural CA Training** - GPU-accelerated IMGEP curriculum learning
 - **Organism Library** - Save, load, and export organisms to JSON

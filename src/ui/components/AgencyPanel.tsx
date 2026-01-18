@@ -37,9 +37,16 @@ export function AgencyPanel({ engine }: AgencyPanelProps) {
     null,
   );
 
-  // Setup creature tracking callback
+  // Setup creature tracking callback (optional - only if tracking is available)
   useEffect(() => {
     if (!engine || !isAgencyMode) return;
+
+    // Check if creature tracking is available
+    const engineAny = engine as unknown as Record<string, unknown>;
+    if (typeof engineAny.onCreatureUpdate !== "function") {
+      // Creature tracking not available - sensorimotor mode still works
+      return;
+    }
 
     const callback = (
       creatureList: Creature[],
@@ -70,22 +77,25 @@ export function AgencyPanel({ engine }: AgencyPanelProps) {
       );
     };
 
-    engine.onCreatureUpdate(callback);
+    (engine as { onCreatureUpdate: (cb: typeof callback | null) => void }).onCreatureUpdate(callback);
 
     return () => {
-      engine.onCreatureUpdate(null);
+      (engine as { onCreatureUpdate: (cb: null) => void }).onCreatureUpdate(null);
     };
   }, [engine, isAgencyMode]);
 
   const handleEnableAgency = useCallback(() => {
     if (!engine) return;
     setIsAgencyMode(true);
-    // Enable creature tracking
-    engine.enableTracking({
-      threshold: 0.05,
-      minMass: 10,
-      updateInterval: 5, // Update every 5 frames
-    });
+    // Enable creature tracking (optional - only if available)
+    const engineAny = engine as unknown as Record<string, unknown>;
+    if (typeof engineAny.enableTracking === "function") {
+      (engine as { enableTracking: (config: { threshold: number; minMass: number; updateInterval: number }) => void }).enableTracking({
+        threshold: 0.05,
+        minMass: 10,
+        updateInterval: 5, // Update every 5 frames
+      });
+    }
     // Enable sensorimotor mode
     engine.enableSensorimotor();
   }, [engine]);
@@ -93,7 +103,11 @@ export function AgencyPanel({ engine }: AgencyPanelProps) {
   const handleDisableAgency = useCallback(() => {
     if (!engine) return;
     setIsAgencyMode(false);
-    engine.disableTracking();
+    // Disable creature tracking (optional - only if available)
+    const engineAny = engine as unknown as Record<string, unknown>;
+    if (typeof engineAny.disableTracking === "function") {
+      (engine as { disableTracking: () => void }).disableTracking();
+    }
     engine.disableSensorimotor();
     setCreatures([]);
     setLargestCreature(null);

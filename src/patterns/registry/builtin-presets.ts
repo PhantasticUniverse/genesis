@@ -11,6 +11,7 @@ import type {
   ContinuousPresetConfig,
   MultiKernelPresetConfig,
 } from "./preset-types";
+import { SENSORIMOTOR_PRESETS } from "./sensorimotor-presets";
 
 // ============================================================================
 // Helper Functions
@@ -637,6 +638,7 @@ export const ALL_BUILTIN_PRESETS: PresetData[] = [
   ...DISCRETE_PRESETS,
   ...CONTINUOUS_PRESETS,
   ...MULTIKERNEL_PRESETS,
+  ...SENSORIMOTOR_PRESETS,
 ];
 
 /**

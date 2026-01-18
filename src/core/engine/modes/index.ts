@@ -41,11 +41,20 @@ export {
   MULTIKERNEL_PRESETS,
 } from "./multikernel-mode";
 
+// Sensorimotor mode (agency)
+export {
+  SensorimotorModeHandler,
+  createSensorimotorModeHandler,
+  type SensorimotorModeConfig,
+  type SensorimotorParams,
+} from "./sensorimotor-mode";
+
 import type { SimulationMode } from "../engine-state";
 import type { ModeFactory } from "./base-mode";
 import { createDiscreteModeHandler } from "./discrete-mode";
 import { createContinuousModeHandler } from "./continuous-mode";
 import { createMultiKernelModeHandler } from "./multikernel-mode";
+import { createSensorimotorModeHandler } from "./sensorimotor-mode";
 
 /**
  * Default mode factories for all simulation modes
@@ -59,7 +68,7 @@ export const DEFAULT_MODE_FACTORIES: Record<
   multikernel: createMultiKernelModeHandler,
   multichannel: null, // TODO: Implement
   particle: null, // TODO: Implement
-  sensorimotor: null, // TODO: Implement
+  sensorimotor: createSensorimotorModeHandler,
 };
 
 /**

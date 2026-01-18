@@ -11,6 +11,8 @@ import { registerEvolveCommands } from "./commands/evolve";
 import { registerEvaluateCommands } from "./commands/evaluate";
 import { registerMultiKernelCommands } from "./commands/multikernel";
 import { sweepCommand } from "./commands/sweep";
+import { registerPresetCommands } from "./commands/preset";
+import { registerExperimentCommands } from "./commands/experiment";
 
 const program = new Command();
 
@@ -28,6 +30,8 @@ registerEvolveCommands(program);
 registerEvaluateCommands(program);
 registerMultiKernelCommands(program);
 program.addCommand(sweepCommand);
+registerPresetCommands(program);
+registerExperimentCommands(program);
 
 // Parse and execute
 program.parse(process.argv);

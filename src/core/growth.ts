@@ -143,11 +143,11 @@ export function calculateGrowth(
 
 // Preset growth configurations
 export const GROWTH_PRESETS = {
-  // Lenia default (Orbium organism)
+  // Lenia default (optimized from evolution experiments)
   "lenia-default": {
-    function: "polynomial" as GrowthFunction,
-    center: 0.15,
-    width: 0.015,
+    function: "gaussian" as GrowthFunction,
+    center: 0.12,
+    width: 0.04,
   },
 
   // Lenia alternative
@@ -171,7 +171,7 @@ export const GROWTH_PRESETS = {
   // Gaussian (smooth, stable)
   "gaussian-stable": {
     function: "gaussian" as GrowthFunction,
-    center: 0.15,
-    width: 0.017,
+    center: 0.12,
+    width: 0.04,
   },
 } as const;

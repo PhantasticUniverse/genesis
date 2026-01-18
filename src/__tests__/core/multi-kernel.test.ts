@@ -49,7 +49,7 @@ describe("multi-kernel", () => {
 
       expect(kernel.id).toBe("kernel-2");
       expect(kernel.shape).toBe("polynomial");
-      expect(kernel.radius).toBe(13);
+      expect(kernel.radius).toBe(12); // Optimized default value
       expect(kernel.weight).toBe(1.0);
     });
   });

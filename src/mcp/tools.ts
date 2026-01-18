@@ -370,6 +370,192 @@ export const GENESIS_TOOLS = [
       },
     },
   },
+  // New preset management tools
+  {
+    name: "genesis_preset_list",
+    description: "List available presets, optionally filtered by mode",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        mode: {
+          type: "string",
+          enum: [
+            "discrete",
+            "continuous",
+            "multikernel",
+            "3d",
+            "particle",
+            "ecology",
+          ],
+          description: "Filter by simulation mode",
+        },
+        category: {
+          type: "string",
+          description: "Filter by category",
+        },
+        tags: {
+          type: "array",
+          items: { type: "string" },
+          description: "Filter by tags",
+        },
+      },
+    },
+  },
+  {
+    name: "genesis_preset_load",
+    description: "Load a preset by name or ID",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        name: {
+          type: "string",
+          description: "Preset name or ID",
+        },
+      },
+      required: ["name"],
+    },
+  },
+  {
+    name: "genesis_preset_info",
+    description: "Get detailed information about a preset",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        name: {
+          type: "string",
+          description: "Preset name or ID",
+        },
+      },
+      required: ["name"],
+    },
+  },
+  // Experiment management tools
+  {
+    name: "genesis_experiment_create",
+    description: "Create a new experiment for tracking runs",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        name: {
+          type: "string",
+          description: "Experiment name",
+        },
+        description: {
+          type: "string",
+          description: "Experiment description",
+        },
+        paradigm: {
+          type: "string",
+          enum: ["discrete", "continuous", "multikernel", "multichannel"],
+          description: "Simulation paradigm",
+        },
+        gridSize: {
+          type: "number",
+          description: "Grid size (default: 512)",
+        },
+        tags: {
+          type: "array",
+          items: { type: "string" },
+          description: "Experiment tags",
+        },
+      },
+      required: ["name"],
+    },
+  },
+  {
+    name: "genesis_experiment_list",
+    description: "List all experiments",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        status: {
+          type: "string",
+          enum: ["created", "running", "paused", "completed", "failed"],
+          description: "Filter by status",
+        },
+        limit: {
+          type: "number",
+          description: "Maximum results to return",
+        },
+      },
+    },
+  },
+  {
+    name: "genesis_experiment_info",
+    description: "Get experiment details and metrics",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        id: {
+          type: "string",
+          description: "Experiment ID",
+        },
+      },
+      required: ["id"],
+    },
+  },
+  // Grid and quality tools
+  {
+    name: "genesis_grid_resize",
+    description: "Change the simulation grid size",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        size: {
+          type: "number",
+          enum: [128, 256, 512, 1024, 2048, 4096],
+          description: "New grid size (width and height)",
+        },
+      },
+      required: ["size"],
+    },
+  },
+  {
+    name: "genesis_set_quality",
+    description: "Set quality preset for performance tuning",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        preset: {
+          type: "string",
+          enum: ["performance", "balanced", "quality", "ultra"],
+          description: "Quality preset",
+        },
+      },
+      required: ["preset"],
+    },
+  },
+  // Ecology tools
+  {
+    name: "genesis_ecology_enable",
+    description: "Enable multi-species ecology mode",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        preset: {
+          type: "string",
+          enum: [
+            "predator-prey",
+            "food-chain",
+            "competition",
+            "mutualism",
+            "resource-gradient",
+            "seasonal",
+          ],
+          description: "Ecology preset",
+        },
+      },
+      required: ["preset"],
+    },
+  },
+  {
+    name: "genesis_ecology_stats",
+    description: "Get ecosystem statistics and population dynamics",
+    inputSchema: {
+      type: "object" as const,
+      properties: {},
+    },
+  },
 ];
 
 /**

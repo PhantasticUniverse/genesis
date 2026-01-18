@@ -224,6 +224,57 @@ export const DISCOVERED_ORGANISMS: LeniaOrganism[] = [
 ];
 
 /**
+ * Optimized organisms from evolution experiments
+ * These were discovered through genetic algorithm optimization
+ */
+export const OPTIMIZED_ORGANISMS: LeniaOrganism[] = [
+  {
+    name: "Evolved Alpha",
+    description: "Single-kernel optimal configuration (fitness 0.5648)",
+    category: "glider",
+    genome: {
+      R: 12,
+      T: 11,
+      m: 0.1055,
+      s: 0.0257,
+      b: [0.148, 0.335, 0.81],
+      kn: 3, // staircase kernel
+      gn: 1, // polynomial growth
+    },
+    speed: 0.25,
+  },
+  {
+    name: "Evolved Stable",
+    description: "Optimized stable pattern with gaussian growth",
+    category: "static",
+    genome: {
+      R: 12,
+      T: 10,
+      m: 0.12,
+      s: 0.04,
+      b: [0.148, 0.335, 0.81],
+      kn: 1, // polynomial kernel
+      gn: 1, // gaussian growth
+    },
+  },
+  {
+    name: "Evolved Swimmer",
+    description: "Fast-moving optimized organism",
+    category: "swimmer",
+    genome: {
+      R: 14,
+      T: 12,
+      m: 0.11,
+      s: 0.035,
+      b: [0.2, 0.5, 0.8],
+      kn: 1,
+      gn: 1,
+    },
+    speed: 0.35,
+  },
+];
+
+/**
  * Chaotic and complex patterns
  */
 export const CHAOTIC_ORGANISMS: LeniaOrganism[] = [
@@ -278,6 +329,7 @@ export const ALL_ORGANISMS: LeniaOrganism[] = [
   ...CLASSIC_ORGANISMS,
   ...SMOOTHLIFE_ORGANISMS,
   ...DISCOVERED_ORGANISMS,
+  ...OPTIMIZED_ORGANISMS,
   ...CHAOTIC_ORGANISMS,
 ];
 

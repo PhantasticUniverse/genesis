@@ -1,0 +1,218 @@
+[
+  {
+    "fitness": 0.999945660607053,
+    "genome": {
+      "T": 18,
+      "kernelCount": 2,
+      "combinationMode": 1,
+      "R": [30, 28],
+      "b": [
+        [0.8648172949192433],
+        [0.11445286766800461, 0.3732961621782709, 0.6397377435688361]
+      ],
+      "h": [0.3785248032961751, 1.385818928691914],
+      "m": [0.23512005917516932, 0.0919933253544867],
+      "s": [0.04815076151541149, 0.07013778258368882],
+      "kn": [2, 1],
+      "gn": [2, 2]
+    },
+    "encoded": "MTh8MnwxfDMwLDI4fDAuODY1LDAuMTE0OjAuMzczOjAuNjQwfDAuMzc5LDEuMzg2fDAuMjM1MSwwLjA5MjB8MC4wNDgyLDAuMDcwMXwyLDF8Miwy",
+    "config": {
+      "kernels": [
+        {
+          "id": "kernel-0",
+          "shape": "step",
+          "radius": 30,
+          "peaks": [0.8648172949192433],
+          "weight": 0.3785248032961751
+        },
+        {
+          "id": "kernel-1",
+          "shape": "polynomial",
+          "radius": 28,
+          "peaks": [
+            0.11445286766800461, 0.3732961621782709, 0.6397377435688361
+          ],
+          "weight": 1.385818928691914
+        }
+      ],
+      "growthParams": [
+        {
+          "type": "gaussian",
+          "mu": 0.23512005917516932,
+          "sigma": 0.04815076151541149
+        },
+        {
+          "type": "gaussian",
+          "mu": 0.0919933253544867,
+          "sigma": 0.07013778258368882
+        }
+      ],
+      "combinationMode": "average",
+      "dt": 0.05555555555555555,
+      "maxKernels": 4
+    }
+  },
+  {
+    "fitness": 0.9999196757812197,
+    "genome": {
+      "T": 18,
+      "kernelCount": 2,
+      "combinationMode": 1,
+      "R": [30, 28],
+      "b": [
+        [0.8648172949192433],
+        [0.11445286766800461, 0.3732961621782709, 0.6390397438683525]
+      ],
+      "h": [0.3785248032961751, 1.3436697176419912],
+      "m": [0.2664280917590545, 0.0919933253544867],
+      "s": [0.04815076151541149, 0.07244523605843224],
+      "kn": [2, 1],
+      "gn": [2, 2]
+    },
+    "encoded": "MTh8MnwxfDMwLDI4fDAuODY1LDAuMTE0OjAuMzczOjAuNjM5fDAuMzc5LDEuMzQ0fDAuMjY2NCwwLjA5MjB8MC4wNDgyLDAuMDcyNHwyLDF8Miwy",
+    "config": {
+      "kernels": [
+        {
+          "id": "kernel-0",
+          "shape": "step",
+          "radius": 30,
+          "peaks": [0.8648172949192433],
+          "weight": 0.3785248032961751
+        },
+        {
+          "id": "kernel-1",
+          "shape": "polynomial",
+          "radius": 28,
+          "peaks": [
+            0.11445286766800461, 0.3732961621782709, 0.6390397438683525
+          ],
+          "weight": 1.3436697176419912
+        }
+      ],
+      "growthParams": [
+        {
+          "type": "gaussian",
+          "mu": 0.2664280917590545,
+          "sigma": 0.04815076151541149
+        },
+        {
+          "type": "gaussian",
+          "mu": 0.0919933253544867,
+          "sigma": 0.07244523605843224
+        }
+      ],
+      "combinationMode": "average",
+      "dt": 0.05555555555555555,
+      "maxKernels": 4
+    }
+  },
+  {
+    "fitness": 0.9999046822565694,
+    "genome": {
+      "T": 18,
+      "kernelCount": 2,
+      "combinationMode": 1,
+      "R": [30, 28],
+      "b": [
+        [0.8044426134108036],
+        [0.11445286766800461, 0.3732961621782709, 0.6397377435688361]
+      ],
+      "h": [0.22291585529685243, 1.475070671775405],
+      "m": [0.2664280917590545, 0.0919933253544867],
+      "s": [0.04815076151541149, 0.07013778258368882],
+      "kn": [2, 1],
+      "gn": [2, 2]
+    },
+    "encoded": "MTh8MnwxfDMwLDI4fDAuODA0LDAuMTE0OjAuMzczOjAuNjQwfDAuMjIzLDEuNDc1fDAuMjY2NCwwLjA5MjB8MC4wNDgyLDAuMDcwMXwyLDF8Miwy",
+    "config": {
+      "kernels": [
+        {
+          "id": "kernel-0",
+          "shape": "step",
+          "radius": 30,
+          "peaks": [0.8044426134108036],
+          "weight": 0.22291585529685243
+        },
+        {
+          "id": "kernel-1",
+          "shape": "polynomial",
+          "radius": 28,
+          "peaks": [
+            0.11445286766800461, 0.3732961621782709, 0.6397377435688361
+          ],
+          "weight": 1.475070671775405
+        }
+      ],
+      "growthParams": [
+        {
+          "type": "gaussian",
+          "mu": 0.2664280917590545,
+          "sigma": 0.04815076151541149
+        },
+        {
+          "type": "gaussian",
+          "mu": 0.0919933253544867,
+          "sigma": 0.07013778258368882
+        }
+      ],
+      "combinationMode": "average",
+      "dt": 0.05555555555555555,
+      "maxKernels": 4
+    }
+  },
+  {
+    "fitness": 0.9940431297943304,
+    "genome": {
+      "T": 18,
+      "kernelCount": 2,
+      "combinationMode": 1,
+      "R": [28, 27],
+      "b": [
+        [0.7147235966243524],
+        [0.11445286766800461, 0.6076561880697567, 0.7510057542157784]
+      ],
+      "h": [0.17207408375341485, 1.4658188934925342],
+      "m": [0.2607741361462227, 0.06607842430555994],
+      "s": [0.04815076151541149, 0.07013778258368882],
+      "kn": [2, 1],
+      "gn": [2, 2]
+    },
+    "encoded": "MTh8MnwxfDI4LDI3fDAuNzE1LDAuMTE0OjAuNjA4OjAuNzUxfDAuMTcyLDEuNDY2fDAuMjYwOCwwLjA2NjF8MC4wNDgyLDAuMDcwMXwyLDF8Miwy",
+    "config": {
+      "kernels": [
+        {
+          "id": "kernel-0",
+          "shape": "step",
+          "radius": 28,
+          "peaks": [0.7147235966243524],
+          "weight": 0.17207408375341485
+        },
+        {
+          "id": "kernel-1",
+          "shape": "polynomial",
+          "radius": 27,
+          "peaks": [
+            0.11445286766800461, 0.6076561880697567, 0.7510057542157784
+          ],
+          "weight": 1.4658188934925342
+        }
+      ],
+      "growthParams": [
+        {
+          "type": "gaussian",
+          "mu": 0.2607741361462227,
+          "sigma": 0.04815076151541149
+        },
+        {
+          "type": "gaussian",
+          "mu": 0.06607842430555994,
+          "sigma": 0.07013778258368882
+        }
+      ],
+      "combinationMode": "average",
+      "dt": 0.05555555555555555,
+      "maxKernels": 4
+    }
+  }
+]

@@ -6,13 +6,31 @@ A next-generation cellular automata platform powered by WebGPU, featuring a biol
 
 ## Features
 
+### Simulation Modes
 - **Discrete CA** - Game of Life and 18 life-like rules (B/S notation)
 - **Continuous CA** - Lenia and SmoothLife with smooth dynamics
-- **Multi-Species Ecology** - Up to 4 interacting species with predator-prey, symbiosis, and chemical signaling
-- **Pattern Discovery** - Genetic algorithm with novelty search, phylogenetic tree tracking, and real-time fitness history visualization
+- **Multi-Kernel Lenia** - 1-4 weighted kernels with composite growth functions
+- **Ecosystem Simulation** - Lotka-Volterra predator-prey dynamics, food chains, mutualism
+
+### Discovery & Evolution
+- **Pattern Discovery** - Genetic algorithm with novelty search and MAP-Elites
+- **Phylogenetic Tracking** - Full genealogy trees with lineage visualization
+- **Preset Registry** - 20+ builtin presets across all modes with import/export
+
+### Analysis Tools
+- **Real-Time Analysis** - Symmetry gauge, chaos meter, mass sparkline, behavior radar
+- **Mass Conservation** - GPU parallel reduction for accurate mass tracking
+- **Creature Tracking** - Hungarian algorithm matching for organism identification
+
+### Research Infrastructure
+- **Experiment Database** - IndexedDB tracking with runs, snapshots, genealogy
+- **Adaptive Quality** - Auto-adjusts grid size (128-4096) based on performance
+- **CLI Tools** - Full feature parity for automation and batch processing
+- **MCP Server** - AI interaction via Model Context Protocol
+
+### Agency & Training
 - **Sensorimotor Agency** - Creature tracking with obstacle avoidance and target navigation
 - **Neural CA Training** - GPU-accelerated IMGEP curriculum learning
-- **Mass Conservation** - Real-time mass tracking via GPU parallel reduction
 - **Organism Library** - Save, load, and export organisms to JSON
 
 ## UI Design: Bioluminescent Observatory
@@ -81,7 +99,7 @@ Run experiments without WebGPU using the CLI:
 # Evolve organisms
 bun run cli evolve run --generations 20 --seed 42
 
-# Multi-kernel evolution (higher fitness)
+# Multi-kernel evolution
 bun run cli multikernel evolve --generations 10 --seed 42
 
 # Analyze organism behavior
@@ -89,6 +107,16 @@ bun run cli analyze full --random --seed 42
 
 # Parameter sweeps
 bun run cli sweep run --config sweep.json
+
+# Preset management
+bun run cli preset list --mode continuous
+bun run cli preset info lenia-orbium
+bun run cli preset export --output my-presets.gpreset
+
+# Experiment tracking
+bun run cli experiment create "my-research" --paradigm continuous
+bun run cli experiment list
+bun run cli experiment export <id>
 ```
 
 ## Tech Stack

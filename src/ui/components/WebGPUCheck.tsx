@@ -43,6 +43,8 @@ const SUPPORTED_BROWSERS: BrowserInfo[] = [
 export interface WebGPUCheckResult {
   available: boolean;
   reason?: "not_supported" | "no_adapter" | "unknown";
+  /** Whether CPU fallback mode is active */
+  usingCPUFallback?: boolean;
 }
 
 /**
@@ -116,15 +118,21 @@ function detectBrowser(): { name: string; version: string } | null {
 interface WebGPUCompatibilityModalProps {
   onDismiss?: () => void;
   checkResult: WebGPUCheckResult;
+  /** Whether CPU fallback mode is active */
+  isCPUFallback?: boolean;
 }
 
 export function WebGPUCompatibilityModal({
   onDismiss,
   checkResult,
+  isCPUFallback = false,
 }: WebGPUCompatibilityModalProps) {
   const browser = detectBrowser();
 
   const getErrorMessage = () => {
+    if (isCPUFallback) {
+      return "Running in CPU fallback mode.";
+    }
     switch (checkResult.reason) {
       case "not_supported":
         return "WebGPU is not supported in your browser.";
@@ -136,6 +144,21 @@ export function WebGPUCompatibilityModal({
   };
 
   const getHelpText = () => {
+    if (isCPUFallback) {
+      return (
+        <>
+          <p>
+            GENESIS is running in <strong>CPU fallback mode</strong>. This
+            provides basic simulation capabilities but with reduced performance.
+          </p>
+          <p className="mt-3 text-green-400">
+            You can still explore Lenia simulations! For best performance,
+            consider using a WebGPU-compatible browser.
+          </p>
+        </>
+      );
+    }
+
     if (checkResult.reason === "no_adapter") {
       return (
         <>
@@ -194,24 +217,35 @@ export function WebGPUCompatibilityModal({
         {/* Header */}
         <div className="px-6 py-4 border-b border-zinc-700">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-red-900/50 flex items-center justify-center">
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center ${isCPUFallback ? "bg-yellow-900/50" : "bg-red-900/50"}`}
+            >
               <svg
-                className="w-5 h-5 text-red-400"
+                className={`w-5 h-5 ${isCPUFallback ? "text-yellow-400" : "text-red-400"}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
+                {isCPUFallback ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                )}
               </svg>
             </div>
             <div>
               <h2 className="text-lg font-semibold text-white">
-                WebGPU Not Available
+                {isCPUFallback ? "CPU Mode Active" : "WebGPU Not Available"}
               </h2>
               <p className="text-sm text-zinc-400">{getErrorMessage()}</p>
             </div>

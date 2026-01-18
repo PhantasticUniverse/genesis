@@ -1,23 +1,23 @@
 {
-  "id": "exp_2026-01-17T09-34-42-420Z_ixlgpz",
+  "id": "exp_2026-01-17T09-55-57-440Z_47vh69",
   "command": "evolve",
   "subcommand": "run",
   "args": {
-    "population": 20,
-    "generations": 20,
+    "population": 30,
+    "generations": 30,
     "size": 64,
-    "steps": 100,
+    "steps": 200,
     "elite": 2,
     "mutation": 0.15,
     "crossover": 0.7,
     "novelty": 0.3,
     "seed": 42,
-    "format": "json"
+    "format": "table"
   },
   "seed": 42,
-  "timestamp": "2026-01-17T09:34:42.468Z",
+  "timestamp": "2026-01-17T09:55:57.484Z",
   "git": {
-    "hash": "78e7793",
+    "hash": "28a5ba3",
     "branch": "main",
     "dirty": true
   },
@@ -29,5 +29,5 @@
     "totalMemoryGB": 36
   },
   "status": "completed",
-  "duration": 105163
+  "duration": 331474
 }

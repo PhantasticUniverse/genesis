@@ -86,17 +86,17 @@ export const DEFAULT_GRID_3D_CONFIG: Grid3DConfig = {
 };
 
 export const DEFAULT_LENIA_3D_PARAMS: Lenia3DParams = {
-  kernelRadius: 13,
-  growthCenter: 0.15,
-  growthWidth: 0.015,
+  kernelRadius: 12,
+  growthCenter: 0.12,
+  growthWidth: 0.04,
   dt: 0.1,
 };
 
 export const DEFAULT_KERNEL_3D_CONFIG: Kernel3DConfig = {
-  radius: 13,
-  peakPositions: [0.5],
-  peakWidths: [0.23],
-  peakWeights: [1],
+  radius: 12,
+  peakPositions: [0.148, 0.335, 0.81],
+  peakWidths: [0.23, 0.23, 0.23],
+  peakWeights: [1, 1, 1],
 };
 
 export const DEFAULT_VIEW_3D_CONFIG: View3DConfig = {

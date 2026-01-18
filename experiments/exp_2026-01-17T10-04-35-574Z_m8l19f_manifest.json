@@ -1,20 +1,22 @@
 {
-  "id": "exp_2026-01-17T09-36-38-403Z_fm1cq0",
+  "id": "exp_2026-01-17T10-04-35-574Z_m8l19f",
   "command": "multikernel",
   "subcommand": "evolve",
   "args": {
-    "generations": 10,
+    "generations": 15,
     "population": 20,
+    "kernels": 2,
     "size": 64,
-    "steps": 50,
+    "steps": 200,
     "mutationRate": 0.15,
     "seed": 42,
+    "output": "experiments/multikernel-optimized.json",
     "format": "table"
   },
   "seed": 42,
-  "timestamp": "2026-01-17T09:36:38.450Z",
+  "timestamp": "2026-01-17T10:04:35.624Z",
   "git": {
-    "hash": "78e7793",
+    "hash": "28a5ba3",
     "branch": "main",
     "dirty": true
   },
@@ -26,5 +28,6 @@
     "totalMemoryGB": 36
   },
   "status": "completed",
-  "duration": 177324
+  "duration": 1818741,
+  "resultsFile": "experiments/multikernel-optimized.json"
 }

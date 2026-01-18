@@ -1,23 +1,24 @@
 {
-  "id": "exp_2026-01-17T09-34-42-420Z_ixlgpz",
+  "id": "exp_2026-01-17T10-01-53-375Z_b44w30",
   "command": "evolve",
   "subcommand": "run",
   "args": {
     "population": 20,
-    "generations": 20,
+    "generations": 15,
     "size": 64,
-    "steps": 100,
+    "steps": 200,
     "elite": 2,
     "mutation": 0.15,
     "crossover": 0.7,
     "novelty": 0.3,
     "seed": 42,
+    "output": "experiments/optimized-genomes.json",
     "format": "json"
   },
   "seed": 42,
-  "timestamp": "2026-01-17T09:34:42.468Z",
+  "timestamp": "2026-01-17T10:01:53.422Z",
   "git": {
-    "hash": "78e7793",
+    "hash": "28a5ba3",
     "branch": "main",
     "dirty": true
   },
@@ -29,5 +30,6 @@
     "totalMemoryGB": 36
   },
   "status": "completed",
-  "duration": 105163
+  "duration": 139931,
+  "resultsFile": "experiments/optimized-genomes.json"
 }

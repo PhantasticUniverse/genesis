@@ -108,12 +108,12 @@ export const GAME_OF_LIFE_RULE: DiscreteRule = {
 
 export const DEFAULT_LENIA_KERNEL: KernelConfig = {
   id: "default-lenia",
-  shape: "gaussian",
-  radius: 13,
-  peaks: [1],
+  shape: "polynomial",
+  radius: 12,
+  peaks: [0.148, 0.335, 0.81],
   growthType: "gaussian",
-  mu: 0.15,
-  sigma: 0.015,
+  mu: 0.12,
+  sigma: 0.04,
   dt: 0.1,
   weight: 1,
 };
@@ -156,8 +156,8 @@ export const DEFAULT_MULTIKERNEL_CONFIG: MultiKernelConfig = {
     {
       id: "kernel-0",
       shape: "polynomial",
-      radius: 13,
-      peaks: [0.5],
+      radius: 12,
+      peaks: [0.148, 0.335, 0.81],
       weight: 1.0,
     },
   ],

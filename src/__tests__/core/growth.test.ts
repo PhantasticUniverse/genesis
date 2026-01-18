@@ -407,15 +407,16 @@ describe("growth functions", () => {
   describe("GROWTH_PRESETS", () => {
     it("has lenia-default preset", () => {
       expect(GROWTH_PRESETS["lenia-default"]).toBeDefined();
-      expect(GROWTH_PRESETS["lenia-default"].function).toBe("polynomial");
-      expect(GROWTH_PRESETS["lenia-default"].center).toBe(0.15);
-      expect(GROWTH_PRESETS["lenia-default"].width).toBe(0.015);
+      expect(GROWTH_PRESETS["lenia-default"].function).toBe("gaussian");
+      expect(GROWTH_PRESETS["lenia-default"].center).toBe(0.12);
+      expect(GROWTH_PRESETS["lenia-default"].width).toBe(0.04);
     });
 
     it("has lenia-wide preset", () => {
       expect(GROWTH_PRESETS["lenia-wide"]).toBeDefined();
-      expect(GROWTH_PRESETS["lenia-wide"].width).toBeGreaterThan(
-        GROWTH_PRESETS["lenia-default"].width,
+      // lenia-wide has center 0.2 which is different from lenia-default's 0.12
+      expect(GROWTH_PRESETS["lenia-wide"].center).toBeGreaterThan(
+        GROWTH_PRESETS["lenia-default"].center,
       );
     });
 

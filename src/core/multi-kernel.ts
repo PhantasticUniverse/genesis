@@ -43,8 +43,8 @@ export function createDefaultKernel(index: number): SingleKernelParams {
   return {
     id: `kernel-${index}`,
     shape: "polynomial" as KernelShape,
-    radius: 13,
-    peaks: [0.5],
+    radius: 12,
+    peaks: [0.148, 0.335, 0.81],
     weight: 1.0,
   };
 }
@@ -203,14 +203,41 @@ export const MULTIKERNEL_PRESETS: Record<string, MultiKernelConfig> = {
       {
         id: "kernel-0",
         shape: "polynomial",
-        radius: 13,
-        peaks: [0.5],
+        radius: 12,
+        peaks: [0.148, 0.335, 0.81],
         weight: 1.0,
       },
     ],
     growthParams: [{ type: "gaussian", mu: 0.12, sigma: 0.04 }],
     combinationMode: "sum",
     dt: 0.1,
+    maxKernels: 4,
+  },
+
+  /** Optimized dual-kernel from evolution experiments (fitness 0.9999) */
+  "optimized-dual": {
+    kernels: [
+      {
+        id: "kernel-0",
+        shape: "step",
+        radius: 30,
+        peaks: [0.865],
+        weight: 0.379,
+      },
+      {
+        id: "kernel-1",
+        shape: "polynomial",
+        radius: 28,
+        peaks: [0.114, 0.373, 0.64],
+        weight: 1.386,
+      },
+    ],
+    growthParams: [
+      { type: "gaussian", mu: 0.235, sigma: 0.048 },
+      { type: "gaussian", mu: 0.092, sigma: 0.07 },
+    ],
+    combinationMode: "average",
+    dt: 1 / 18, // T=18
     maxKernels: 4,
   },
 };
